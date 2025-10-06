@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       id: user.id, 
       email: user.email, 
       name: user.name,
-      profileImage: user.profileImage || null,
+      profileImage: (user as any).profileImage || null,
       diamonds: user.diamonds || 100,
       coins: user.coins || 500,
       success: true 

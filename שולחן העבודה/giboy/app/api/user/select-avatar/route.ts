@@ -15,12 +15,12 @@ export async function POST(req: NextRequest) {
       data: {
         avatarId: avatarId || null,
         updatedAt: new Date()
-      }
+      } as any
     });
 
     return NextResponse.json({
       success: true,
-      avatarId: user.avatarId
+      avatarId: (user as any).avatarId
     });
   } catch (err) {
     console.error('Select avatar error:', err);

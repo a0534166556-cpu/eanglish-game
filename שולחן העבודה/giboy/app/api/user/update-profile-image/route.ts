@@ -15,12 +15,12 @@ export async function POST(req: NextRequest) {
       data: { 
         profileImage: profileImage || null,
         updatedAt: new Date()
-      }
+      } as any
     });
 
     return NextResponse.json({ 
       success: true, 
-      profileImage: user.profileImage 
+      profileImage: (user as any).profileImage 
     });
   } catch (err) {
     console.error('Update profile image error:', err);

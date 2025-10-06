@@ -18,28 +18,28 @@ export async function POST(req: NextRequest) {
     if (!tagId) {
       const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: { selectedTag: null },
+        data: { selectedTag: null } as any,
       });
       return NextResponse.json({ 
         success: true, 
-        selectedTag: updatedUser.selectedTag 
+        selectedTag: (updatedUser as any).selectedTag 
       });
     }
 
     // בודק שהמשתמש בעל התג
-    let ownedTags = user.ownedTags ? JSON.parse(user.ownedTags) : [];
+    let ownedTags = (user as any).ownedTags ? JSON.parse((user as any).ownedTags) : [];
     if (!ownedTags.includes(tagId)) {
       return NextResponse.json({ error: 'Tag not owned' }, { status: 403 });
     }
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { selectedTag: tagId },
+      data: { selectedTag: tagId } as any,
     });
 
     return NextResponse.json({ 
       success: true, 
-      selectedTag: updatedUser.selectedTag 
+      selectedTag: (updatedUser as any).selectedTag 
     });
   } catch (error) {
     console.error('Error selecting tag:', error);

@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Not enough coins' }, { status: 400 });
     }
 
-    let ownedTags = user.ownedTags ? JSON.parse(user.ownedTags) : [];
+    let ownedTags = (user as any).ownedTags ? JSON.parse((user as any).ownedTags) : [];
     if (ownedTags.includes(tagId)) {
       return NextResponse.json({ error: 'Tag already owned' }, { status: 400 });
     }
@@ -30,13 +30,13 @@ export async function POST(req: NextRequest) {
       data: {
         coins: user.coins - price,
         ownedTags: JSON.stringify(ownedTags),
-      },
+      } as any,
     });
 
     return NextResponse.json({ 
       success: true, 
       coins: updatedUser.coins, 
-      ownedTags: updatedUser.ownedTags 
+      ownedTags: (updatedUser as any).ownedTags 
     });
   } catch (error) {
     console.error('Error buying tag:', error);

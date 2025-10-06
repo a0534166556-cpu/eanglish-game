@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     // קבע דרגה חדשה
     const newRank = getRankByPoints(totalScore);
     const progress = calculateProgress(totalScore);
-    const oldRank = user.rank;
+    const oldRank = (user as any).rank;
 
     // עדכן דרגה אם השתנתה
     const updatedUser = await prisma.user.update({
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       data: {
         rank: newRank.id,
         rankProgress: progress
-      }
+      } as any
     });
 
     // בדוק אם עלה דרגה

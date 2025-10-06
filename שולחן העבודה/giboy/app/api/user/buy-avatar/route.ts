@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     }
 
     // קבל רשימת אווטארים שכבר נקנו
-    const ownedAvatars = user.ownedAvatars ? JSON.parse(user.ownedAvatars) : [];
+    const ownedAvatars = (user as any).ownedAvatars ? JSON.parse((user as any).ownedAvatars) : [];
     
     // בדוק אם כבר קנה את האווטאר
     if (ownedAvatars.includes(avatarId)) {
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         coins: user.coins - price,
         ownedAvatars: JSON.stringify(ownedAvatars),
         updatedAt: new Date()
-      }
+      } as any
     });
 
     return NextResponse.json({
