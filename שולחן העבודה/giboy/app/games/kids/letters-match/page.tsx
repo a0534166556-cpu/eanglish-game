@@ -237,39 +237,6 @@ export default function LettersMatchGame() {
               </button>
             </Link>
           </div>
-
-          {/* עדכון ניקוד בסוף המשחק */}
-          {(() => {
-            const userStr = localStorage.getItem('user');
-            if (userStr && score > 0) {
-              const user = JSON.parse(userStr);
-              
-              // עדכון ניקוד במסד נתונים
-              fetch(`/api/user/${user.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  points: user.points + score,
-                  gamesPlayed: user.gamesPlayed + 1,
-                  gamesWon: user.gamesWon + (score > 0 ? 1 : 0)
-                })
-              }).then(() => {
-                // עדכון רמה
-                fetch('/api/user/update-rank', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ userId: user.id })
-                });
-              });
-              
-              // עדכון localStorage
-              user.points += score;
-              user.gamesPlayed += 1;
-              if (score > 0) user.gamesWon += 1;
-              localStorage.setItem('user', JSON.stringify(user));
-            }
-            return null;
-          })()}
         </div>
       </div>
     </main>
