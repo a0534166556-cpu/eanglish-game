@@ -1,0 +1,122 @@
+import { Server as NetServer } from 'http';
+import { Server } from 'socket.io';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { Socket } from 'net';
+
+type NextServerWithIO = NetServer & { io?: Server };
+interface SocketWithServer extends Socket {
+  server: NextServerWithIO;
+}
+
+const ioHandler = (req: NextApiRequest, res: NextApiResponse & { socket: SocketWithServer }) => {
+  if (!res.socket) {
+    res.status(500).end("No socket found");
+    return;
+  }
+  const server: NextServerWithIO = res.socket.server as NextServerWithIO;
+  if (!server.io) {
+    const io = new Server(server, {
+      path: '/api/games/picture-description-duel',
+      addTrailingSlash: false,
+    });
+
+    const waitingPlayers: any[] = [];
+    const activeGames: Map<string, any> = new Map();
+
+    io.on('connection', (socket) => {
+      console.log('Client connected');
+
+      socket.on('join-game', (data) => {
+        const { userId, username } = data;
+        for (const [gameId, game] of activeGames.entries()) {
+          if (game.player1.id === userId || game.player2?.id === userId) {
+            socket.emit('error', 'אתה כבר במשחק פעיל');
+            return;
+          }
+        }
+        waitingPlayers.push({
+          id: userId,
+          name: username,
+          socketId: socket.id,
+          ready: false
+        });
+        if (waitingPlayers.length >= 2) {
+          const player1 = waitingPlayers.shift();
+          const player2 = waitingPlayers.shift();
+          const gameId = `${player1.id}-${player2.id}-${Date.now()}`;
+          const gameState = {
+            id: gameId,
+            status: 'waiting',
+            player1: { id: player1.id, name: player1.name, score: 0, ready: false },
+            player2: { id: player2.id, name: player2.name, score: 0, ready: false },
+            currentPlayer: 1,
+            questions: [], // TODO: Load questions from database
+            currentQuestion: 0,
+            timer: 30
+          };
+          activeGames.set(gameId, gameState);
+          socket.join(gameId);
+          io.to(player1.socketId).emit('game-state', gameState);
+          io.to(player2.socketId).emit('game-state', gameState);
+        }
+      });
+      socket.on('player-ready', () => {
+        for (const [gameId, game] of activeGames.entries()) {
+          if (game.player1.id === socket.id) {
+            game.player1.ready = true;
+          } else if (game.player2?.id === socket.id) {
+            game.player2.ready = true;
+          }
+          if (game.player1.ready && game.player2.ready) {
+            game.status = 'playing';
+            io.to(gameId).emit('game-state', game);
+          }
+        }
+      });
+      socket.on('answer', (answer) => {
+        for (const [gameId, game] of activeGames.entries()) {
+          if (game.status !== 'playing') continue;
+          const currentQuestion = game.questions[game.currentQuestion];
+          const isCorrect = currentQuestion.answer === answer;
+          if (game.currentPlayer === 1) {
+            if (isCorrect) game.player1.score += 10;
+            game.currentPlayer = 2;
+          } else {
+            if (isCorrect) game.player2.score += 10;
+            game.currentPlayer = 1;
+          }
+          if (game.currentQuestion < game.questions.length - 1) {
+            game.currentQuestion++;
+          } else {
+            game.status = 'finished';
+          }
+          io.to(gameId).emit('game-state', game);
+        }
+      });
+      socket.on('chat-message', (message) => {
+        for (const [gameId, game] of activeGames.entries()) {
+          if (game.player1.id === socket.id || game.player2?.id === socket.id) {
+            io.to(gameId).emit('message', {
+              sender: game.player1.id === socket.id ? game.player1.name : game.player2.name,
+              text: message,
+              timestamp: new Date()
+            });
+          }
+        }
+      });
+      socket.on('disconnect', () => {
+        console.log('Client disconnected');
+        for (const [gameId, game] of activeGames.entries()) {
+          if (game.player1.id === socket.id || game.player2?.id === socket.id) {
+            io.to(gameId).emit('error', 'השחקן השני התנתק');
+            activeGames.delete(gameId);
+          }
+        }
+      });
+    });
+    server.io = io;
+  }
+  res.end();
+};
+
+export default ioHandler; 

@@ -1,0 +1,4146 @@
+{
+  "game_1758729187751_fqlpeow2l": {
+    "id": "game_1758729187751_fqlpeow2l",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "test123",
+      "player2": "player2_test"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758729187751,
+    "updatedAt": 1758729595464,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758729270722_bnq34o8ej": {
+    "id": "game_1758729270722_bnq34o8ej",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758666707865_nyd2ugph4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758729270722,
+    "updatedAt": 1758729270722,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758729751300_s1rv1htxe": {
+    "id": "game_1758729751300_s1rv1htxe",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758666707865_nyd2ugph4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758729751301,
+    "updatedAt": 1758729751301,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758730151069_9k1adtxw6": {
+    "id": "game_1758730151069_9k1adtxw6",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758730140740_iquljnhmq",
+      "player2": "player2_test"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758730151069,
+    "updatedAt": 1758730155044,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758730281676_nywd9l3ad": {
+    "id": "game_1758730281676_nywd9l3ad",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758666707865_nyd2ugph4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758730281676,
+    "updatedAt": 1758730281676,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758730489167_po1dplrk2": {
+    "id": "game_1758730489167_po1dplrk2",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758730466465_xjhh4yjqd",
+      "player2": "player2_test"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758730489167,
+    "updatedAt": 1758730583443,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758730682534_u48vssm7j": {
+    "id": "game_1758730682534_u48vssm7j",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758666707865_nyd2ugph4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758730682534,
+    "updatedAt": 1758730682534,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758730891932_y68a29tw1": {
+    "id": "game_1758730891932_y68a29tw1",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758666707865_nyd2ugph4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758730891932,
+    "updatedAt": 1758730891932,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758731034299_v8v2hgnae": {
+    "id": "game_1758731034299_v8v2hgnae",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758731026915_ir5prcole",
+      "player2": "player2_test"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758731034299,
+    "updatedAt": 1758731038024,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758731295948_q5ethlwm4": {
+    "id": "game_1758731295948_q5ethlwm4",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758731026915_ir5prcole",
+      "player2": "player2_test"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758731295948,
+    "updatedAt": 1758731299605,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1758733529417_qqe91x4vu": {
+    "id": "game_1758733529417_qqe91x4vu",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758666707865_nyd2ugph4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1758733529417,
+    "updatedAt": 1758733529417,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759003796363_4wrgysc32": {
+    "id": "game_1759003796363_4wrgysc32",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1759003795200",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759003796363,
+    "updatedAt": 1759003796363,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759003805837_w3lwm2qyb": {
+    "id": "game_1759003805837_w3lwm2qyb",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758731026915_ir5prcole",
+      "player2": "player_1759004367789"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759003805837,
+    "updatedAt": 1759004368196,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759014384122_cylp6r1fx": {
+    "id": "game_1759014384122_cylp6r1fx",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1759014382926",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759014384123,
+    "updatedAt": 1759014384123,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759014388785_dkc9r11yy": {
+    "id": "game_1759014388785_dkc9r11yy",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758731026915_ir5prcole",
+      "player2": "player_1759014446900"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759014388785,
+    "updatedAt": 1759014447152,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759014526891_ubuxqp4ev": {
+    "id": "game_1759014526891_ubuxqp4ev",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1759014526821",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759014526891,
+    "updatedAt": 1759014526891,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759014529332_e9hbleblv": {
+    "id": "game_1759014529332_e9hbleblv",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "user_1758731026915_ir5prcole",
+      "player2": "player_1759014604444"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759014529332,
+    "updatedAt": 1759014605069,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759015800950_j0pw7hd1w": {
+    "id": "game_1759015800950_j0pw7hd1w",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1759015800258",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759015800950,
+    "updatedAt": 1759015800950,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759015849347_3323vog1r": {
+    "id": "game_1759015849347_3323vog1r",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1759015849124",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759015849347,
+    "updatedAt": 1759015849347,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759360572257_pbyvnl6dz": {
+    "id": "game_1759360572257_pbyvnl6dz",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1759360571472",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759360572257,
+    "updatedAt": 1759360572257,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642167735_6c8l98src": {
+    "id": "game_1759642167735_6c8l98src",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "test_player_1",
+      "player2": "test_player_2"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642167735,
+    "updatedAt": 1759642167988,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642184517_74wlyxaid": {
+    "id": "game_1759642184517_74wlyxaid",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "test_player_1",
+      "player2": "test_player_2"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642184518,
+    "updatedAt": 1759642184944,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642197823_nebz7g0fg": {
+    "id": "game_1759642197823_nebz7g0fg",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "debug_player_1",
+      "player2": "debug_player_2"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642197823,
+    "updatedAt": 1759642197975,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642254945_m3ta2n16r": {
+    "id": "game_1759642254945_m3ta2n16r",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1",
+      "player2": "player_2"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642254945,
+    "updatedAt": 1759642255047,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642255120_gjxikrq98": {
+    "id": "game_1759642255120_gjxikrq98",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_3",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642255120,
+    "updatedAt": 1759642255120,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642278787_9bsgd8p1p": {
+    "id": "game_1759642278787_9bsgd8p1p",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "logic_player_1",
+      "player2": "logic_player_2"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642278787,
+    "updatedAt": 1759642278862,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642300291_sbm2soa1v": {
+    "id": "game_1759642300291_sbm2soa1v",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_player_1",
+      "player2": "perf_player_2"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642300291,
+    "updatedAt": 1759642300439,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642300702_hdlqg85za": {
+    "id": "game_1759642300702_hdlqg85za",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_multi_0",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642300703,
+    "updatedAt": 1759642300703,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642300713_sa0fycr3j": {
+    "id": "game_1759642300713_sa0fycr3j",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_multi_1",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642300713,
+    "updatedAt": 1759642300713,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642300722_3k5ro3xrp": {
+    "id": "game_1759642300722_3k5ro3xrp",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_multi_2",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642300722,
+    "updatedAt": 1759642300722,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642300731_d9vnua1w2": {
+    "id": "game_1759642300731_d9vnua1w2",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_multi_3",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642300731,
+    "updatedAt": 1759642300731,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642300751_pln7nr97g": {
+    "id": "game_1759642300751_pln7nr97g",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_multi_4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642300753,
+    "updatedAt": 1759642300753,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642300954_9j7fqks52": {
+    "id": "game_1759642300954_9j7fqks52",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_seq_0",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642300954,
+    "updatedAt": 1759642300954,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301098_248ku2ygd": {
+    "id": "game_1759642301098_248ku2ygd",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_seq_1",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301099,
+    "updatedAt": 1759642301099,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301229_t8ioss87n": {
+    "id": "game_1759642301229_t8ioss87n",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "perf_seq_2",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301229,
+    "updatedAt": 1759642301229,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301557_h20d9ejbn": {
+    "id": "game_1759642301557_h20d9ejbn",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_0",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301557,
+    "updatedAt": 1759642301557,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301659_0ez7fn99w": {
+    "id": "game_1759642301659_0ez7fn99w",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_1",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301660,
+    "updatedAt": 1759642301660,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301672_jcc68vev6": {
+    "id": "game_1759642301672_jcc68vev6",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_3",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301672,
+    "updatedAt": 1759642301672,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301681_s3xznb024": {
+    "id": "game_1759642301681_s3xznb024",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_2",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301681,
+    "updatedAt": 1759642301681,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301692_ihdtrr654": {
+    "id": "game_1759642301692_ihdtrr654",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301692,
+    "updatedAt": 1759642301692,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301708_agr6q44cu": {
+    "id": "game_1759642301708_agr6q44cu",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_5",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301709,
+    "updatedAt": 1759642301709,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301724_eu4p2uh2b": {
+    "id": "game_1759642301724_eu4p2uh2b",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_6",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301724,
+    "updatedAt": 1759642301724,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301732_60859rrek": {
+    "id": "game_1759642301732_60859rrek",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_7",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301732,
+    "updatedAt": 1759642301732,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301741_rrcj2w5hm": {
+    "id": "game_1759642301741_rrcj2w5hm",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_8",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301741,
+    "updatedAt": 1759642301741,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642301752_61y84zkuk": {
+    "id": "game_1759642301752_61y84zkuk",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "load_test_9",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642301752,
+    "updatedAt": 1759642301752,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642327379_sxd9mj91p": {
+    "id": "game_1759642327379_sxd9mj91p",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "'; DROP TABLE games; --",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642327380,
+    "updatedAt": 1759642327380,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642327477_j682t26ir": {
+    "id": "game_1759642327477_j682t26ir",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "<script>alert(\"XSS\")</script>",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642327477,
+    "updatedAt": 1759642327477,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642327630_t3sd38luu": {
+    "id": "game_1759642327630_t3sd38luu",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "csrf_test",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642327630,
+    "updatedAt": 1759642327630,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642327869_jsfj50bhd": {
+    "id": "game_1759642327869_jsfj50bhd",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_0",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642327869,
+    "updatedAt": 1759642327869,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642327970_5scpfte3e": {
+    "id": "game_1759642327970_5scpfte3e",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_1",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642327970,
+    "updatedAt": 1759642327970,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328058_2b97u8gwx": {
+    "id": "game_1759642328058_2b97u8gwx",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_2",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328058,
+    "updatedAt": 1759642328058,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328068_9sommjd7y": {
+    "id": "game_1759642328068_9sommjd7y",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_3",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328068,
+    "updatedAt": 1759642328068,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328074_dzcdsm817": {
+    "id": "game_1759642328074_dzcdsm817",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_4",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328074,
+    "updatedAt": 1759642328074,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328094_lyomb76ub": {
+    "id": "game_1759642328094_lyomb76ub",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_5",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328094,
+    "updatedAt": 1759642328094,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328119_84tks3vuv": {
+    "id": "game_1759642328119_84tks3vuv",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_6",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328119,
+    "updatedAt": 1759642328119,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328149_syw9bcg7i": {
+    "id": "game_1759642328149_syw9bcg7i",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_7",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328149,
+    "updatedAt": 1759642328149,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328171_2wkmfnkov": {
+    "id": "game_1759642328171_2wkmfnkov",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_8",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328171,
+    "updatedAt": 1759642328171,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328187_cjz563po8": {
+    "id": "game_1759642328187_cjz563po8",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_9",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328187,
+    "updatedAt": 1759642328187,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328203_ld9i0ws4d": {
+    "id": "game_1759642328203_ld9i0ws4d",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_10",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328203,
+    "updatedAt": 1759642328203,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328222_a5sleaxl6": {
+    "id": "game_1759642328222_a5sleaxl6",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_11",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328222,
+    "updatedAt": 1759642328222,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328240_u375clrfq": {
+    "id": "game_1759642328240_u375clrfq",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_12",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328240,
+    "updatedAt": 1759642328240,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328438_31fsocb4t": {
+    "id": "game_1759642328438_31fsocb4t",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_14",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328438,
+    "updatedAt": 1759642328438,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328452_ajae4ib7n": {
+    "id": "game_1759642328452_ajae4ib7n",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_15",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328452,
+    "updatedAt": 1759642328452,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328461_3e4xdx494": {
+    "id": "game_1759642328461_3e4xdx494",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_13",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328461,
+    "updatedAt": 1759642328461,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328478_xorn326fp": {
+    "id": "game_1759642328478_xorn326fp",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_17",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328478,
+    "updatedAt": 1759642328478,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328493_bhn9rnywg": {
+    "id": "game_1759642328493_bhn9rnywg",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_16",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328493,
+    "updatedAt": 1759642328493,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328507_0jyzji2py": {
+    "id": "game_1759642328507_0jyzji2py",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_18",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328507,
+    "updatedAt": 1759642328507,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328525_0h2jm6fuh": {
+    "id": "game_1759642328525_0h2jm6fuh",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "rate_limit_19",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328525,
+    "updatedAt": 1759642328525,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328673_caz8kze74": {
+    "id": "game_1759642328673_caz8kze74",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328673,
+    "updatedAt": 1759642328673,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328752_rz9x2sc1y": {
+    "id": "game_1759642328752_rz9x2sc1y",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328752,
+    "updatedAt": 1759642328752,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328830_uzxtgkuzl": {
+    "id": "game_1759642328830_uzxtgkuzl",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "auth_player_1",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328831,
+    "updatedAt": 1759642328831,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642328983_swo457ije": {
+    "id": "game_1759642328983_swo457ije",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "integrity_player_1",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642328983,
+    "updatedAt": 1759642328983,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642444996_oyny81dew": {
+    "id": "game_1759642444996_oyny81dew",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "final_player_1",
+      "player2": "final_player_2"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642444996,
+    "updatedAt": 1759642445117,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1759642519059_ik1avl1nu": {
+    "id": "game_1759642519059_ik1avl1nu",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1759642518997",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759642519059,
+    "updatedAt": 1759642519059,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  }
+}

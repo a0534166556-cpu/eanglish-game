@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  name        String
+  profileImage String? @db.LongText // תמונת פרופיל (base64)
+  avatarId    String?  // אווטאר שנבחר
+  ownedAvatars String? @db.Text // רשימת אווטארים שנקנו (JSON)
+  selectedTag String?  // תג שנבחר
+  ownedTags   String? @db.Text // רשימת תגים שנקנו (JSON)
+  rank        String   @default("beginner") // רמת המשתמש
+  rankProgress Int     @default(0) // התקדמות לרמה הבאה (0-100)
+  createdAt   DateTime @default(now())
+  gamesPlayed Int      @default(0)
+  gamesWon    Int      @default(0)
+  level       Int      @default(1)
+  points      Int      @default(0)
+  diamonds    Int      @default(100) // יהלומים
+  coins       Int      @default(500) // מטבעות
+  updatedAt   DateTime
+  gameStat    GameStat[]
+  achievements UserAchievement[]
+  houseItems  HouseItem[]
+  subscription Subscription?
+}
+
+model GameStat {
+  id           String   @id @default(cuid())
+  userId       String
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameName     String
+  gamesPlayed  Int      @default(0)
+  gamesWon     Int      @default(0)
+  averageScore Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, gameName])
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  userId    String?
+  page      String
+  referrer  String?
+  userAgent String?
+  ipAddress String?
+  sessionId String
+  createdAt DateTime @default(now())
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String?
+  sessionId String   @unique
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  duration  Int?     // in seconds
+  pageViews Int      @default(0)
+  device    String?
+  browser   String?
+  os        String?
+  country   String?
+  city      String?
+}
+
+model Conversion {
+  id          String   @id @default(cuid())
+  userId      String?
+  type        String   // 'signup', 'login', 'game_complete', 'purchase'
+  value       Float?   // monetary value if applicable
+  metadata    String?  // JSON string for additional data
+  sessionId   String
+  createdAt   DateTime @default(now())
+}
+
+model UserBehavior {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // 'click', 'scroll', 'hover', 'form_submit'
+  element   String?  // element ID or class
+  page      String
+  value     String?  // additional data
+  sessionId String
+  createdAt DateTime @default(now())
+}
+
+model WordClashGame {
+  id                    String   @id @default(cuid())
+  gameId                String   @unique
+  status                String   // 'waiting', 'active', 'finished'
+  currentRound          Int      @default(0)
+  maxRounds             Int      @default(5)
+  currentWord           String   // JSON string
+  players               String   // JSON string
+  playerStates          String   // JSON string
+  lastMove              String?  // JSON string
+  winner                String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  chatMessages          String?  // JSON string
+  revealedLetters       String?  // JSON string
+}
+
+// מערכת הישגים
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  icon        String   // emoji או URL לתמונה
+  category    String   // 'games', 'streak', 'level', 'special'
+  requirement Int      // כמות נדרשת
+  reward      Int      // יהלומים/מטבעות
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          user        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  progress      Int         @default(0)
+  isCompleted   Boolean     @default(false)
+  completedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  
+  @@unique([userId, achievementId])
+}
+
+// מערכת חנות הבית
+model ShopItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  category    String   // 'furniture', 'decoration', 'floor', 'wall', 'lighting'
+  price       Int      // מחיר ביהלומים
+  icon        String   // emoji או URL לתמונה
+  rarity      String   // 'common', 'rare', 'epic', 'legendary'
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  houseItems  HouseItem[]
+}
+
+model HouseItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopItemId String
+  shopItem  ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+  positionX Float    @default(0)
+  positionY Float    @default(0)
+  rotation  Float    @default(0)
+  scale     Float    @default(1)
+  isPlaced  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// מערכת פרסים למשחקים
+model GameReward {
+  id        String   @id @default(cuid())
+  gameName  String
+  action    String   // 'win', 'complete', 'streak', 'perfect'
+  diamonds  Int      @default(0)
+  coins     Int      @default(0)
+  points    Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// מערכת מנויים
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          String   // 'basic', 'premium', 'yearly'
+  status        String   // 'active', 'inactive', 'expired', 'cancelled'
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  paymentId     String   @unique
+  paymentMethod String   // 'card', 'paypal', 'bank_transfer'
+  amount        Float    // סכום התשלום
+  currency      String   @default("ILS")
+  bankAccount   String?  // פרטי העברה בנקאית
+  transactionId String?  // מספר העברה
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  payment       Payment?
+}
+
+// תשלומים
+model Payment {
+  id              String   @id @default(cuid())
+  subscriptionId  String   @unique
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount          Float
+  currency        String   @default("ILS")
+  paymentMethod   String
+  status          String   // 'pending', 'completed', 'failed', 'refunded'
+  bankAccount     String?  // חשבון 047312 בנק פאגי סניף 173
+  transactionId   String?
+  paymentDetails  String?  // JSON string עם פרטי התשלום
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// מערכת פרסומות
+model Ad {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   // 'banner', 'video', 'popup', 'native'
+  position    String   // 'top', 'bottom', 'sidebar', 'inline', 'floating'
+  imageUrl    String?  // URL לתמונה
+  videoUrl    String?  // URL לוידאו
+  linkUrl     String   // קישור יעד
+  isActive    Boolean  @default(true)
+  startDate   DateTime
+  endDate     DateTime
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  ctr         Float    @default(0) // Click Through Rate
+  earnings    Float    @default(0) // הכנסות
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
