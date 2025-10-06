@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-// Stripe configuration
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-08-27.basil',
-});
+// Stripe configuration - only initialize if key exists
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-08-27.basil',
+    })
+  : null;
 
 // Create Stripe Checkout Session
 export async function POST(request: NextRequest) {
   try {
     const { amount, currency, description, diamonds, coins } = await request.json();
+
+    if (!stripe) {
+      return NextResponse.json({
+        success: false,
+        error: 'Stripe is not configured'
+      }, { status: 500 });
+    }
 
     if (!amount || amount <= 0) {
       return NextResponse.json({
