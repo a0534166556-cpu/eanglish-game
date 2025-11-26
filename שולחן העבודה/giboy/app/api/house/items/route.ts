@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const houseId = searchParams.get('houseId');
 
     if (!userId) {
       return NextResponse.json(
@@ -13,8 +14,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // אם לא צוין houseId, טען את הבית ברירת המחדל
+    let whereClause: any = { userId };
+    if (houseId) {
+      whereClause.houseId = houseId;
+    } else {
+      // מצא את הבית ברירת המחדל
+      const defaultHouse = await prisma.house.findFirst({
+        where: { userId, isDefault: true }
+      });
+      if (defaultHouse) {
+        whereClause.houseId = defaultHouse.id;
+      } else {
+        // אם אין בית ברירת מחדל, טען פריטים ללא houseId (פריטים ישנים)
+        whereClause.houseId = null;
+      }
+    }
+
     const houseItems = await prisma.houseItem.findMany({
-      where: { userId },
+      where: whereClause,
       include: {
         shopItem: true
       },

@@ -1,418 +1,358 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import useAuthUser from '@/lib/useAuthUser';
 
-interface SystemAlert {
-  id: string;
-  type: 'error' | 'warning' | 'info' | 'success';
-  title: string;
-  message: string;
-  timestamp: Date;
-  resolved: boolean;
-  priority: 'high' | 'medium' | 'low';
-}
-
-interface SystemStats {
-  uptime: number;
-  memory: {
-    used: number;
-    total: number;
-    percentage: number;
+interface DashboardData {
+  overview: {
+    totalUsers: number;
+    totalGames: number;
+    totalAchievements: number;
+    totalBugReports: number;
+    newUsersThisWeek: number;
+    gamesThisWeek: number;
+    openBugReports: number;
+    activeUsers: number;
+    completedAchievements: number;
   };
-  cpu: {
-    usage: number;
-    load: number;
+  gameStats: {
+    totalGamesPlayed: number;
+    totalGamesWon: number;
+    totalScore: number;
+    averageScore: number;
+  };
+  bugReports: {
+    byPriority: Array<{ priority: string; _count: { priority: number } }>;
+    recent: Array<{
+      id: string;
+      email?: string;
+      description: string;
+      status: string;
+      priority: string;
+      createdAt: string;
+    }>;
   };
   users: {
-    active: number;
-    total: number;
-    newToday: number;
+    byLevel: Array<{ level: number; _count: { level: number } }>;
+    topUsers: Array<{
+      id: string;
+      name: string;
+      email: string;
+      points: number;
+      level: number;
+      gamesPlayed: number;
+      gamesWon: number;
+    }>;
   };
   games: {
-    totalPlays: number;
-    averageScore: number;
-    topGame: string;
+    popular: Array<{
+      gameName: string;
+      _count: { gameName: number };
+      _sum: { gamesPlayed: number | null };
+    }>;
   };
-  performance: {
-    pageLoadTime: number;
-    apiResponseTime: number;
-    errorRate: number;
-  };
+  dailyStats: Array<{
+    date: string;
+    users: number;
+    games: number;
+    bugReports: number;
+  }>;
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<SystemStats | null>(null);
-  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const { user, loading: authLoading } = useAuthUser();
+  const router = useRouter();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadData();
+    if (authLoading) return;
     
-    if (autoRefresh) {
-      const interval = setInterval(loadData, 10000); // כל 10 שניות
-      return () => clearInterval(interval);
+    if (!user) {
+      router.push('/login');
+      return;
     }
-  }, [autoRefresh]);
 
-  const loadData = async () => {
+    loadDashboardData();
+  }, [user, authLoading, router]);
+
+  const loadDashboardData = async () => {
     try {
-      // טעינת נתוני מערכת
-      const response = await fetch('/api/admin/metrics');
-      const data = await response.json();
-      
-      if (data.success) {
-        setStats(data.data);
+      setLoading(true);
+      const response = await fetch(`/api/admin/dashboard?userId=${user?.id}`);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to load dashboard data');
       }
 
-      // יצירת התראות
-      generateAlerts(data.data);
-      
+      setData(result);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading dashboard:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const generateAlerts = (data: any) => {
-    const newAlerts: SystemAlert[] = [];
-    
-    // בדיקת זיכרון
-    if (data.memory.percentage > 80) {
-      newAlerts.push({
-        id: 'memory-high',
-        type: 'warning',
-        title: 'זיכרון גבוה',
-        message: `שימוש בזיכרון: ${data.memory.percentage}%`,
-        timestamp: new Date(),
-        resolved: false,
-        priority: 'high'
-      });
-    }
-    
-    // בדיקת CPU
-    if (data.cpu.usage > 70) {
-      newAlerts.push({
-        id: 'cpu-high',
-        type: 'warning',
-        title: 'CPU גבוה',
-        message: `שימוש ב-CPU: ${data.cpu.usage}%`,
-        timestamp: new Date(),
-        resolved: false,
-        priority: 'high'
-      });
-    }
-    
-    // בדיקת זמן תגובה
-    if (data.performance.pageLoadTime > 2000) {
-      newAlerts.push({
-        id: 'slow-response',
-        type: 'warning',
-        title: 'זמן תגובה איטי',
-        message: `זמן טעינה: ${data.performance.pageLoadTime}ms`,
-        timestamp: new Date(),
-        resolved: false,
-        priority: 'medium'
-      });
-    }
-    
-    // בדיקת שגיאות
-    if (data.performance.errorRate > 3) {
-      newAlerts.push({
-        id: 'high-errors',
-        type: 'error',
-        title: 'שיעור שגיאות גבוה',
-        message: `שיעור שגיאות: ${data.performance.errorRate.toFixed(1)}%`,
-        timestamp: new Date(),
-        resolved: false,
-        priority: 'high'
-      });
-    }
-    
-    // בדיקת משתמשים
-    if (data.users.active > 100) {
-      newAlerts.push({
-        id: 'high-users',
-        type: 'info',
-        title: 'עומס משתמשים גבוה',
-        message: `${data.users.active} משתמשים פעילים`,
-        timestamp: new Date(),
-        resolved: false,
-        priority: 'medium'
-      });
-    }
-    
-    setAlerts(prev => [...newAlerts, ...prev].slice(0, 20));
-  };
-
-  const resolveAlert = (alertId: string) => {
-    setAlerts(prev => prev.map(alert => 
-      alert.id === alertId ? { ...alert, resolved: true } : alert
-    ));
-  };
-
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case 'error': return '🚨';
-      case 'warning': return '⚠️';
-      case 'info': return 'ℹ️';
-      case 'success': return '✅';
-      default: return '📢';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'low': return 'text-blue-600 bg-blue-50 border-blue-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
-
-  const formatUptime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${hours} שעות ${minutes} דקות`;
-  };
-
-  if (isLoading) {
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">טוען נתונים...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">טוען לוח בקרה...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">❌</div>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">שגיאה בטעינת הנתונים</h1>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={loadDashboardData}
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            נסה שוב
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">📊</div>
+          <h1 className="text-2xl font-bold text-gray-600">אין נתונים להצגה</h1>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900"> לוח בקרה</h1>
-              <p className="text-gray-600 mt-2">ניהול וניטור המערכת בזמן אמת</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setAutoRefresh(!autoRefresh)}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  autoRefresh 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-gray-300 text-gray-700'
-                }`}
-              >
-                {autoRefresh ? '🔄 רענון אוטומטי' : '⏸️ רענון ידני'}
-              </button>
-              <button
-                onClick={loadData}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
-              >
-                🔄 רענן עכשיו
-              </button>
-            </div>
-          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">📊 לוח בקרה</h1>
+          <p className="text-lg text-gray-600">נתונים אמיתיים מהמערכת</p>
         </div>
 
-        {/* Quick Stats */}
+        {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Uptime */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <span className="text-2xl">⏱️</span>
+          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">סה"כ משתמשים</p>
+                <p className="text-3xl font-bold text-blue-600">{data.overview.totalUsers}</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">זמן פעילות</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats ? formatUptime(stats.uptime) : '0 שעות 0 דקות'}
-                </p>
-              </div>
+              <div className="text-4xl">👥</div>
             </div>
+            <p className="text-sm text-green-600 mt-2">
+              +{data.overview.newUsersThisWeek} השבוע
+            </p>
           </div>
 
-          {/* Memory */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <span className="text-2xl">💾</span>
+          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">משחקים שוחקו</p>
+                <p className="text-3xl font-bold text-green-600">{data.overview.totalGames}</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">זיכרון</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats ? `${stats.memory.used}GB / ${stats.memory.total}GB` : '0GB / 0GB'}
-                </p>
-                <p className={`text-sm font-medium ${
-                  stats && stats.memory.percentage > 80 ? 'text-red-600' : 'text-green-600'
-                }`}>
-                  {stats ? `${stats.memory.percentage}%` : '0%'}
-                </p>
-              </div>
+              <div className="text-4xl">🎮</div>
             </div>
+            <p className="text-sm text-green-600 mt-2">
+              +{data.overview.gamesThisWeek} השבוע
+            </p>
           </div>
 
-          {/* CPU */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <span className="text-2xl">⚡</span>
+          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">הישגים מושלמים</p>
+                <p className="text-3xl font-bold text-purple-600">{data.overview.completedAchievements}</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">CPU</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats ? `${stats.cpu.usage}%` : '0%'}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Load: {stats ? stats.cpu.load.toFixed(2) : '0.00'}
-                </p>
-              </div>
+              <div className="text-4xl">🏆</div>
             </div>
+            <p className="text-sm text-gray-600 mt-2">
+              מתוך {data.overview.totalAchievements} הישגים
+            </p>
           </div>
 
-          {/* Active Users */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <span className="text-2xl">👥</span>
+          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">דיווחי באגים פתוחים</p>
+                <p className="text-3xl font-bold text-red-600">{data.overview.openBugReports}</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">משתמשים פעילים</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats ? stats.users.active : '0'}
-                </p>
-                <p className="text-sm text-gray-500">
-                  סה"כ: {stats ? stats.users.total : '0'}
-                </p>
-              </div>
+              <div className="text-4xl">🐛</div>
             </div>
+            <p className="text-sm text-gray-600 mt-2">
+              מתוך {data.overview.totalBugReports} סה"כ
+            </p>
           </div>
         </div>
 
-        {/* Alerts */}
-        {alerts.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">🚨 התראות</h2>
-            <div className="grid gap-4">
-              {alerts.slice(0, 5).map((alert) => (
-                <div
-                  key={alert.id}
-                  className={`p-4 rounded-lg border-l-4 ${
-                    alert.resolved ? 'opacity-50' : ''
-                  } ${getPriorityColor(alert.priority)}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">{getAlertIcon(alert.type)}</span>
-                      <div>
-                        <p className="font-medium">{alert.title}</p>
-                        <p className="text-sm">{alert.message}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">
-                        {alert.timestamp.toLocaleTimeString('he-IL')}
-                      </span>
-                      {!alert.resolved && (
-                        <button
-                          onClick={() => resolveAlert(alert.id)}
-                          className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                        >
-                          פתור
-                        </button>
-                      )}
-                    </div>
+        {/* Game Statistics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">📈 סטטיסטיקות משחקים</h2>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">סה"כ משחקים שוחקו:</span>
+                <span className="font-bold text-blue-600">{data.gameStats.totalGamesPlayed}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">משחקים שניצחו:</span>
+                <span className="font-bold text-green-600">{data.gameStats.totalGamesWon}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">אחוז ניצחונות:</span>
+                <span className="font-bold text-purple-600">
+                  {data.gameStats.totalGamesPlayed > 0 
+                    ? Math.round((data.gameStats.totalGamesWon / data.gameStats.totalGamesPlayed) * 100)
+                    : 0}%
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">ציון ממוצע:</span>
+                <span className="font-bold text-orange-600">
+                  {Math.round(data.gameStats.averageScore || 0)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">🎯 משחקים פופולריים</h2>
+            <div className="space-y-3">
+              {data.games.popular.slice(0, 5).map((game, index) => (
+                <div key={game.gameName} className="flex justify-between items-center">
+                  <span className="text-gray-600">{game.gameName}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-blue-600">{game._count.gameName}</span>
+                    <span className="text-sm text-gray-500">פעמים</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Performance Metrics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Performance */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">🚀 ביצועים</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">זמן טעינת דף</span>
-                <span className={`font-medium ${
-                  stats && stats.performance.pageLoadTime > 2000 ? 'text-red-600' : 'text-green-600'
-                }`}>
-                  {stats ? `${stats.performance.pageLoadTime}ms` : '0ms'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">זמן תגובת API</span>
-                <span className={`font-medium ${
-                  stats && stats.performance.apiResponseTime > 1000 ? 'text-red-600' : 'text-green-600'
-                }`}>
-                  {stats ? `${stats.performance.apiResponseTime}ms` : '0ms'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">שיעור שגיאות</span>
-                <span className={`font-medium ${
-                  stats && stats.performance.errorRate > 3 ? 'text-red-600' : 'text-green-600'
-                }`}>
-                  {stats ? `${stats.performance.errorRate.toFixed(1)}%` : '0%'}
-                </span>
-              </div>
+        {/* Users and Bug Reports */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">👑 משתמשים מובילים</h2>
+            <div className="space-y-3">
+              {data.users.topUsers.slice(0, 5).map((user, index) => (
+                <div key={user.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🏆</span>
+                    <div>
+                      <p className="font-bold text-gray-900">{user.name}</p>
+                      <p className="text-sm text-gray-600">רמה {user.level}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-blue-600">{user.points} נקודות</p>
+                    <p className="text-sm text-gray-500">{user.gamesWon}/{user.gamesPlayed} ניצחונות</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Games */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">🎮 משחקים</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">סה"כ משחקים</span>
-                <span className="font-medium text-blue-600">
-                  {stats ? stats.games.totalPlays : '0'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">ציון ממוצע</span>
-                <span className="font-medium text-green-600">
-                  {stats ? stats.games.averageScore : '0'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">משחק פופולרי</span>
-                <span className="font-medium text-purple-600">
-                  {stats ? stats.games.topGame : 'אין נתונים'}
-                </span>
-              </div>
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">🐛 דיווחי באגים אחרונים</h2>
+            <div className="space-y-3">
+              {data.bugReports.recent.map((report) => (
+                <div key={report.id} className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-start mb-2">
+                    <p className="font-medium text-gray-900">
+                      {report.email || 'אנונימי'}
+                    </p>
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                      report.priority === 'critical' ? 'bg-red-100 text-red-800' :
+                      report.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                      report.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {report.priority}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {report.description.length > 100 
+                      ? report.description.substring(0, 100) + '...'
+                      : report.description
+                    }
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(report.createdAt).toLocaleDateString('he-IL')}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">⚡ פעולות מהירות</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-              <div className="text-2xl mb-2">🔄</div>
-              <p className="font-medium text-blue-900">רענן נתונים</p>
-            </button>
-            <button className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-              <div className="text-2xl mb-2">📊</div>
-              <p className="font-medium text-green-900">דוח מפורט</p>
-            </button>
-            <button className="p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
-              <div className="text-2xl mb-2">🔧</div>
-              <p className="font-medium text-yellow-900">הגדרות מערכת</p>
-            </button>
+        {/* Daily Stats Chart */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">📊 פעילות יומית (7 ימים אחרונים)</h2>
+          <div className="grid grid-cols-7 gap-4">
+            {data.dailyStats.map((day, index) => (
+              <div key={day.date} className="text-center">
+                <div className="text-sm text-gray-600 mb-2">
+                  {new Date(day.date).toLocaleDateString('he-IL', { weekday: 'short' })}
+                </div>
+                <div className="space-y-2">
+                  <div className="bg-blue-100 rounded p-2">
+                    <div className="text-lg font-bold text-blue-600">{day.users}</div>
+                    <div className="text-xs text-blue-600">משתמשים</div>
+                  </div>
+                  <div className="bg-green-100 rounded p-2">
+                    <div className="text-lg font-bold text-green-600">{day.games}</div>
+                    <div className="text-xs text-green-600">משחקים</div>
+                  </div>
+                  <div className="bg-red-100 rounded p-2">
+                    <div className="text-lg font-bold text-red-600">{day.bugReports}</div>
+                    <div className="text-xs text-red-600">דיווחים</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-4 justify-center">
+          <button
+            onClick={loadDashboardData}
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            🔄 רענן נתונים
+          </button>
+          <button
+            onClick={() => router.push('/admin/bug-reports')}
+            className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            🐛 ניהול דיווחי באגים
+          </button>
+          <button
+            onClick={() => router.push('/profile')}
+            className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+          >
+            👤 חזרה לפרופיל
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
-

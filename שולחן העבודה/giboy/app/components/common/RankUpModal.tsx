@@ -72,3 +72,11 @@ export default function RankUpModal({ show, newRank, onClose }: RankUpModalProps
 
 
 
+
+
+
+
+
+
+
+

@@ -1,15 +1,28 @@
 import * as nodemailer from 'nodemailer';
 
-// הגדרות מייל (תוכל לשנות ל-Gmail, Outlook וכו')
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER || 'your-email@gmail.com',
-    pass: process.env.SMTP_PASS || 'your-app-password',
-  },
-});
+// Check if SendGrid is configured
+const useSendGrid = !!process.env.SENDGRID_API_KEY;
+
+// הגדרות מייל
+const transporter = useSendGrid 
+  ? nodemailer.createTransport({
+      host: 'smtp.sendgrid.net',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'apikey',
+        pass: process.env.SENDGRID_API_KEY,
+      },
+    })
+  : nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER || 'your-email@gmail.com',
+        pass: process.env.SMTP_PASS || 'your-app-password',
+      },
+    });
 
 export async function sendPaymentConfirmationEmail(
   userEmail: string,
@@ -389,6 +402,38 @@ export async function sendPasswordResetEmail(userEmail: string, resetToken: stri
 }
 
 // שליחת מייל התראה על מנוי שפג תוקפו
+// שליחת מייל כללי
+export async function sendEmail({ to, subject, html }: { to: string; subject: string; html: string }) {
+  console.log('📧 sendEmail function called');
+  console.log('📧 Using SendGrid:', useSendGrid);
+  console.log('📧 SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
+  
+  const mailOptions = {
+    from: useSendGrid ? `noreply@learningenglish.com` : `pajaw13300@gmail.com`, // Use verified domain for SendGrid
+    to,
+    subject,
+    html,
+  };
+
+  console.log('📧 Mail options:', { from: mailOptions.from, to: mailOptions.to, subject: mailOptions.subject.substring(0, 50) + '...' });
+
+  try {
+    console.log('🚀 Sending email via transporter...');
+    await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully to:', to);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to send email:', error);
+    console.error('❌ Error details:', {
+      name: (error as Error).name,
+      message: (error as Error).message,
+      code: (error as any).code,
+      response: (error as any).response
+    });
+    throw error;
+  }
+}
+
 export async function sendSubscriptionExpiryEmail(userEmail: string, plan: string, daysLeft: number) {
   const planNames = {
     basic: 'Basic',

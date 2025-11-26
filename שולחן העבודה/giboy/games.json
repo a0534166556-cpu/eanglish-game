@@ -4142,5 +4142,1510 @@
       "player1": [],
       "player2": []
     }
+  },
+  "game_1759952670010_p28erc9p6": {
+    "id": "game_1759952670010_p28erc9p6",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "currentWord": {
+      "word": "APPLE",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      "sentences": [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      "correctDefinitionIndex": 0,
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1759952668958",
+      "player2": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1759952670010,
+    "updatedAt": 1759952670010,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1764084108178_krvh3qco6": {
+    "id": "game_1764084108178_krvh3qco6",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentQuestion": {
+      "text": "Which is sharper: Tooth or Nail?",
+      "answer": "Tooth",
+      "explanation": "שן חדה יותר מציפורן"
+    },
+    "players": {
+      "player1": "player_1764084106932",
+      "player2": "player_1764084141289"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764084108179,
+    "updatedAt": 1764084141615,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1764085237054_a9lkwjn8k": {
+    "id": "game_1764085237054_a9lkwjn8k",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "definitions": [
+        "A building where people live",
+        "A type of music",
+        "A game",
+        "A color"
+      ],
+      "correctDefinitionIndex": 0,
+      "sentences": [
+        "I live in a big house.",
+        "The house has three bedrooms.",
+        "She bought a new house.",
+        "Our house is near the school."
+      ],
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1764085236798",
+      "player2": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764085237054,
+    "updatedAt": 1764085238490,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1764085769528_f0ulf5rb8": {
+    "id": "game_1764085769528_f0ulf5rb8",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "definitions": [
+        "A building where people live",
+        "A type of music",
+        "A game",
+        "A color"
+      ],
+      "correctDefinitionIndex": 0,
+      "sentences": [
+        "I live in a big house.",
+        "The house has three bedrooms.",
+        "She bought a new house.",
+        "Our house is near the school."
+      ],
+      "correctSentenceIndex": 0
+    },
+    "players": {
+      "player1": "player_1764085767609",
+      "player2": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764085769528,
+    "updatedAt": 1764085771572,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1764086913286_y5d6ag042": {
+    "id": "game_1764086913286_y5d6ag042",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "CAT",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A small furry animal that meows",
+        "A type of vehicle",
+        "A tool for cutting",
+        "A musical instrument"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764086912937",
+      "player2": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764086913286,
+    "updatedAt": 1764086915458,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1764087317075_pscaj3su6": {
+    "id": "game_1764087317075_pscaj3su6",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A building where people live",
+        "A type of music",
+        "A game",
+        "A color"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764087312860",
+      "player2": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764087317075,
+    "updatedAt": 1764087325450,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1764087851545_bzl42tzcx": {
+    "id": "game_1764087851545_bzl42tzcx",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A building where people live",
+        "A type of music",
+        "A game",
+        "A color"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764087849552",
+      "player2": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764087851547,
+    "updatedAt": 1764087854879,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": []
+    }
+  },
+  "game_1764089365454_o0af744pb": {
+    "id": "game_1764089365454_o0af744pb",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A building where people live",
+        "A type of music",
+        "A game",
+        "A color"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764089359947",
+      "player2": "player_1764089394648",
+      "player3": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764089365455,
+    "updatedAt": 1764089402803,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    }
+  },
+  "game_1764090147886_tmgha1s92": {
+    "id": "game_1764090147886_tmgha1s92",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "APPLE",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A type of computer made by Apple Inc.",
+        "A round object used in sports",
+        "A color between red and yellow"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764090147120",
+      "player2": "player_1764090166572",
+      "player3": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764090147887,
+    "updatedAt": 1764090472825,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    }
+  },
+  "game_1764094983368_e5gflgnpe": {
+    "id": "game_1764094983368_e5gflgnpe",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A building where people live",
+        "A type of music",
+        "A game",
+        "A color"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764094982224",
+      "player2": "player_1764095047831",
+      "player3": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764094983371,
+    "updatedAt": 1764095067206,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764095067206,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764098562933_r4tul6848": {
+    "id": "game_1764098562933_r4tul6848",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "BOOK",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "Pages bound together for reading",
+        "A type of food",
+        "A vehicle",
+        "A musical instrument"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764098557205",
+      "player2": null,
+      "player3": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764098562934,
+    "updatedAt": 1764098562934,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    }
+  },
+  "game_1764098735167_2o5a6hsgf": {
+    "id": "game_1764098735167_2o5a6hsgf",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A building where people live",
+        "A type of music",
+        "A game",
+        "A color"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764098734322",
+      "player2": "player_1764098748201",
+      "player3": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764098735168,
+    "updatedAt": 1764098767870,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764098767870,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764102167585_tffwcewnp": {
+    "id": "game_1764102167585_tffwcewnp",
+    "status": "active",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A building where people live",
+        "A type of music",
+        "A game",
+        "A color"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764102167509",
+      "player2": "player_1764102178057",
+      "player3": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764102167585,
+    "updatedAt": 1764102245757,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764102245757,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764103764537_ti71fty0x": {
+    "id": "game_1764103764537_ti71fty0x",
+    "status": "active",
+    "currentRound": 4,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "DOG",
+      "questionType": "dictation",
+      "sentenceToRecord": "I love cats.",
+      "wasRecorded": false
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764103763810",
+      "player2": "player_1764103833163",
+      "player3": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764103764537,
+    "updatedAt": 1764106834585,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764106834585,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764107619514_nq5o39iqr": {
+    "id": "game_1764107619514_nq5o39iqr",
+    "status": "active",
+    "currentRound": 4,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "APPLE",
+      "questionType": "dictation",
+      "sentenceToRecord": "He reads a book.",
+      "wasRecorded": false
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764107617519",
+      "player2": "player_1764107652458",
+      "player3": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764107619515,
+    "updatedAt": 1764107797171,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764107797171,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764123941770_464otn0co": {
+    "id": "game_1764123941770_464otn0co",
+    "status": "active",
+    "currentRound": 4,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "questionType": "dictation",
+      "sentenceToRecord": "I love cats.",
+      "wasRecorded": false
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764123940737",
+      "player2": "player_1764123960410",
+      "player3": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764123941771,
+    "updatedAt": 1764124026864,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764124026864,
+    "timeLeft": 15,
+    "questionResults": {
+      "player1": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      },
+      "player2": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      },
+      "player3": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      }
+    }
+  },
+  "game_1764124718180_17g52zywt": {
+    "id": "game_1764124718180_17g52zywt",
+    "status": "active",
+    "currentRound": 4,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "BOOK",
+      "questionType": "dictation",
+      "sentenceToRecord": "Close the door.",
+      "wasRecorded": false
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764124717918",
+      "player2": "player_1764124733941",
+      "player3": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764124718180,
+    "updatedAt": 1764124801059,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764124801059,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764185095310_hm2o3b0b3": {
+    "id": "game_1764185095310_hm2o3b0b3",
+    "status": "waiting",
+    "currentRound": 0,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "APPLE",
+      "questionType": "multiple-choice",
+      "definitions": [
+        "A red or green fruit that grows on trees",
+        "A type of computer made by Apple Inc.",
+        "A round object used in sports",
+        "A color between red and yellow"
+      ],
+      "correctDefinitionIndex": 0
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764185094310",
+      "player2": null,
+      "player3": null
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": false,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764185095311,
+    "updatedAt": 1764185095311,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    }
+  },
+  "game_1764185208565_cscudhe26": {
+    "id": "game_1764185208565_cscudhe26",
+    "status": "active",
+    "currentRound": 4,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "CAT",
+      "questionType": "dictation",
+      "sentenceToRecord": "They eat lunch.",
+      "wasRecorded": false
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764185208201",
+      "player2": "player_1764185247393",
+      "player3": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764185208566,
+    "updatedAt": 1764185305710,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764185305710,
+    "timeLeft": 15,
+    "questionResults": {
+      "player1": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      },
+      "player2": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      },
+      "player3": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      }
+    }
+  },
+  "game_1764185394047_iknt801jm": {
+    "id": "game_1764185394047_iknt801jm",
+    "status": "active",
+    "currentRound": 3,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "BOOK",
+      "questionType": "sentence-scramble",
+      "scrambledWords": [
+        "I",
+        "drink",
+        "tea"
+      ],
+      "correctSentence": "I drink tea."
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764185393691",
+      "player2": "player_1764185451542",
+      "player3": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764185394047,
+    "updatedAt": 1764185483020,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764185483020,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764185650412_ttvy2m0i6": {
+    "id": "game_1764185650412_ttvy2m0i6",
+    "status": "active",
+    "currentRound": 4,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "BOOK",
+      "questionType": "dictation",
+      "sentenceToRecord": "I drink tea.",
+      "wasRecorded": false
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764185650355",
+      "player2": "player_1764185664890",
+      "player3": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764185650412,
+    "updatedAt": 1764185960609,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764185960609,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764187852571_8ab00fdsy": {
+    "id": "game_1764187852571_8ab00fdsy",
+    "status": "active",
+    "currentRound": 3,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "APPLE",
+      "questionType": "sentence-scramble",
+      "scrambledWords": [
+        "blue",
+        "I",
+        "like"
+      ],
+      "correctSentence": "I like blue."
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764187851661",
+      "player2": "player_1764187858420",
+      "player3": "cmgrntnug0000djtcxv2ro1bf"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764187852571,
+    "updatedAt": 1764187891406,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764187891406,
+    "timeLeft": 15,
+    "questionResults": {}
+  },
+  "game_1764188148588_g475wk9d4": {
+    "id": "game_1764188148588_g475wk9d4",
+    "status": "active",
+    "currentRound": 4,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "BOOK",
+      "questionType": "dictation",
+      "sentenceToRecord": "Can you help me?",
+      "wasRecorded": false
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764188148521",
+      "player2": "player_1764188156812",
+      "player3": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764188148588,
+    "updatedAt": 1764188204688,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764188204688,
+    "timeLeft": 15,
+    "questionResults": {
+      "player1": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      },
+      "player2": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      },
+      "player3": {
+        "isCorrect": false,
+        "answerTime": 15000,
+        "speedBonus": 0,
+        "speedBonusText": "",
+        "answerTimeSeconds": 15
+      }
+    }
+  },
+  "game_1764188325857_grui4b85m": {
+    "id": "game_1764188325857_grui4b85m",
+    "status": "active",
+    "currentRound": 4,
+    "maxRounds": 5,
+    "difficulty": "easy",
+    "currentWord": {
+      "word": "HOUSE",
+      "questionType": "dictation",
+      "sentenceToRecord": "The sun is hot.",
+      "wasRecorded": false
+    },
+    "previousQuestions": [],
+    "players": {
+      "player1": "player_1764188325393",
+      "player2": "player_1764188637732",
+      "player3": "user_1763926151185_jdahvla28"
+    },
+    "playerStates": {
+      "player1": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player2": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      },
+      "player3": {
+        "score": 0,
+        "isReady": true,
+        "powerUps": {
+          "revealLetter": 3,
+          "skipWord": 2,
+          "freezeOpponent": 1
+        }
+      }
+    },
+    "lastMove": null,
+    "winner": null,
+    "createdAt": 1764188325858,
+    "updatedAt": 1764188697002,
+    "chatMessages": [],
+    "revealedLetters": {
+      "player1": [],
+      "player2": [],
+      "player3": []
+    },
+    "timerStartTime": 1764188697002,
+    "timeLeft": 20,
+    "questionResults": {}
   }
 }

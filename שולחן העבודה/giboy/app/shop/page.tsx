@@ -523,15 +523,28 @@ export default function ShopPage() {
         if (response.ok) {
           const data = await response.json();
           setCoins(data.coins);
-          // Update localStorage
+          
+          // עדכן את המשתמש ב-localStorage עם האווטארים החדשים
           user.coins = data.coins;
+          
+          // וודא שה-ownedAvatars הוא מערך
+          if (Array.isArray(data.ownedAvatars)) {
+            user.ownedAvatars = data.ownedAvatars;
+          } else {
+            user.ownedAvatars = data.ownedAvatars ? JSON.parse(data.ownedAvatars) : [];
+          }
+          
           localStorage.setItem('user', JSON.stringify(user));
-          window.dispatchEvent(new StorageEvent('storage', {
-            key: 'user',
-            newValue: JSON.stringify(user)
-          }));
+          
           console.log('✅ Avatar purchased successfully:', data);
-          alert(`🎉 קנית את האווטאר ${item.name}! לך לפרופיל לבחור בו!`);
+          console.log('✅ Updated user in localStorage:', user);
+          
+          alert(`🎉 קנית את האווטאר ${item.name}!\n\nהאווטאר נוסף לפרופיל שלך.\nלך לפרופיל כדי לבחור בו!`);
+          
+          // רענן את הדף כדי לעדכן את הרשימה
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
           return;
         } else {
           const error = await response.json();
@@ -564,15 +577,28 @@ export default function ShopPage() {
         if (response.ok) {
           const data = await response.json();
           setCoins(data.coins);
-          // Update localStorage
+          
+          // עדכן את המשתמש ב-localStorage עם התגים החדשים
           user.coins = data.coins;
+          
+          // וודא שה-ownedTags הוא מערך
+          if (Array.isArray(data.ownedTags)) {
+            user.ownedTags = data.ownedTags;
+          } else {
+            user.ownedTags = data.ownedTags ? JSON.parse(data.ownedTags) : [];
+          }
+          
           localStorage.setItem('user', JSON.stringify(user));
-          window.dispatchEvent(new StorageEvent('storage', {
-            key: 'user',
-            newValue: JSON.stringify(user)
-          }));
+          
           console.log('✅ Tag purchased successfully:', data);
-          alert(`🎉 קנית את התג ${item.name}! לך לפרופיל לבחור בו!`);
+          console.log('✅ Updated user in localStorage:', user);
+          
+          alert(`🎉 קנית את התג ${item.name}!\n\nהתג נוסף לפרופיל שלך.\nלך לפרופיל כדי לבחור בו!`);
+          
+          // רענן את הדף כדי לעדכן את הרשימה
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
           return;
         } else {
           const error = await response.json();
@@ -765,42 +791,73 @@ export default function ShopPage() {
 
       {/* Rewarded Ad Modal */}
       {showAdReward && adRewardItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
-              🎬 צפה בפרסומת
-            </h2>
-            <p className="text-gray-600 text-center mb-6">
-              צפה בפרסומת קצרה וקבל {adRewardItem.name}!
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-lg w-full mx-4">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-4">🎬</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                צפה בפרסומת
+              </h2>
+              <p className="text-gray-600">
+                צפה בפרסומת קצרה וקבל {adRewardItem.name}!
+              </p>
+            </div>
             
-            <RewardedAd
-              onReward={(reward: any) => {
-                // אחרי שצפה בפרסומת, תן לו כרטיס למשחק
-                const userStr = localStorage.getItem('user');
-                if (userStr) {
-                  const user = JSON.parse(userStr);
-                  // שמור את הכרטיס למשחק
-                  const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
-                  premiumPasses['word-clash'] = (premiumPasses['word-clash'] || 0) + 1;
-                  localStorage.setItem('premium-passes', JSON.stringify(premiumPasses));
+            <div className="mb-6">
+              <RewardedAd
+                onReward={(reward: any) => {
+                  console.log('🎬 RewardedAd onReward called:', reward);
                   
-                  alert('🎉 מעולה! קיבלת כניסה אחת למשחק וורד קלאש!');
-                }
-                setShowAdReward(false);
-                setAdRewardItem(null);
-              }}
-              rewardType="coins"
-              rewardAmount={0}
-              testMode={false}
-            />
+                  // אחרי שצפה בפרסומת, תן לו כרטיס למשחק
+                  try {
+                    // שמור את הכרטיס למשחק
+                    const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
+                    const currentPasses = premiumPasses['word-clash'] || 0;
+                    premiumPasses['word-clash'] = currentPasses + 1;
+                    localStorage.setItem('premium-passes', JSON.stringify(premiumPasses));
+                    
+                    console.log('✅ Premium pass saved:', premiumPasses);
+                    console.log('✅ Word Clash passes:', premiumPasses['word-clash']);
+                    
+                    // עדכון מיידי של כל הטאבים והדפים
+                    window.dispatchEvent(new StorageEvent('storage', {
+                      key: 'premium-passes',
+                      newValue: JSON.stringify(premiumPasses)
+                    }));
+                    
+                    // שליחת event מותאם אישית
+                    window.dispatchEvent(new CustomEvent('premiumPassUpdated', {
+                      detail: { game: 'word-clash', passes: premiumPasses['word-clash'] }
+                    }));
+                    
+                    console.log('✅ Events dispatched');
+                    
+                    // הודעה יפה יותר
+                    setTimeout(() => {
+                      const passesCount = premiumPasses['word-clash'];
+                      alert(`🎉 מעולה! קיבלת כניסה אחת למשחק וורד קלאש!\n\nיש לך כעת ${passesCount} כרטיס${passesCount > 1 ? 'ים' : ''} זמין${passesCount > 1 ? 'ים' : ''}.\n\nעכשיו תוכל לשחק במשחק Word Clash!`);
+                      setShowAdReward(false);
+                      setAdRewardItem(null);
+                    }, 500);
+                  } catch (error) {
+                    console.error('❌ Error saving premium pass:', error);
+                    alert('שגיאה בשמירת הכרטיס. נסה שוב.');
+                    setShowAdReward(false);
+                    setAdRewardItem(null);
+                  }
+                }}
+                rewardType="coins"
+                rewardAmount={0}
+                testMode={false}
+              />
+            </div>
             
             <button
               onClick={() => {
                 setShowAdReward(false);
                 setAdRewardItem(null);
               }}
-              className="mt-4 w-full py-3 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400 transition-colors duration-200 font-bold"
+              className="w-full py-3 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400 transition-colors duration-200 font-bold"
             >
               ביטול
             </button>

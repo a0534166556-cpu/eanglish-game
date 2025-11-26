@@ -5,6 +5,15 @@ import { useState } from 'react';
 
 const kidsGames = [
   {
+    id: 'classroom-game',
+    name: '🎓 משחק כיתה למורים',
+    description: 'משחק מיוחד למורים - צור משחק לכיתה שלמה!',
+    icon: '🎓',
+    color: 'from-purple-500 to-indigo-600',
+    href: '/classroom-teacher',
+    isSpecial: true
+  },
+  {
     id: 'letters-match',
     name: 'התאמת אותיות',
     description: 'התאם אות גדולה לאות קטנה!',
@@ -206,17 +215,38 @@ export default function KidsGamesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {filteredGames.map((game) => (
             <Link href={game.href} key={game.id}>
-              <div className="relative group bg-white bg-opacity-95 rounded-3xl shadow-2xl p-6 md:p-8 cursor-pointer transition-all duration-300 border-4 border-white hover:scale-105 hover:shadow-3xl hover:border-pink-300">
+              <div className={`relative group rounded-3xl shadow-2xl p-6 md:p-8 cursor-pointer transition-all duration-300 border-4 hover:scale-105 hover:shadow-3xl ${
+                game.isSpecial 
+                  ? 'bg-gradient-to-br from-purple-100 to-indigo-100 border-purple-300 hover:border-purple-400' 
+                  : 'bg-white bg-opacity-95 border-white hover:border-pink-300'
+              }`}>
+                {game.isSpecial && (
+                  <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                    מיוחד!
+                  </div>
+                )}
                 <div className={`absolute -top-10 left-1/2 -translate-x-1/2 text-6xl md:text-7xl drop-shadow-2xl select-none animate-bounce-slow`}>
                   {game.icon}
                 </div>
-                <h2 className="text-xl md:text-2xl font-extrabold text-gray-800 mb-3 mt-8 text-center">{game.name}</h2>
-                <p className="text-base md:text-lg text-gray-600 text-center mb-4 leading-relaxed">{game.description}</p>
+                <h2 className={`text-xl md:text-2xl font-extrabold mb-3 mt-8 text-center ${
+                  game.isSpecial ? 'text-purple-800' : 'text-gray-800'
+                }`}>
+                  {game.name}
+                </h2>
+                <p className={`text-base md:text-lg text-center mb-4 leading-relaxed ${
+                  game.isSpecial ? 'text-purple-600' : 'text-gray-600'
+                }`}>
+                  {game.description}
+                </p>
                 <div className={`h-3 w-3/4 mx-auto rounded-full bg-gradient-to-r ${game.color}`}></div>
                 
                 {/* כוכבים מעופפים */}
                 <div className="absolute top-2 right-2 text-2xl animate-pulse">⭐</div>
                 <div className="absolute bottom-2 left-2 text-2xl animate-pulse" style={{ animationDelay: '0.5s' }}>✨</div>
+                
+                {game.isSpecial && (
+                  <div className="absolute top-2 left-2 text-2xl animate-pulse">👨‍🏫</div>
+                )}
               </div>
             </Link>
           ))}

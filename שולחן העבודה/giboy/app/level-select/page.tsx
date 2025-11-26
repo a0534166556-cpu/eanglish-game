@@ -46,12 +46,24 @@ export default function LevelSelect() {
           ))}
         </div>
         {selectedLevel && (
-          <div className="mt-16 text-center animate-fade-in">
-            <Link href={`/games?level=${selectedLevel}`}>
-              <button className="bg-gradient-to-r from-yellow-400 via-green-400 to-blue-500 text-white px-16 py-5 rounded-full text-3xl font-extrabold shadow-2xl hover:from-blue-500 hover:to-green-400 hover:scale-105 transition-all duration-200 tracking-tight ring-4 ring-yellow-300/40 animate-glow">
-                המשך לבחירת משחק
-              </button>
-            </Link>
+          <div className="mt-16 text-center animate-fade-in space-y-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href={`/level-vocabulary?level=${selectedLevel}`}>
+                <button className="bg-gradient-to-r from-blue-400 to-purple-500 text-white px-8 py-4 rounded-full text-xl font-bold shadow-xl hover:from-purple-500 hover:to-blue-400 hover:scale-105 transition-all duration-200 tracking-tight">
+                  📚 צפה במילים של הרמה
+                </button>
+              </Link>
+              
+              <Link href={`/games?level=${selectedLevel}`}>
+                <button className="bg-gradient-to-r from-yellow-400 via-green-400 to-blue-500 text-white px-8 py-4 rounded-full text-xl font-bold shadow-xl hover:from-blue-500 hover:to-green-400 hover:scale-105 transition-all duration-200 tracking-tight ring-4 ring-yellow-300/40 animate-glow">
+                  🎮 המשך לבחירת משחק
+                </button>
+              </Link>
+            </div>
+            
+            <div className="text-white/80 text-lg max-w-2xl mx-auto">
+              💡 <strong>טיפ:</strong> מומלץ לראות את המילים לפני שמתחילים לשחק, כדי להכיר את החומר!
+            </div>
           </div>
         )}
       </div>

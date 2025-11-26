@@ -27,18 +27,18 @@ function PaymentPageContent() {
   const plan = searchParams?.get('plan') || 'basic';
 
   const plans = {
-    basic: { name: 'Basic', price: '₪9.90', period: 'לחודש' },
-    premium: { name: 'Premium', price: '₪19.90', period: 'לחודש' },
-    yearly: { name: 'Yearly', price: '₪199.90', period: 'לשנה' }
+    basic: { name: 'Basic', price: '₪10.00', period: 'לחודש' },
+    premium: { name: 'Premium', price: '₪29.90', period: 'לחודש' },
+    yearly: { name: 'Yearly', price: '₪299.90', period: 'לשנה' }
   };
 
   const selectedPlan = plans[plan as keyof typeof plans] || plans.basic;
 
   // מחירי התוכניות
   const planPrices = {
-    basic: 9.90,
-    premium: 19.90,
-    yearly: 199.90
+    basic: 10.00,
+    premium: 29.90,
+    yearly: 299.90
   };
 
   const planAmount = planPrices[plan as keyof typeof planPrices] || 9.90;
@@ -78,6 +78,14 @@ function PaymentPageContent() {
     setIsProcessing(true);
     
     try {
+      const userId = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).id : null;
+      
+      if (!userId) {
+        alert('נא להתחבר תחילה');
+        setIsProcessing(false);
+        return;
+      }
+
       // בדיקות ולידציה
       if (paymentMethod === 'bank_transfer') {
         if (!bankTransfer.transactionId || !bankTransfer.amount || !bankTransfer.date) {
@@ -92,7 +100,45 @@ function PaymentPageContent() {
           return;
         }
       }
+
+      // אם זה PayPal, שליחה לדף PayPal קודם
+      if (paymentMethod === 'paypal') {
+        const paypalResponse = await fetch('/api/payment/paypal', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: planAmount,
+            currency: 'ILS',
+            description: `מנוי ${selectedPlan.name} - ${selectedPlan.period}`,
+            plan: plan,
+            userId: userId
+          }),
+        });
+
+        const paypalData = await paypalResponse.json();
+
+        if (paypalData.success && paypalData.approvalUrl) {
+          // שמירת פרטי המנוי ב-localStorage כדי שנוכל להשלים את התהליך אחרי התשלום
+          localStorage.setItem('pending-subscription', JSON.stringify({
+            plan: plan,
+            userId: userId,
+            paymentMethod: 'paypal',
+            orderId: paypalData.orderId
+          }));
+          
+          // מעבר לדף PayPal
+          window.location.href = paypalData.approvalUrl;
+          return;
+        } else {
+          alert(`שגיאה ביצירת תשלום PayPal: ${paypalData.error || 'שגיאה לא ידועה'}`);
+          setIsProcessing(false);
+          return;
+        }
+      }
       
+      // עבור שיטות תשלום אחרות (כרטיס, העברה בנקאית, Payoneer)
       // יצירת מנוי
       const response = await fetch('/api/subscription/subscribe', {
         method: 'POST',
@@ -101,7 +147,7 @@ function PaymentPageContent() {
         },
         body: JSON.stringify({
           plan: plan,
-          userId: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!).id : null,
+          userId: userId,
           paymentMethod: paymentMethod,
           paymentDetails: paymentMethod === 'card' ? cardDetails : null,
           bankTransfer: paymentMethod === 'bank_transfer' ? {

@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getRankByPoints, calculateTotalScore, calculateProgress, RANKS, RankInfo } from '@/lib/rankSystem';
+import { getRankByPoints, getRankByUserStats, calculateTotalScore, calculateProgress, calculateRankProgress, RANKS, RankInfo, calculateLevelProgress, canLevelUp, calculateLevelRequirements } from '@/lib/rankSystem';
 import RankUpModal from '@/app/components/common/RankUpModal';
+import LevelUpModal from '@/app/components/common/LevelUpModal';
 
 interface UserData {
   id: string;
@@ -14,6 +15,7 @@ interface UserData {
   gamesWon: number;
   level: number;
   points: number;
+  isAdmin?: boolean;
   gameStat: Array<{
     id: string;
     gameName: string;
@@ -34,6 +36,10 @@ export default function ProfilePage() {
   const [ownedAvatars, setOwnedAvatars] = useState<string[]>([]);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [ownedTags, setOwnedTags] = useState<string[]>([]);
+  const [achievementsXP, setAchievementsXP] = useState<number>(0);
+  const [completedAchievementsCount, setCompletedAchievementsCount] = useState<number>(0);
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [levelUpData, setLevelUpData] = useState<{ oldLevel: number; newLevel: number } | null>(null);
   
   // Debug state changes
   useEffect(() => {
@@ -183,16 +189,80 @@ export default function ProfilePage() {
       const response = await fetch(`/api/user/${userId}`);
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Fetched user data from API:', {
+          level: data.level,
+          points: data.points,
+          gamesPlayed: data.gamesPlayed,
+          gamesWon: data.gamesWon
+        });
         setUserData(data);
         
-        // חשב דרגה נוכחית
-        const totalScore = calculateTotalScore({
-          points: data.points || 0,
+        // עדכן אווטארים ותגים מה-DB
+        if (data.avatarId) {
+          console.log('✅ Setting avatarId from fetchUserData:', data.avatarId);
+          setSelectedAvatar(data.avatarId);
+        }
+        if (data.ownedAvatars) {
+          try {
+            const avatars = typeof data.ownedAvatars === 'string' 
+              ? JSON.parse(data.ownedAvatars) 
+              : data.ownedAvatars;
+            console.log('✅ Setting ownedAvatars from fetchUserData:', avatars);
+            setOwnedAvatars(Array.isArray(avatars) ? avatars : []);
+          } catch (e) {
+            console.error('❌ Error parsing ownedAvatars in fetchUserData:', e);
+            setOwnedAvatars([]);
+          }
+        } else {
+          console.log('⚠️ No ownedAvatars in fetchUserData, keeping current state');
+        }
+        if (data.selectedTag) {
+          console.log('✅ Setting selectedTag from fetchUserData:', data.selectedTag);
+          setSelectedTag(data.selectedTag);
+        }
+        if (data.ownedTags) {
+          try {
+            const tags = typeof data.ownedTags === 'string' 
+              ? JSON.parse(data.ownedTags) 
+              : data.ownedTags;
+            console.log('✅ Setting ownedTags from fetchUserData:', tags);
+            setOwnedTags(Array.isArray(tags) ? tags : []);
+          } catch (e) {
+            console.error('❌ Error parsing ownedTags in fetchUserData:', e);
+            setOwnedTags([]);
+          }
+        } else {
+          console.log('⚠️ No ownedTags in fetchUserData, keeping current state');
+        }
+        
+        // טען הישגים שהושלמו
+        let completedCount = 0;
+        try {
+          const achievementsResponse = await fetch(`/api/achievements?userId=${userId}&sync=true`);
+          if (achievementsResponse.ok) {
+            const achievementsData = await achievementsResponse.json();
+            completedCount = achievementsData.completedAchievementsCount || 0;
+            setCompletedAchievementsCount(completedCount);
+          }
+        } catch (error) {
+          console.error('Failed to fetch achievements:', error);
+        }
+        
+        // חשב דרגה נוכחית - לפי כל הנתונים (נקודות, משחקים, ניצחונות, הישגים)
+        const basePoints = data.points || 0;
+        const rank = getRankByUserStats({
+          points: basePoints,
+          gamesPlayed: data.gamesPlayed || 0,
           gamesWon: data.gamesWon || 0,
-          gamesPlayed: data.gamesPlayed || 0
+          completedAchievementsCount: completedCount
         });
-        const rank = getRankByPoints(totalScore);
-        const progress = calculateProgress(totalScore);
+        // חשב התקדמות לדרגה הבאה לפי כל הנתונים
+        const progress = calculateRankProgress({
+          points: basePoints,
+          gamesPlayed: data.gamesPlayed || 0,
+          gamesWon: data.gamesWon || 0,
+          completedAchievementsCount: completedCount
+        });
         
         setCurrentRank(rank);
         setRankProgress(progress);
@@ -210,6 +280,108 @@ export default function ProfilePage() {
           setUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
           console.log('Profile - Updated user data from database:', updatedUser);
+        }
+        
+        // טען הישגים כדי לחשב achievementsXP ומספר הישגים שהושלמו
+        // ואז בדוק אם המשתמש יכול לעלות רמה
+        try {
+          const achievementsResponse = await fetch(`/api/achievements?userId=${userId}`);
+          if (achievementsResponse.ok) {
+            const achievementsData = await achievementsResponse.json();
+            const completedAchievements = achievementsData.achievements?.filter((a: any) => a.isCompleted) || [];
+            const totalXP = completedAchievements.reduce((sum: number, a: any) => sum + (a.xpReward || 0), 0);
+            const completedCount = completedAchievements.length;
+            setAchievementsXP(totalXP);
+            setCompletedAchievementsCount(completedCount);
+            
+            // תמיד קרא ל-API לעדכון רמה - המערכת תבדוק ותעדכן אוטומטית על פי הנתונים
+            const currentUser = user || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null);
+            if (currentUser) {
+              // חשב דרישות לרמה הנוכחית
+              const requirements = calculateLevelRequirements(data.level);
+              console.log('🔍 Level up check for level', data.level, ':', {
+                points: data.points,
+                pointsNeeded: requirements.pointsNeeded,
+                gamesWon: data.gamesWon,
+                winsNeeded: requirements.winsNeeded,
+                gamesPlayed: data.gamesPlayed,
+                gamesNeeded: requirements.gamesNeeded,
+                completedAchievementsCount: completedCount,
+                achievementsNeeded: requirements.achievementsNeeded
+              });
+              
+              const canLevel = canLevelUp({
+                points: data.points,
+                gamesWon: data.gamesWon,
+                gamesPlayed: data.gamesPlayed,
+                level: data.level,
+                completedAchievementsCount: completedCount
+              });
+              
+              console.log('✅ Can level up?', canLevel);
+              
+              // תמיד קרא ל-API לעדכון רמה - המערכת תבדוק ותעדכן אוטומטית
+              console.log('🔄 Calling update-rank API to sync level automatically...');
+              fetch('/api/user/update-rank', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id })
+              })
+              .then(updateResponse => {
+                if (updateResponse.ok) {
+                  return updateResponse.json();
+                }
+                return updateResponse.text().then(text => {
+                  throw new Error(`Failed to update rank: ${text}`);
+                });
+              })
+              .then(updateData => {
+                console.log('📊 Level update response:', updateData);
+                // רענן את הנתונים אחרי עדכון הרמה (גם אם לא עלה רמה, כדי לוודא שהנתונים מעודכנים)
+                return fetch(`/api/user/${currentUser.id}`);
+              })
+              .then(refreshResponse => {
+                if (refreshResponse && refreshResponse.ok) {
+                  return refreshResponse.json();
+                }
+                throw new Error('Failed to refresh user data');
+              })
+              .then(refreshData => {
+                if (refreshData) {
+                  console.log('🔄 Refreshed user data:', refreshData);
+                  setUserData(refreshData);
+                  // עדכן את ה-state עם הנתונים המעודכנים
+                  if (user) {
+                    const updatedUser = {
+                      ...user,
+                      level: refreshData.level,
+                      points: refreshData.points,
+                      gamesPlayed: refreshData.gamesPlayed,
+                      gamesWon: refreshData.gamesWon
+                    };
+                    setUser(updatedUser);
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                  }
+                    // אם הרמה השתנתה, הצג modal
+                    if (refreshData.level !== data.level) {
+                      console.log('🎉 Level changed from', data.level, 'to', refreshData.level, '! Showing level up modal...');
+                      setLevelUpData({
+                        oldLevel: data.level,
+                        newLevel: refreshData.level
+                      });
+                      setShowLevelUpModal(true);
+                    }
+                }
+              })
+              .catch(error => {
+                console.error('❌ Error updating rank:', error);
+              });
+            }
+          } else {
+            console.error('❌ Failed to fetch achievements');
+          }
+        } catch (error) {
+          console.error('❌ Error loading achievements:', error);
         }
       } else {
         console.error('Failed to fetch user data');
@@ -408,6 +580,11 @@ export default function ProfilePage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h1 className="text-3xl font-bold text-gray-900">{user.name}</h1>
+                    {userData?.isAdmin && (
+                      <span className="px-3 py-1 rounded-full text-white text-sm font-bold bg-gradient-to-r from-red-500 to-pink-600 flex items-center gap-1">
+                        👑 מנהל
+                      </span>
+                    )}
                     {selectedTag && (
                       <span className={`px-3 py-1 rounded-full text-white text-sm font-bold ${TAGS.find(t => t.id === selectedTag)?.color || 'bg-gray-500'}`}>
                         {TAGS.find(t => t.id === selectedTag)?.icon} {TAGS.find(t => t.id === selectedTag)?.name}
@@ -452,7 +629,7 @@ export default function ProfilePage() {
               {/* Progress Bar */}
               <div className="mt-4">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">התקדמות לרמה הבאה</span>
+                  <span className="text-sm font-medium">התקדמות לדרגה הבאה</span>
                   <span className="text-sm font-bold">{rankProgress}%</span>
                 </div>
                 <div className="w-full bg-white bg-opacity-30 rounded-full h-4 overflow-hidden">
@@ -463,14 +640,10 @@ export default function ProfilePage() {
                 </div>
                 {rankProgress < 100 && (
                   <p className="text-sm mt-2 opacity-75">
-                    המשך לשחק ולזכות כדי להגיע לרמה הבאה!
+                    המשך לשחק ולזכות כדי להגיע לדרגה הבאה!
                   </p>
                 )}
-                {rankProgress >= 100 && (
-                  <p className="text-sm mt-2 font-bold animate-pulse">
-                    🎉 אתה ברמה המקסימלית! מדהים!
-                  </p>
-                )}
+                {/* הסרת ההודעה "דרגה מקסימלית" - היא לא רלוונטית כי הדרגה והרמה הם שני דברים שונים */}
               </div>
             </div>
           )}
@@ -502,6 +675,150 @@ export default function ProfilePage() {
               <div className="text-gray-600">נקודות</div>
             </div>
           </div>
+
+          {/* Level Requirements Section */}
+          {userData && (
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl shadow-xl p-8 mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                🎯 דרישות לרמה הבאה
+              </h2>
+              
+              {(() => {
+                const levelProgress = calculateLevelProgress({
+                  points: userData.points,
+                  gamesWon: userData.gamesWon,
+                  gamesPlayed: userData.gamesPlayed,
+                  level: userData.level,
+                  achievementsXP: achievementsXP,
+                  completedAchievementsCount: completedAchievementsCount
+                });
+                
+                const canLevel = canLevelUp({
+                  points: userData.points,
+                  gamesWon: userData.gamesWon,
+                  gamesPlayed: userData.gamesPlayed,
+                  level: userData.level,
+                  achievementsXP: achievementsXP,
+                  completedAchievementsCount: completedAchievementsCount
+                });
+
+                return (
+                  <div className="space-y-4">
+                    {/* Progress Bar */}
+                    <div className="mb-6">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-lg font-semibold">התקדמות לרמה {userData.level + 1}</span>
+                        <span className="text-lg font-bold text-purple-600">{levelProgress.progress}%</span>
+                      </div>
+                      <div className="w-full bg-white bg-opacity-50 rounded-full h-6 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-purple-500 to-blue-500 h-6 rounded-full transition-all duration-500 ease-out"
+                          style={{ width: `${levelProgress.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Requirements Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Points */}
+                      <div className="bg-white rounded-xl p-4 shadow-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">נקודות</span>
+                          <span className="text-sm font-bold text-blue-600">
+                            {levelProgress.current.points} / {levelProgress.requirements.pointsNeeded}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(100, Math.max(0, (levelProgress.current.points / levelProgress.requirements.pointsNeeded) * 100))}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Games Played */}
+                      <div className="bg-white rounded-xl p-4 shadow-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">משחקים שוחקו</span>
+                          <span className="text-sm font-bold text-green-600">
+                            {levelProgress.current.games} / {levelProgress.requirements.gamesNeeded}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(100, Math.max(0, (levelProgress.current.games / levelProgress.requirements.gamesNeeded) * 100))}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Games Won */}
+                      <div className="bg-white rounded-xl p-4 shadow-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">משחקים שניצחו</span>
+                          <span className="text-sm font-bold text-orange-600">
+                            {levelProgress.current.wins} / {levelProgress.requirements.winsNeeded}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(100, Math.max(0, (levelProgress.current.wins / levelProgress.requirements.winsNeeded) * 100))}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Achievements */}
+                      <div className="bg-white rounded-xl p-4 shadow-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium text-gray-600">הישגים</span>
+                          <span className="text-sm font-bold text-purple-600">
+                            {levelProgress.current.achievements} / {levelProgress.requirements.achievementsNeeded}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(100, Math.max(0, (levelProgress.current.achievements / levelProgress.requirements.achievementsNeeded) * 100))}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Level Up Message */}
+                    {canLevel && (
+                      <div className="mt-6 p-4 bg-gradient-to-r from-green-100 to-blue-100 rounded-xl border-2 border-green-300">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🎉</span>
+                          <span className="text-lg font-bold text-green-800">
+                            אתה יכול לעלות לרמה {userData.level + 1}!
+                          </span>
+                        </div>
+                        <p className="text-green-700 mt-2">
+                          כל הדרישות מולאו! המשך לשחק כדי לעלות רמה.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Difficulty Info */}
+                    <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">⚠️</span>
+                        <span className="font-semibold text-yellow-800">מידע חשוב</span>
+                      </div>
+                      <p className="text-yellow-700 text-sm">
+                        ככל שהרמה גבוהה יותר, הדרישות גדלות באופן אקספוננציאלי. 
+                        רמה {userData.level + 1} דורשת {Math.floor(200 * Math.pow(1.5, userData.level))} נקודות, 
+                        {Math.floor(10 * Math.pow(1.5, userData.level))} משחקים, 
+                        {Math.floor(6 * Math.pow(1.5, userData.level))} ניצחונות ו-
+                        {Math.max(2, Math.floor(3 * Math.pow(1.5, userData.level)))} הישגים.
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
 
           {/* Avatars Section */}
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
@@ -680,7 +997,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link
               href="/games"
               className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
@@ -698,6 +1015,14 @@ export default function ProfilePage() {
               <p className="text-gray-600">בחרו רמה מתאימה</p>
             </Link>
             <Link
+              href="/learned-words"
+              className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+            >
+              <div className="text-4xl mb-4">📚</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">מילים נלמדות</h3>
+              <p className="text-gray-600">צפו בכל המילים שלמדתם</p>
+            </Link>
+            <Link
               href="/shop"
               className="bg-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
             >
@@ -706,6 +1031,41 @@ export default function ProfilePage() {
               <p className="text-gray-600">קנו פריטים מיוחדים</p>
             </Link>
           </div>
+
+          {/* Admin Actions - רק למנהלים */}
+          {userData?.isAdmin && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                👑 פעולות מנהל
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Link
+                  href="/admin/bug-reports"
+                  className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className="text-4xl mb-4">🐛</div>
+                  <h3 className="text-lg font-semibold mb-2">דיווחי באגים</h3>
+                  <p className="text-red-100">נהל דיווחי בעיות מהמשתמשים</p>
+                </Link>
+                <Link
+                  href="/admin/dashboard"
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className="text-4xl mb-4">📊</div>
+                  <h3 className="text-lg font-semibold mb-2">לוח בקרה</h3>
+                  <p className="text-blue-100">סטטיסטיקות ונתונים כלליים</p>
+                </Link>
+                <Link
+                  href="/admin/users"
+                  className="bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl shadow-lg p-6 text-center hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200"
+                >
+                  <div className="text-4xl mb-4">👥</div>
+                  <h3 className="text-lg font-semibold mb-2">ניהול משתמשים</h3>
+                  <p className="text-green-100">צפה וטפל במשתמשים</p>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -715,6 +1075,22 @@ export default function ProfilePage() {
           show={showRankUpModal}
           newRank={newRankInfo}
           onClose={() => setShowRankUpModal(false)}
+        />
+      )}
+
+      {/* Level Up Modal */}
+      {levelUpData && (
+        <LevelUpModal
+          show={showLevelUpModal}
+          oldLevel={levelUpData.oldLevel}
+          newLevel={levelUpData.newLevel}
+          onClose={() => {
+            setShowLevelUpModal(false);
+            // רענן את הדף אחרי סגירת ה-modal
+            setTimeout(() => {
+              window.location.reload();
+            }, 300);
+          }}
         />
       )}
     </div>

@@ -1,13 +1,24 @@
-export type Player = 'player1' | 'player2';
+export type Player = 'player1' | 'player2' | 'player3';
 export type GameStatus = 'waiting' | 'active' | 'finished';
 export type GameResult = Player | 'draw' | null;
 
+export type QuestionType = 'multiple-choice' | 'sentence-choice' | 'recording' | 'sentence-scramble' | 'dictation';
+
 export interface WordChallenge {
   word: string;
-  definitions: string[];
-  correctDefinitionIndex: number;
-  sentences: string[];
-  correctSentenceIndex: number;
+  questionType: QuestionType;
+  // For multiple-choice and sentence-choice
+  definitions?: string[];
+  correctDefinitionIndex?: number;
+  sentences?: string[];
+  correctSentenceIndex?: number;
+  // For recording and dictation
+  sentenceToRecord?: string; // המשפט להקלטה/הכתבה
+  // For sentence-scramble
+  scrambledWords?: string[]; // המילים בסדר מעורב
+  correctSentence?: string; // המשפט הנכון
+  // For dictation - track if this sentence was recorded earlier
+  wasRecorded?: boolean; // האם המשפט הזה נשאל להקלטה קודם
 }
 
 export interface PlayerState {
@@ -36,19 +47,29 @@ export interface Game {
   players: {
     player1: string | null;
     player2: string | null;
+    player3: string | null;
   };
   playerStates: {
     player1: PlayerState;
     player2: PlayerState;
+    player3: PlayerState;
   };
   winner: GameResult;
   lastMove: {
     player: Player;
-    answer: 'definition' | 'sentence';
+    answer: 'definition' | 'sentence' | 'recording' | 'sentence-scramble' | 'dictation';
     isCorrect: boolean;
     time: number;
     selectedIndex: number;
+    answerValue?: string;
   } | null;
+  timerStartTime?: number; // When the current question timer started
+  timeLeft?: number; // Current time left in seconds
+  questionResults?: {
+    player1?: { isCorrect: boolean; answerTime: number; selectedIndex?: number; speedBonus?: number; speedBonusText?: string; answerTimeSeconds?: number };
+    player2?: { isCorrect: boolean; answerTime: number; selectedIndex?: number; speedBonus?: number; speedBonusText?: string; answerTimeSeconds?: number };
+    player3?: { isCorrect: boolean; answerTime: number; selectedIndex?: number; speedBonus?: number; speedBonusText?: string; answerTimeSeconds?: number };
+  }; // Results for the current question
   createdAt: number;
   updatedAt: number;
   chatMessages: ChatMessage[];

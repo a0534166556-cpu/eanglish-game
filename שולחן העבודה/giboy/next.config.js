@@ -12,10 +12,8 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
-  // Skip failed page generation during build
-  experimental: {
-    skipTrailingSlashRedirect: true,
-  },
+  // Skip trailing slash redirect
+  skipTrailingSlashRedirect: true,
   
   // הגדרות תמונות
   images: {
@@ -33,7 +31,21 @@ const nextConfig = {
         tls: false,
       };
     }
+    
+    // שיפור ביצועים - cache
+    config.cache = {
+      type: 'filesystem',
+      buildDependencies: {
+        config: [__filename],
+      },
+    };
+    
     return config;
+  },
+  
+  // שיפור ביצועים - experimental features
+  experimental: {
+    optimizePackageImports: ['@mui/material', '@mui/icons-material'],
   },
 };
 

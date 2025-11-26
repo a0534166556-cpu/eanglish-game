@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       coins: updatedUser.coins, 
-      ownedTags: (updatedUser as any).ownedTags 
+      ownedTags: ownedTags // החזר את המערך ישירות
     });
   } catch (error) {
     console.error('Error buying tag:', error);

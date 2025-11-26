@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     console.log('LOGIN API CALLED');
@@ -43,9 +45,11 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error('LOGIN SERVER ERROR:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+    console.error('Error details:', errorMessage);
     return NextResponse.json({ 
       error: 'Server error', 
-      details: err instanceof Error ? err.message : 'Unknown error' 
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
     }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useRouter } from "next/navigation";
 import AdManager from "@/app/components/ads/AdManager";
+import useAuthUser from '@/lib/useAuthUser';
 
 type Question = {
   id: number;
@@ -13,6 +14,7 @@ type Question = {
   answer: number;
   explanation: string;
   explanationHe?: string;
+  difficulty?: 'easy' | 'medium' | 'hard' | 'extreme';
 };
 
 type Player = {
@@ -41,14 +43,14 @@ type DetailedResult = Question & {
 };
 
 const QUESTIONS: readonly Question[] = [
-  // Animals
-  { id: 1, lang: "en", category: "animals", text: "Which animal barks?", options: ["Cat", "Dog", "Cow", "Horse"], answer: 1, explanation: "A dog barks.", explanationHe: "כלב נובח." },
-  { id: 2, lang: "en", category: "animals", text: "Which animal can fly?", options: ["Dog", "Bird", "Fish", "Horse"], answer: 1, explanation: "A bird can fly.", explanationHe: "ציפור יכולה לעוף." },
-  { id: 3, lang: "en", category: "animals", text: "Which animal lives in water?", options: ["Cat", "Dog", "Fish", "Cow"], answer: 2, explanation: "A fish lives in water.", explanationHe: "דג חי במים." },
+  // Easy level - Animals (basic)
+  { id: 1, lang: "en", category: "animals", text: "Which animal barks?", options: ["Cat", "Dog", "Cow", "Horse"], answer: 1, explanation: "A dog barks.", explanationHe: "כלב נובח.", difficulty: "easy" },
+  { id: 2, lang: "en", category: "animals", text: "Which animal can fly?", options: ["Dog", "Bird", "Fish", "Horse"], answer: 1, explanation: "A bird can fly.", explanationHe: "ציפור יכולה לעוף.", difficulty: "easy" },
+  { id: 3, lang: "en", category: "animals", text: "Which animal lives in water?", options: ["Cat", "Dog", "Fish", "Cow"], answer: 2, explanation: "A fish lives in water.", explanationHe: "דג חי במים.", difficulty: "easy" },
   // Food
-  { id: 4, lang: "en", category: "food", text: "Which fruit is yellow?", options: ["Apple", "Banana", "Grape", "Cherry"], answer: 1, explanation: "A banana is yellow.", explanationHe: "בננה היא צהובה." },
-  { id: 5, lang: "en", category: "food", text: "Which food is made from flour?", options: ["Bread", "Egg", "Milk", "Apple"], answer: 0, explanation: "Bread is made from flour.", explanationHe: "לחם עשוי מקמח." },
-  { id: 6, lang: "en", category: "food", text: "Which is a vegetable?", options: ["Carrot", "Banana", "Apple", "Cake"], answer: 0, explanation: "A carrot is a vegetable.", explanationHe: "גזר הוא ירק." },
+  { id: 4, lang: "en", category: "food", text: "Which fruit is yellow?", options: ["Apple", "Banana", "Grape", "Cherry"], answer: 1, explanation: "A banana is yellow.", explanationHe: "בננה היא צהובה.", difficulty: "easy" },
+  { id: 5, lang: "en", category: "food", text: "Which food is made from flour?", options: ["Bread", "Egg", "Milk", "Apple"], answer: 0, explanation: "Bread is made from flour.", explanationHe: "לחם עשוי מקמח.", difficulty: "easy" },
+  { id: 6, lang: "en", category: "food", text: "Which is a vegetable?", options: ["Carrot", "Banana", "Apple", "Cake"], answer: 0, explanation: "A carrot is a vegetable.", explanationHe: "גזר הוא ירק.", difficulty: "easy" },
   // Colors
   { id: 7, lang: "en", category: "colors", text: "What color do you get by mixing yellow and blue?", options: ["Green", "Purple", "Orange", "Red"], answer: 0, explanation: "Yellow and blue make green.", explanationHe: "צהוב וכחול יוצרים ירוק." },
   { id: 8, lang: "en", category: "colors", text: "Which color is made by mixing red and blue?", options: ["Green", "Purple", "Orange", "Yellow"], answer: 1, explanation: "Red and blue make purple.", explanationHe: "אדום וכחול יוצרים סגול." },
@@ -156,7 +158,60 @@ const QUESTIONS: readonly Question[] = [
   { id: 92, lang: "en", category: "adjectives", text: "What is the opposite of 'young'?", options: ["Old", "New", "Small", "Big"], answer: 0, explanation: "The opposite of 'young' is 'old'.", explanationHe: "ההפך מ'צעיר' הוא 'זקן'." },
   { id: 93, lang: "en", category: "vehicles", text: "Which vehicle has a siren?", options: ["Taxi", "Ambulance", "Bus", "Bicycle"], answer: 1, explanation: "An ambulance has a siren.", explanationHe: "לאמבולנס יש סירנה." },
   { id: 94, lang: "en", category: "fruits", text: "Which fruit is green and has a pit?", options: ["Apple", "Avocado", "Banana", "Orange"], answer: 1, explanation: "An avocado is green and has a pit.", explanationHe: "אבוקדו הוא ירוק ויש לו גלעין." },
-  { id: 95, lang: "en", category: "vegetables", text: "Which vegetable is white and looks like a tree?", options: ["Carrot", "Broccoli", "Tomato", "Cucumber"], answer: 1, explanation: "Broccoli is white and looks like a tree.", explanationHe: "ברוקולי הוא לבן ונראה כמו עץ." },
+  { id: 95, lang: "en", category: "vegetables", text: "Which vegetable is white and looks like a tree?", options: ["Carrot", "Broccoli", "Tomato", "Cucumber"], answer: 1, explanation: "Broccoli is white and looks like a tree.", explanationHe: "ברוקולי הוא לבן ונראה כמו עץ.", difficulty: "easy" },
+  
+  // Medium level questions - more complex
+  { id: 96, lang: "en", category: "animals", text: "Which animal is known as the king of the jungle?", options: ["Lion", "Tiger", "Elephant", "Giraffe"], answer: 0, explanation: "The lion is known as the king of the jungle.", explanationHe: "האריה נקרא מלך החיות.", difficulty: "medium" },
+  { id: 97, lang: "en", category: "science", text: "What gas do plants produce during photosynthesis?", options: ["Carbon dioxide", "Oxygen", "Nitrogen", "Hydrogen"], answer: 1, explanation: "Plants produce oxygen during photosynthesis.", explanationHe: "צמחים מייצרים חמצן בתהליך הפוטוסינתזה.", difficulty: "medium" },
+  { id: 98, lang: "en", category: "geography", text: "Which is the largest continent by area?", options: ["Africa", "Asia", "North America", "Europe"], answer: 1, explanation: "Asia is the largest continent by area.", explanationHe: "אסיה היא היבשת הגדולה ביותר בשטח.", difficulty: "medium" },
+  { id: 99, lang: "en", category: "history", text: "In which year did World War II end?", options: ["1943", "1944", "1945", "1946"], answer: 2, explanation: "World War II ended in 1945.", explanationHe: "מלחמת העולם השנייה הסתיימה ב-1945.", difficulty: "medium" },
+  { id: 100, lang: "en", category: "literature", text: "Who wrote the play 'Romeo and Juliet'?", options: ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"], answer: 1, explanation: "William Shakespeare wrote 'Romeo and Juliet'.", explanationHe: "ויליאם שייקספיר כתב את 'רומיאו ויוליה'.", difficulty: "medium" },
+  { id: 111, lang: "en", category: "geography", text: "Which country has the most natural lakes?", options: ["Russia", "Canada", "Finland", "United States"], answer: 1, explanation: "Canada has the most natural lakes in the world.", explanationHe: "לקנדה יש הכי הרבה אגמים טבעיים בעולם.", difficulty: "medium" },
+  { id: 112, lang: "en", category: "science", text: "What is the hardest natural substance on Earth?", options: ["Diamond", "Gold", "Iron", "Quartz"], answer: 0, explanation: "Diamond is the hardest natural substance on Earth.", explanationHe: "יהלום הוא החומר הטבעי הקשה ביותר על כדור הארץ.", difficulty: "medium" },
+  { id: 113, lang: "en", category: "animals", text: "Which animal has the longest lifespan?", options: ["Elephant", "Tortoise", "Whale", "Parrot"], answer: 1, explanation: "Some tortoises can live over 150 years.", explanationHe: "חלק מהצבים יכולים לחיות מעל 150 שנה.", difficulty: "medium" },
+  { id: 114, lang: "en", category: "space", text: "Which planet has the most moons?", options: ["Jupiter", "Saturn", "Neptune", "Uranus"], answer: 1, explanation: "Saturn has the most moons in our solar system.", explanationHe: "לשבתאי יש הכי הרבה ירחים במערכת השמש שלנו.", difficulty: "medium" },
+  { id: 115, lang: "en", category: "technology", text: "What does CPU stand for?", options: ["Central Processing Unit", "Computer Processing Unit", "Central Program Unit", "Computer Program Unit"], answer: 0, explanation: "CPU stands for Central Processing Unit.", explanationHe: "CPU הוא קיצור של Central Processing Unit.", difficulty: "medium" },
+  { id: 116, lang: "en", category: "sports", text: "In which sport is a shuttlecock used?", options: ["Tennis", "Badminton", "Squash", "Table Tennis"], answer: 1, explanation: "A shuttlecock is used in badminton.", explanationHe: "שבשבת משמשת בבדמינטון.", difficulty: "medium" },
+  
+  // Hard level questions - very complex
+  { id: 101, lang: "en", category: "science", text: "What is the chemical symbol for gold?", options: ["Go", "Gd", "Au", "Ag"], answer: 2, explanation: "The chemical symbol for gold is Au (from Latin 'aurum').", explanationHe: "הסמל הכימי לזהב הוא Au (מלטינית 'aurum').", difficulty: "hard" },
+  { id: 102, lang: "en", category: "mathematics", text: "What is the value of π (pi) to two decimal places?", options: ["3.14", "3.15", "3.13", "3.16"], answer: 0, explanation: "The value of π to two decimal places is 3.14.", explanationHe: "הערך של π לשני מקומות עשרוניים הוא 3.14.", difficulty: "hard" },
+  { id: 103, lang: "en", category: "astronomy", text: "Which planet is known as the 'Red Planet'?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: 1, explanation: "Mars is known as the 'Red Planet'.", explanationHe: "מאדים נקרא 'כוכב הלכת האדום'.", difficulty: "hard" },
+  { id: 104, lang: "en", category: "biology", text: "What is the powerhouse of the cell?", options: ["Nucleus", "Mitochondria", "Ribosome", "Cytoplasm"], answer: 1, explanation: "Mitochondria are known as the powerhouse of the cell.", explanationHe: "המיטוכונדריה נקראות תחנת הכוח של התא.", difficulty: "hard" },
+  { id: 105, lang: "en", category: "physics", text: "What is the speed of light in a vacuum?", options: ["299,792,458 m/s", "300,000,000 m/s", "299,000,000 m/s", "300,792,458 m/s"], answer: 0, explanation: "The speed of light in a vacuum is 299,792,458 meters per second.", explanationHe: "מהירות האור בריק היא 299,792,458 מטרים בשנייה.", difficulty: "hard" },
+  { id: 117, lang: "en", category: "chemistry", text: "What is the pH of pure water at 25°C?", options: ["6", "7", "8", "9"], answer: 1, explanation: "Pure water has a pH of 7 at 25°C.", explanationHe: "למים טהורים יש pH של 7 ב-25°C.", difficulty: "hard" },
+  { id: 118, lang: "en", category: "mathematics", text: "What is the derivative of x²?", options: ["x", "2x", "x²", "2x²"], answer: 1, explanation: "The derivative of x² is 2x.", explanationHe: "הנגזרת של x² היא 2x.", difficulty: "hard" },
+  { id: 119, lang: "en", category: "biology", text: "How many chambers does a human heart have?", options: ["2", "3", "4", "5"], answer: 2, explanation: "A human heart has 4 chambers: 2 atria and 2 ventricles.", explanationHe: "ללב אנושי יש 4 חדרים: 2 עליות ו-2 חדרים.", difficulty: "hard" },
+  { id: 120, lang: "en", category: "astronomy", text: "What is the closest star to Earth after the Sun?", options: ["Alpha Centauri", "Proxima Centauri", "Sirius", "Vega"], answer: 1, explanation: "Proxima Centauri is the closest star to Earth after the Sun.", explanationHe: "פרוקסימה קנטאורי הוא הכוכב הקרוב ביותר לכדור הארץ אחרי השמש.", difficulty: "hard" },
+  { id: 121, lang: "en", category: "geology", text: "What type of rock is formed from cooled magma?", options: ["Sedimentary", "Metamorphic", "Igneous", "Fossil"], answer: 2, explanation: "Igneous rocks are formed from cooled magma.", explanationHe: "סלעי יסוד נוצרים ממגמה שהתקררה.", difficulty: "hard" },
+  { id: 122, lang: "en", category: "anatomy", text: "How many bones are in an adult human body?", options: ["186", "206", "226", "246"], answer: 1, explanation: "An adult human body has 206 bones.", explanationHe: "לגוף אנושי בוגר יש 206 עצמות.", difficulty: "hard" },
+  { id: 123, lang: "en", category: "chemistry", text: "What is the chemical formula for table salt?", options: ["NaCl", "KCl", "CaCl₂", "MgCl₂"], answer: 0, explanation: "Table salt is NaCl (sodium chloride).", explanationHe: "מלח שולחן הוא NaCl (נתרן כלורי).", difficulty: "hard" },
+  { id: 124, lang: "en", category: "physics", text: "What is the unit of electrical resistance?", options: ["Volt", "Ampere", "Ohm", "Watt"], answer: 2, explanation: "Electrical resistance is measured in Ohms.", explanationHe: "התנגדות חשמלית נמדדת באוהם.", difficulty: "hard" },
+  { id: 125, lang: "en", category: "biology", text: "What is the largest organ in the human body?", options: ["Liver", "Lungs", "Skin", "Brain"], answer: 2, explanation: "The skin is the largest organ in the human body.", explanationHe: "העור הוא האיבר הגדול ביותר בגוף האנושי.", difficulty: "hard" },
+  
+  // Extreme level questions - expert level
+  { id: 106, lang: "en", category: "chemistry", text: "What is the molecular formula for caffeine?", options: ["C8H10N4O2", "C7H8N4O2", "C8H10N4O3", "C9H10N4O2"], answer: 0, explanation: "The molecular formula for caffeine is C8H10N4O2.", explanationHe: "הנוסחה המולקולרית של קפאין היא C8H10N4O2.", difficulty: "extreme" },
+  { id: 107, lang: "en", category: "quantum_physics", text: "What principle states that you cannot simultaneously know both the position and momentum of a particle?", options: ["Uncertainty Principle", "Exclusion Principle", "Complementarity Principle", "Correspondence Principle"], answer: 0, explanation: "The Uncertainty Principle states this limitation.", explanationHe: "עקרון אי-הוודאות קובע את המגבלה הזו.", difficulty: "extreme" },
+  { id: 108, lang: "en", category: "advanced_math", text: "What is the derivative of e^x?", options: ["e^x", "x·e^x", "e^(x-1)", "ln(x)"], answer: 0, explanation: "The derivative of e^x is e^x.", explanationHe: "הנגזרת של e^x היא e^x.", difficulty: "extreme" },
+  { id: 109, lang: "en", category: "neuroscience", text: "Which neurotransmitter is primarily associated with pleasure and reward?", options: ["Serotonin", "Dopamine", "GABA", "Acetylcholine"], answer: 1, explanation: "Dopamine is primarily associated with pleasure and reward.", explanationHe: "דופמין קשור בעיקר לעונג ותגמול.", difficulty: "extreme" },
+  { id: 110, lang: "en", category: "advanced_biology", text: "What is the name of the process by which cells break down glucose to produce ATP?", options: ["Photosynthesis", "Cellular respiration", "Fermentation", "Glycolysis"], answer: 1, explanation: "Cellular respiration is the process of breaking down glucose to produce ATP.", explanationHe: "נשימה תאית היא התהליך של פירוק גלוקוז לייצור ATP.", difficulty: "extreme" },
+  { id: 126, lang: "en", category: "quantum_mechanics", text: "What is the name of the phenomenon where particles can be in multiple states simultaneously?", options: ["Superposition", "Entanglement", "Tunneling", "Decoherence"], answer: 0, explanation: "Superposition allows particles to exist in multiple states simultaneously.", explanationHe: "סופרפוזיציה מאפשרת לחלקיקים להתקיים במספר מצבים בו-זמנית.", difficulty: "extreme" },
+  { id: 127, lang: "en", category: "advanced_chemistry", text: "What is the name of the process by which plants convert light energy into chemical energy?", options: ["Respiration", "Photosynthesis", "Fermentation", "Digestion"], answer: 1, explanation: "Photosynthesis converts light energy into chemical energy.", explanationHe: "פוטוסינתזה ממירה אנרגיית אור לאנרגיה כימית.", difficulty: "extreme" },
+  { id: 128, lang: "en", category: "astrophysics", text: "What is the name of the boundary around a black hole from which nothing can escape?", options: ["Event horizon", "Schwarzschild radius", "Photon sphere", "Accretion disk"], answer: 0, explanation: "The event horizon is the boundary from which nothing can escape a black hole.", explanationHe: "אופק האירועים הוא הגבול שממנו שום דבר לא יכול לברוח מחור שחור.", difficulty: "extreme" },
+  { id: 129, lang: "en", category: "molecular_biology", text: "What is the name of the enzyme that synthesizes DNA from RNA?", options: ["DNA polymerase", "Reverse transcriptase", "RNA polymerase", "Helicase"], answer: 1, explanation: "Reverse transcriptase synthesizes DNA from RNA.", explanationHe: "ריברס טרנסקריפטאז מסנתז DNA מ-RNA.", difficulty: "extreme" },
+  { id: 130, lang: "en", category: "thermodynamics", text: "What is the name of the law that states entropy always increases in an isolated system?", options: ["First law of thermodynamics", "Second law of thermodynamics", "Third law of thermodynamics", "Zeroth law of thermodynamics"], answer: 1, explanation: "The second law of thermodynamics states that entropy always increases.", explanationHe: "החוק השני של התרמודינמיקה קובע שהאנטרופיה תמיד גדלה.", difficulty: "extreme" },
+  { id: 131, lang: "en", category: "genetics", text: "What is the name of the process by which genetic information is transferred from DNA to RNA?", options: ["Translation", "Transcription", "Replication", "Mutation"], answer: 1, explanation: "Transcription transfers genetic information from DNA to RNA.", explanationHe: "שעתוק מעביר מידע גנטי מ-DNA ל-RNA.", difficulty: "extreme" },
+  { id: 132, lang: "en", category: "particle_physics", text: "What is the name of the particle that gives other particles their mass?", options: ["Photon", "Higgs boson", "Neutrino", "Gluon"], answer: 1, explanation: "The Higgs boson gives other particles their mass.", explanationHe: "בוזון היגס נותן לחלקיקים אחרים את המסה שלהם.", difficulty: "extreme" },
+  { id: 133, lang: "en", category: "organic_chemistry", text: "What is the name of the functional group -COOH?", options: ["Hydroxyl", "Carbonyl", "Carboxyl", "Amino"], answer: 2, explanation: "The -COOH group is called carboxyl.", explanationHe: "הקבוצה -COOH נקראת קרבוקסיל.", difficulty: "extreme" },
+  { id: 134, lang: "en", category: "cell_biology", text: "What is the name of the organelle responsible for protein synthesis?", options: ["Mitochondria", "Ribosome", "Nucleus", "Endoplasmic reticulum"], answer: 1, explanation: "Ribosomes are responsible for protein synthesis.", explanationHe: "ריבוזומים אחראים לסינתזת חלבונים.", difficulty: "extreme" },
+  { id: 135, lang: "en", category: "electromagnetism", text: "What is the name of the law that describes the relationship between electric current and magnetic field?", options: ["Ohm's law", "Faraday's law", "Ampere's law", "Gauss's law"], answer: 2, explanation: "Ampere's law describes the relationship between current and magnetic field.", explanationHe: "חוק אמפר מתאר את הקשר בין זרם חשמלי לשדה מגנטי.", difficulty: "extreme" },
+  { id: 136, lang: "en", category: "biochemistry", text: "What is the name of the process by which cells divide?", options: ["Meiosis", "Mitosis", "Cytokinesis", "Apoptosis"], answer: 1, explanation: "Mitosis is the process by which cells divide.", explanationHe: "מיטוזה הוא התהליך שבו תאים מתחלקים.", difficulty: "extreme" },
+  { id: 137, lang: "en", category: "relativity", text: "What is the name of Einstein's theory that describes gravity as the curvature of spacetime?", options: ["Special relativity", "General relativity", "Quantum mechanics", "String theory"], answer: 1, explanation: "General relativity describes gravity as the curvature of spacetime.", explanationHe: "תורת היחסות הכללית מתארת את הכבידה כעקמומיות של מרחב-זמן.", difficulty: "extreme" },
+  { id: 138, lang: "en", category: "immunology", text: "What is the name of the cells that produce antibodies?", options: ["T cells", "B cells", "NK cells", "Macrophages"], answer: 1, explanation: "B cells produce antibodies.", explanationHe: "תאי B מייצרים נוגדנים.", difficulty: "extreme" },
+  { id: 139, lang: "en", category: "crystallography", text: "What is the name of the repeating pattern in a crystal structure?", options: ["Unit cell", "Lattice", "Crystal system", "Space group"], answer: 1, explanation: "The lattice is the repeating pattern in a crystal structure.", explanationHe: "הסריג הוא הדפוס החוזר במבנה הגביש.", difficulty: "extreme" },
+  { id: 140, lang: "en", category: "neurochemistry", text: "What is the name of the neurotransmitter that is primarily inhibitory in the central nervous system?", options: ["Glutamate", "GABA", "Dopamine", "Serotonin"], answer: 1, explanation: "GABA is the primary inhibitory neurotransmitter in the CNS.", explanationHe: "GABA הוא הנוירוטרנסמיטר המעכב העיקרי במערכת העצבים המרכזית.", difficulty: "extreme" },
+  { id: 141, lang: "en", category: "meteorology", text: "What is the name of the layer of the atmosphere where most weather occurs?", options: ["Stratosphere", "Troposphere", "Mesosphere", "Thermosphere"], answer: 1, explanation: "The troposphere is where most weather occurs.", explanationHe: "הטרופוספירה היא המקום שבו מתרחש רוב מזג האוויר.", difficulty: "extreme" },
+  { id: 142, lang: "en", category: "pharmacology", text: "What is the name of the study of how drugs interact with living organisms?", options: ["Pharmacokinetics", "Pharmacodynamics", "Pharmacology", "Toxicology"], answer: 2, explanation: "Pharmacology is the study of drug interactions with living organisms.", explanationHe: "פרמקולוגיה היא חקר האינטראקציות של תרופות עם אורגניזמים חיים.", difficulty: "extreme" },
 ];
 
 const difficulties = [
@@ -205,13 +260,18 @@ function setStats(name: string, stats: any) {
   localStorage.setItem('quiz-stats-' + name, JSON.stringify(stats));
 }
 
-function pickQuestions(all: readonly Question[], lang: 'en' | 'he', count: number, category: string) {
+function pickQuestions(all: readonly Question[], lang: 'en' | 'he', count: number, category: string, difficulty: string = 'easy') {
   let pool = all.filter(q => q.lang === lang);
   if (category && category !== "all") pool = pool.filter(q => q.category === category);
+  // אם יש רמת קושי מוגדרת, בחר רק שאלות ברמה הזו
+  if (difficulty && difficulty !== 'all') {
+    pool = pool.filter(q => q.difficulty === difficulty || !q.difficulty); // כולל שאלות ללא רמת קושי מוגדרת
+  }
   return pool.sort(() => Math.random() - 0.5).slice(0, count);
 }
 
 const Page = () => {
+  const { user } = useAuthUser();
   const [lang, setLang] = useState<'en' | 'he'>('en');
   const [difficulty, setDifficulty] = useState('easy');
   const [category, setCategory] = useState<string>("all");
@@ -240,6 +300,11 @@ const Page = () => {
   const [botThinking, setBotThinking] = useState(false);
   const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard' | 'extreme'>('medium');
   const [achievements, setAchievements] = useState<string[]>([]);
+  const [useLearnedWords, setUseLearnedWords] = useState(false);
+  const [learnedWordsData, setLearnedWordsData] = useState<Array<{word: string, translation: string}>>([]);
+  const [loadingLearnedWords, setLoadingLearnedWords] = useState(false);
+  const [selectedWordsCount, setSelectedWordsCount] = useState<number | null>(null);
+  const [selectedWords, setSelectedWords] = useState<Array<{word: string, translation: string}>>([]);
 
   // הישגים למשחק Picture Description Duel
   const DUEL_ACHIEVEMENTS = [
@@ -255,9 +320,153 @@ const Page = () => {
     { id: 'duel_master', name: 'מאסטר דו-קרב', icon: '🏆', description: 'השלם 50 דו-קרבות', reward: 1200 },
   ];
 
+  // טען מילים שנלמדו מה-API
+  const loadLearnedWords = async () => {
+    if (!user) {
+      console.log('Cannot load learned words - no user logged in');
+      return;
+    }
+    
+    try {
+      setLoadingLearnedWords(true);
+      const response = await fetch(`/api/learned-words?userId=${user.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to load learned words');
+      }
+      
+      const data = await response.json();
+      const words = data.learnedWords || [];
+      
+      setLearnedWordsData(words);
+      console.log('Loaded learned words:', words.length);
+    } catch (error) {
+      console.error('Error loading learned words:', error);
+      setLearnedWordsData([]);
+    } finally {
+      setLoadingLearnedWords(false);
+    }
+  };
+
+  // המר מילים שנלמדו לשאלות
+  const createQuestionsFromLearnedWords = (words: Array<{word: string, translation: string}>, count: number): Question[] => {
+    const questions: Question[] = [];
+    const usedWords = new Set<string>();
+    
+    words.forEach((wordData, index) => {
+      if (questions.length >= count) return;
+      if (usedWords.has(wordData.word.toLowerCase())) return;
+      
+      // צור שאלה פשוטה מהמילה
+      const word = wordData.word;
+      const translation = wordData.translation || word;
+      
+      // נסה למצוא שאלה קיימת שהמילה היא התשובה הנכונה שלה
+      const existingQuestion = QUESTIONS.find(q => 
+        q.options[q.answer]?.toLowerCase() === word.toLowerCase()
+      );
+      
+      if (existingQuestion) {
+        // נסה למצוא תרגום טוב יותר אם התרגום זהה למילה
+        let finalTranslation = translation;
+        if (translation === word || !translation || translation.trim() === '') {
+          // נסה למצוא תרגום מהשאלות הקיימות
+          const matchingQuestion = QUESTIONS.find(q => 
+            q.options[q.answer]?.toLowerCase() === word.toLowerCase()
+          );
+          if (matchingQuestion?.explanationHe) {
+            finalTranslation = matchingQuestion.explanationHe.split('-')[0]?.trim() || word;
+          } else {
+            finalTranslation = word;
+          }
+        }
+        
+        // אם יש שאלה קיימת שהמילה היא התשובה הנכונה, נשנה את הטקסט לאנגלית עם המילה בעברית
+        const modifiedQuestion = {
+          ...existingQuestion,
+          text: finalTranslation !== word
+            ? `What is the English word for "${finalTranslation}"?`
+            : `What is the English word "${word}"?`,
+          explanation: finalTranslation !== word
+            ? `The English word for "${finalTranslation}" is "${word}".`
+            : `The English word "${word}".`,
+          explanationHe: finalTranslation !== word
+            ? `המילה "${word}" פירושה "${finalTranslation}"`
+            : `המילה "${word}" היא מילה באנגלית`
+        };
+        questions.push(modifiedQuestion);
+        usedWords.add(word.toLowerCase());
+      } else {
+        // צור שאלה חדשה מהמילה
+        // נסה למצוא מילים דומות לאופציות (רק באנגלית)
+        const similarWords = QUESTIONS
+          .flatMap(q => q.options)
+          .filter(opt => opt.toLowerCase() !== word.toLowerCase())
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3);
+        
+        const options = [word, ...similarWords].sort(() => Math.random() - 0.5);
+        const answerIndex = options.indexOf(word);
+        
+        // נסה למצוא תרגום טוב יותר אם התרגום זהה למילה
+        let finalTranslation = translation;
+        if (translation === word || !translation || translation.trim() === '') {
+          // נסה למצוא תרגום מהשאלות הקיימות
+          const matchingQuestion = QUESTIONS.find(q => 
+            q.options[q.answer]?.toLowerCase() === word.toLowerCase()
+          );
+          if (matchingQuestion?.explanationHe) {
+            finalTranslation = matchingQuestion.explanationHe.split('-')[0]?.trim() || word;
+          } else {
+            finalTranslation = word;
+          }
+        }
+        
+        questions.push({
+          id: 1000 + index,
+          lang: 'en', // השאלה באנגלית
+          category: 'learned',
+          text: finalTranslation !== word
+            ? `What is the English word for "${finalTranslation}"?`
+            : `What is the English word "${word}"?`,
+          options: options as readonly string[], // האופציות באנגלית
+          answer: answerIndex,
+          explanation: finalTranslation !== word
+            ? `The English word for "${finalTranslation}" is "${word}".`
+            : `The English word "${word}".`,
+          explanationHe: finalTranslation !== word
+            ? `המילה "${word}" פירושה "${finalTranslation}"`
+            : `המילה "${word}" היא מילה באנגלית`,
+          difficulty: 'easy'
+        });
+        usedWords.add(word.toLowerCase());
+      }
+    });
+    
+    return questions.slice(0, count);
+  };
+
   useEffect(() => {
     const diff = difficulties.find(d => d.key === difficulty)!;
-    setQuestions(pickQuestions(QUESTIONS, lang, diff.count, category));
+    
+    if (useLearnedWords && learnedWordsData.length > 0) {
+      // השתמש במילים שנלמדו - אם יש כמות נבחרת, השתמש בה
+      const wordsToUse = selectedWordsCount && selectedWords.length > 0 
+        ? selectedWords.slice(0, selectedWordsCount)
+        : learnedWordsData;
+      
+      const learnedQuestions = createQuestionsFromLearnedWords(wordsToUse, diff.count);
+      if (learnedQuestions.length > 0) {
+        setQuestions(learnedQuestions);
+      } else {
+        // אם אין מספיק שאלות, השתמש בשאלות רגילות
+    setQuestions(pickQuestions(QUESTIONS, lang, diff.count, category, difficulty));
+      }
+    } else {
+      // השתמש בשאלות רגילות
+      setQuestions(pickQuestions(QUESTIONS, lang, diff.count, category, difficulty));
+    }
+    
     setCurrent(0);
     setSelected(null);
     setFeedback(null);
@@ -266,7 +475,7 @@ const Page = () => {
     setTimer(0);
     setCountdown(getInitialTime(difficulty));
     setTimeUp(false);
-  }, [difficulty, lang, category]);
+  }, [difficulty, lang, category, useLearnedWords, learnedWordsData, selectedWordsCount, selectedWords]);
 
   useEffect(() => {
     if (feedback === 'correct' && confettiRef.current) {
@@ -302,6 +511,13 @@ const Page = () => {
       console.log('Failed to load inventory from localStorage (picture-description-duel)');
     }
   }, []);
+
+  // טען מילים שנלמדו כשהמשתמש בוחר במצב learned words
+  useEffect(() => {
+    if (useLearnedWords && user && learnedWordsData.length === 0 && !loadingLearnedWords) {
+      loadLearnedWords();
+    }
+  }, [useLearnedWords, user]);
 
   const playSound = (type: 'success' | 'fail') => {
     if (type === 'success' && successAudio.current) {
@@ -351,7 +567,7 @@ const Page = () => {
     if (idx === questions[current].answer) {
       setCurrentPlayerObj(prev => ({
         ...prev,
-        score: prev.score + 10,
+        score: prev.score + 3, // 3 נקודות לתשובה נכונה
         correct: prev.correct + 1
       }));
       setFeedback('correct');
@@ -392,6 +608,18 @@ const Page = () => {
 
   function startGame() {
     console.log('startGame called', player1Input, player2Input);
+    
+    // אם משתמש במילים שנלמדו, ודא שהמילים נטענו
+    if (useLearnedWords) {
+      if (!user) {
+        alert('אנא התחבר כדי לשחק עם המילים שלמדת');
+        return;
+      }
+      if (learnedWordsData.length === 0) {
+        alert('אין מילים שנלמדו עדיין! אנא שחק במשחקים אחרים כדי ללמוד מילים.');
+        return;
+      }
+    }
     if (!player1Input) {
       alert('נא להזין שם לשחקן הראשון');
       return;
@@ -410,7 +638,21 @@ const Page = () => {
     }
     
     setGameStarted(true);
-    setQuestions(pickQuestions(QUESTIONS, lang, difficulties.find(d => d.key === difficulty)!.count, category));
+    
+    // בחר שאלות - מילים שנלמדו או רגילות
+    const diff = difficulties.find(d => d.key === difficulty)!;
+    if (useLearnedWords && learnedWordsData.length > 0) {
+      const learnedQuestions = createQuestionsFromLearnedWords(learnedWordsData, diff.count);
+      if (learnedQuestions.length > 0) {
+        setQuestions(learnedQuestions);
+      } else {
+        alert('אין מספיק שאלות מהמילים שנלמדו. משתמש בשאלות רגילות.');
+        setQuestions(pickQuestions(QUESTIONS, lang, diff.count, category, difficulty));
+      }
+    } else {
+      setQuestions(pickQuestions(QUESTIONS, lang, diff.count, category, difficulty));
+    }
+    
     setCurrent(0);
     setSelected(null);
     setFeedback(null);
@@ -487,6 +729,43 @@ const Page = () => {
     }
   }, [currentPlayer, gameMode, botThinking, finished, gameStarted]);
 
+  // עדכון ניקוד במסד נתונים כשהמשחק מסתיים
+  useEffect(() => {
+    if (finished && gameMode === 'bot' && player1.score > player2.score) {
+      // עדכון ניקוד במסד נתונים
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        
+        // הגבל את הניקוד המקסימלי למשחק - מקסימום 1000 נקודות
+        const maxScorePerGame = 1000;
+        const cappedScore = Math.min(player1.score, maxScorePerGame);
+        
+        // עדכון ניקוד במסד נתונים דרך update-stats API (יש הגבלה שם)
+        fetch('/api/games/update-stats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            gameName: 'picture-description-duel',
+            score: cappedScore,
+            won: true,
+            correctAnswers: player1.score > 0 ? 1 : 0,
+            totalQuestions: 1
+          })
+        }).then(async (response) => {
+          if (response.ok) {
+            const data = await response.json();
+            // עדכון localStorage עם הנתונים המעודכנים מהשרת (לא ישירות!)
+            if (data.user) {
+              localStorage.setItem('user', JSON.stringify(data.user));
+            }
+          }
+        }).catch(err => console.error('Error updating stats:', err));
+      }
+    }
+  }, [finished, gameMode, player1.score, player2.score]);
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-900 via-blue-700 to-purple-900">
       {/* Top Banner Ad */}
@@ -498,6 +777,122 @@ const Page = () => {
         {!gameStarted && (
           <div className="flex flex-col gap-6 items-center justify-center mt-8">
             <h2 className="text-2xl font-bold text-blue-700 mb-2">התחל קרב זוגי</h2>
+            
+            {/* בחירת מצב משחק - רגיל או מילים שנלמדו */}
+            <div className="w-full mb-4 bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+              <h3 className="text-lg font-bold text-blue-800 mb-3 text-center">בחר מקור שאלות:</h3>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setUseLearnedWords(false);
+                  }}
+                  className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                    !useLearnedWords
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white scale-105'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  🎮 שאלות רגילות
+                </button>
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      alert('אנא התחבר כדי לשחק עם המילים שלמדת');
+                      return;
+                    }
+                    setUseLearnedWords(true);
+                    if (learnedWordsData.length === 0) {
+                      loadLearnedWords();
+                    }
+                  }}
+                  disabled={!user || loadingLearnedWords}
+                  className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                    useLearnedWords
+                      ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white scale-105'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {loadingLearnedWords ? (
+                    '⏳ טוען מילים...'
+                  ) : (
+                    <>
+                      📚 שאלות מהמילים שנלמדו
+                      {learnedWordsData.length > 0 && (
+                        <span className="block text-sm mt-1">({learnedWordsData.length} מילים זמינות)</span>
+                      )}
+                    </>
+                  )}
+                </button>
+                {!user && (
+                  <p className="text-sm text-gray-600 text-center mt-2">
+                    💡 התחבר כדי לשחק עם המילים שלמדת
+                  </p>
+                )}
+              </div>
+              
+              {/* בחירת כמות מילים (רק אם יש מילים שנלמדו) */}
+              {useLearnedWords && learnedWordsData.length > 0 && !loadingLearnedWords && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                  <label className="block text-sm font-bold text-blue-800 mb-2 text-center">
+                    בחר כמות מילים למשחק:
+                  </label>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3 justify-center">
+                      <input
+                        type="radio"
+                        id="all-words-pdd"
+                        name="word-count-pdd"
+                        checked={selectedWordsCount === null}
+                        onChange={() => {
+                          setSelectedWordsCount(null);
+                          setSelectedWords([]);
+                        }}
+                        className="w-5 h-5"
+                      />
+                      <label htmlFor="all-words-pdd" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                        כל המילים ({learnedWordsData.length})
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-3 justify-center">
+                      <input
+                        type="radio"
+                        id="custom-count-pdd"
+                        name="word-count-pdd"
+                        checked={selectedWordsCount !== null}
+                        onChange={() => {
+                          setSelectedWordsCount(Math.min(40, learnedWordsData.length));
+                          setSelectedWords([...learnedWordsData].sort(() => Math.random() - 0.5));
+                        }}
+                        className="w-5 h-5"
+                      />
+                      <label htmlFor="custom-count-pdd" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                        כמות ספציפית:
+                      </label>
+                      {selectedWordsCount !== null && (
+                        <input
+                          type="number"
+                          min="1"
+                          max={learnedWordsData.length}
+                          value={selectedWordsCount}
+                          onChange={(e) => {
+                            const count = parseInt(e.target.value) || 1;
+                            const maxCount = Math.min(count, learnedWordsData.length);
+                            setSelectedWordsCount(maxCount);
+                            setSelectedWords([...learnedWordsData].sort(() => Math.random() - 0.5));
+                          }}
+                          className="w-20 px-2 py-1 border-2 border-blue-300 rounded-lg text-center font-bold"
+                        />
+                      )}
+                    </div>
+                    {selectedWordsCount !== null && (
+                      <p className="text-xs text-gray-600 text-center mt-2">
+                        המילים נבחרות אקראית מתוך {learnedWordsData.length} מילים זמינות
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* בחירת מצב משחק */}
             <div className="flex gap-4 mb-4">
@@ -584,12 +979,12 @@ const Page = () => {
             <div className="flex flex-col gap-3 mb-4">
               {questions[current]?.options?.map((opt, idx) => (
                 <button key={idx} onClick={() => handleSelect(idx)} disabled={selected !== null || (gameMode === 'bot' && currentPlayer === 2)}
-                  className={`w-full px-6 py-3 rounded-2xl font-bold text-lg shadow transition-all duration-200 border-2 flex items-center gap-2
+                  className={`w-full px-6 py-3 rounded-2xl font-bold text-lg shadow transition-all duration-200 border-2 flex items-center gap-2 answer-button
                     ${selected === idx
                       ? idx === questions[current]?.answer
-                        ? 'bg-green-200 border-green-500 text-green-900 scale-105'
-                        : 'bg-red-200 border-red-500 text-red-900 shake'
-                      : 'bg-white border-blue-200 text-blue-900 hover:bg-blue-50 hover:scale-105'}`}
+                        ? 'selected-correct scale-105'
+                        : 'selected-wrong shake'
+                      : ''}`}
                 >{opt}</button>
               ))}
             </div>
@@ -664,6 +1059,19 @@ const Page = () => {
                 <div>תשובות נכונות: {player2.correct}</div>
                 <div>טעויות: {player2.mistakes}</div>
               </div>
+              {/* הוספת ניקוד למשתמש אם הוא ניצח את הבוט */}
+              {gameMode === 'bot' && player1.score > player2.score && (
+                <div className="bg-green-100 border-2 border-green-400 rounded-xl p-4 mt-4">
+                  <div className="text-green-700 font-bold text-lg">🎉 ניצחת את הבוט!</div>
+                  <div className="text-green-600">קיבלת {player1.score} נקודות נוספות!</div>
+                </div>
+              )}
+              <button
+                onClick={resetGame}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-full font-bold text-lg mt-4 shadow-lg hover:scale-105 transition"
+              >
+                משחק חדש
+              </button>
             </div>
           </div>
         )}
@@ -679,6 +1087,30 @@ const Page = () => {
       .animate-shake { animation: shake 0.4s; }
       .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; opacity: 0; transition: opacity 0.3s; }
       .confetti.show { opacity: 1; }
+      
+      /* וידוא שכל התשובות נראות זהות עד שהמשתמש בוחר */
+      .answer-button {
+        background-color: #ffffff !important;
+        border-color: #dbeafe !important;
+        color: #1e3a8a !important;
+      }
+      
+      .answer-button:hover {
+        background-color: #eff6ff !important;
+        transform: scale(1.05) !important;
+      }
+      
+      .answer-button.selected-correct {
+        background-color: #dcfce7 !important;
+        border-color: #22c55e !important;
+        color: #166534 !important;
+      }
+      
+      .answer-button.selected-wrong {
+        background-color: #fecaca !important;
+        border-color: #ef4444 !important;
+        color: #991b1b !important;
+      }
       `}</style>
       
       {/* Bottom Banner Ad */}

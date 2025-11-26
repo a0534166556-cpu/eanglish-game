@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import useAuthUser from '@/lib/useAuthUser';
+import { getTranslationWithFallback } from '@/lib/translations';
 
 const WORD_BANK = [
   // Easy level (1-20)
@@ -46,49 +48,49 @@ const WORD_BANK = [
   { id: 38, en: 'Lion', he: 'אריה', level: 'medium' },
   { id: 39, en: 'Tiger', he: 'נמר', level: 'medium' },
   { id: 40, en: 'Bear', he: 'דוב', level: 'medium' },
-  // Hard level (41-60)
+  // Hard level (41-60) - מילים מורכבות יותר
   { id: 41, en: 'Monkey', he: 'קוף', level: 'hard' },
   { id: 42, en: 'Elephant', he: 'פיל', level: 'hard' },
   { id: 43, en: 'Giraffe', he: 'ג׳ירפה', level: 'hard' },
   { id: 44, en: 'Frog', he: 'צפרדע', level: 'hard' },
   { id: 45, en: 'Wolf', he: 'זאב', level: 'hard' },
   { id: 46, en: 'Fox', he: 'שועל', level: 'hard' },
-  { id: 47, en: 'Bread', he: 'לחם', level: 'hard' },
-  { id: 48, en: 'Cheese', he: 'גבינה', level: 'hard' },
-  { id: 49, en: 'Cake', he: 'עוגה', level: 'hard' },
-  { id: 50, en: 'Banana', he: 'בננה', level: 'hard' },
-  { id: 51, en: 'Orange', he: 'תפוז', level: 'hard' },
-  { id: 52, en: 'Grape', he: 'ענב', level: 'hard' },
-  { id: 53, en: 'Strawberry', he: 'תות', level: 'hard' },
-  { id: 54, en: 'Potato', he: 'תפוח אדמה', level: 'hard' },
-  { id: 55, en: 'Tomato', he: 'עגבניה', level: 'hard' },
-  { id: 56, en: 'Cucumber', he: 'מלפפון', level: 'hard' },
-  { id: 57, en: 'Carrot', he: 'גזר', level: 'hard' },
-  { id: 58, en: 'Onion', he: 'בצל', level: 'hard' },
-  { id: 59, en: 'Pepper', he: 'פלפל', level: 'hard' },
-  { id: 60, en: 'Rice', he: 'אורז', level: 'hard' },
+  { id: 47, en: 'Butterfly', he: 'פרפר', level: 'hard' },
+  { id: 48, en: 'Dragonfly', he: 'שפירית', level: 'hard' },
+  { id: 49, en: 'Hummingbird', he: 'יונק דבש', level: 'hard' },
+  { id: 50, en: 'Penguin', he: 'פינגווין', level: 'hard' },
+  { id: 51, en: 'Dolphin', he: 'דולפין', level: 'hard' },
+  { id: 52, en: 'Octopus', he: 'תמנון', level: 'hard' },
+  { id: 53, en: 'Jellyfish', he: 'מדוזה', level: 'hard' },
+  { id: 54, en: 'Crocodile', he: 'תנין', level: 'hard' },
+  { id: 55, en: 'Rhinoceros', he: 'קרנף', level: 'hard' },
+  { id: 56, en: 'Hippopotamus', he: 'היפופוטם', level: 'hard' },
+  { id: 57, en: 'Kangaroo', he: 'קנגורו', level: 'hard' },
+  { id: 58, en: 'Platypus', he: 'ברווזן', level: 'hard' },
+  { id: 59, en: 'Chameleon', he: 'זיקית', level: 'hard' },
+  { id: 60, en: 'Salamander', he: 'סלמנדרה', level: 'hard' },
   
-  // Easy level - Additional words (61-80)
-  { id: 61, en: 'Soup', he: 'מרק', level: 'easy' },
-  { id: 62, en: 'Red', he: 'אדום', level: 'easy' },
-  { id: 63, en: 'Blue', he: 'כחול', level: 'easy' },
-  { id: 64, en: 'Green', he: 'ירוק', level: 'easy' },
-  { id: 65, en: 'Yellow', he: 'צהוב', level: 'easy' },
-  { id: 66, en: 'Black', he: 'שחור', level: 'easy' },
-  { id: 67, en: 'White', he: 'לבן', level: 'easy' },
-  { id: 68, en: 'Pink', he: 'ורוד', level: 'easy' },
-  { id: 69, en: 'Purple', he: 'סגול', level: 'easy' },
-  { id: 70, en: 'Brown', he: 'חום', level: 'easy' },
-  { id: 71, en: 'Orange', he: 'כתום', level: 'easy' },
-  { id: 72, en: 'Gray', he: 'אפור', level: 'easy' },
-  { id: 73, en: 'Happy', he: 'שמח', level: 'easy' },
-  { id: 74, en: 'Sad', he: 'עצוב', level: 'easy' },
-  { id: 75, en: 'Angry', he: 'כועס', level: 'easy' },
-  { id: 76, en: 'Scared', he: 'מפוחד', level: 'easy' },
-  { id: 77, en: 'Excited', he: 'נרגש', level: 'easy' },
-  { id: 78, en: 'Tired', he: 'עייף', level: 'easy' },
-  { id: 79, en: 'Bored', he: 'משועמם', level: 'easy' },
-  { id: 80, en: 'Surprised', he: 'מופתע', level: 'easy' },
+  // Easy level - Additional words (61-80) - מילים בסיסיות
+  { id: 61, en: 'Bread', he: 'לחם', level: 'easy' },
+  { id: 62, en: 'Cheese', he: 'גבינה', level: 'easy' },
+  { id: 63, en: 'Cake', he: 'עוגה', level: 'easy' },
+  { id: 64, en: 'Banana', he: 'בננה', level: 'easy' },
+  { id: 65, en: 'Orange', he: 'תפוז', level: 'easy' },
+  { id: 66, en: 'Grape', he: 'ענב', level: 'easy' },
+  { id: 67, en: 'Strawberry', he: 'תות', level: 'easy' },
+  { id: 68, en: 'Potato', he: 'תפוח אדמה', level: 'easy' },
+  { id: 69, en: 'Tomato', he: 'עגבניה', level: 'easy' },
+  { id: 70, en: 'Cucumber', he: 'מלפפון', level: 'easy' },
+  { id: 71, en: 'Carrot', he: 'גזר', level: 'easy' },
+  { id: 72, en: 'Onion', he: 'בצל', level: 'easy' },
+  { id: 73, en: 'Pepper', he: 'פלפל', level: 'easy' },
+  { id: 74, en: 'Rice', he: 'אורז', level: 'easy' },
+  { id: 75, en: 'Soup', he: 'מרק', level: 'easy' },
+  { id: 76, en: 'Red', he: 'אדום', level: 'easy' },
+  { id: 77, en: 'Blue', he: 'כחול', level: 'easy' },
+  { id: 78, en: 'Green', he: 'ירוק', level: 'easy' },
+  { id: 79, en: 'Yellow', he: 'צהוב', level: 'easy' },
+  { id: 80, en: 'Black', he: 'שחור', level: 'easy' },
   
   // Medium level - Additional words (81-100)
   { id: 81, en: 'Hand', he: 'יד', level: 'medium' },
@@ -424,63 +426,67 @@ const WORD_BANK = [
   { id: 399, en: 'Spice', he: 'תבלין', level: 'medium' },
   { id: 400, en: 'Herb', he: 'עשב תבלין', level: 'medium' },
   
-  // Additional Hard Words (401-450)
-  { id: 401, en: 'Architecture', he: 'אדריכלות', level: 'hard' },
-  { id: 402, en: 'Engineering', he: 'הנדסה', level: 'hard' },
-  { id: 403, en: 'Mathematics', he: 'מתמטיקה', level: 'hard' },
-  { id: 404, en: 'Physics', he: 'פיזיקה', level: 'hard' },
-  { id: 405, en: 'Chemistry', he: 'כימיה', level: 'hard' },
-  { id: 406, en: 'Biology', he: 'ביולוגיה', level: 'hard' },
-  { id: 407, en: 'Astronomy', he: 'אסטרונומיה', level: 'hard' },
-  { id: 408, en: 'Geology', he: 'גיאולוגיה', level: 'hard' },
-  { id: 409, en: 'Psychology', he: 'פסיכולוגיה', level: 'hard' },
-  { id: 410, en: 'Philosophy', he: 'פילוסופיה', level: 'hard' },
-  { id: 411, en: 'Literature', he: 'ספרות', level: 'hard' },
-  { id: 412, en: 'Linguistics', he: 'בלשנות', level: 'hard' },
-  { id: 413, en: 'Anthropology', he: 'אנתרופולוגיה', level: 'hard' },
-  { id: 414, en: 'Sociology', he: 'סוציולוגיה', level: 'hard' },
-  { id: 415, en: 'Economics', he: 'כלכלה', level: 'hard' },
-  { id: 416, en: 'Politics', he: 'פוליטיקה', level: 'hard' },
-  { id: 417, en: 'History', he: 'היסטוריה', level: 'hard' },
-  { id: 418, en: 'Geography', he: 'גיאוגרפיה', level: 'hard' },
-  { id: 419, en: 'Medicine', he: 'רפואה', level: 'hard' },
-  { id: 420, en: 'Law', he: 'משפטים', level: 'hard' },
-  { id: 421, en: 'Education', he: 'חינוך', level: 'hard' },
-  { id: 422, en: 'Journalism', he: 'עיתונות', level: 'hard' },
-  { id: 423, en: 'Communication', he: 'תקשורת', level: 'hard' },
-  { id: 424, en: 'Marketing', he: 'שיווק', level: 'hard' },
-  { id: 425, en: 'Business', he: 'עסקים', level: 'hard' },
-  { id: 426, en: 'Management', he: 'ניהול', level: 'hard' },
-  { id: 427, en: 'Finance', he: 'פיננסים', level: 'hard' },
-  { id: 428, en: 'Accounting', he: 'חשבונאות', level: 'hard' },
-  { id: 429, en: 'Statistics', he: 'סטטיסטיקה', level: 'hard' },
-  { id: 430, en: 'Computer Science', he: 'מדעי המחשב', level: 'hard' },
-  { id: 431, en: 'Information Technology', he: 'טכנולוגיית מידע', level: 'hard' },
-  { id: 432, en: 'Artificial Intelligence', he: 'בינה מלאכותית', level: 'hard' },
-  { id: 433, en: 'Machine Learning', he: 'למידת מכונה', level: 'hard' },
-  { id: 434, en: 'Data Science', he: 'מדעי הנתונים', level: 'hard' },
-  { id: 435, en: 'Cybersecurity', he: 'אבטחת סייבר', level: 'hard' },
-  { id: 436, en: 'Software Engineering', he: 'הנדסת תוכנה', level: 'hard' },
-  { id: 437, en: 'Web Development', he: 'פיתוח אתרים', level: 'hard' },
-  { id: 438, en: 'Mobile Development', he: 'פיתוח מובייל', level: 'hard' },
-  { id: 439, en: 'Game Development', he: 'פיתוח משחקים', level: 'hard' },
-  { id: 440, en: 'User Experience', he: 'חוויית משתמש', level: 'hard' },
-  { id: 441, en: 'User Interface', he: 'ממשק משתמש', level: 'hard' },
-  { id: 442, en: 'Database', he: 'מסד נתונים', level: 'hard' },
-  { id: 443, en: 'Cloud Computing', he: 'מחשוב ענן', level: 'hard' },
-  { id: 444, en: 'Blockchain', he: 'בלוקצ׳יין', level: 'hard' },
-  { id: 445, en: 'Cryptocurrency', he: 'מטבע קריפטו', level: 'hard' },
-  { id: 446, en: 'Virtual Reality', he: 'מציאות מדומה', level: 'hard' },
-  { id: 447, en: 'Augmented Reality', he: 'מציאות רבודה', level: 'hard' },
-  { id: 448, en: 'Internet of Things', he: 'אינטרנט של הדברים', level: 'hard' },
-  { id: 449, en: 'Quantum Computing', he: 'מחשוב קוונטי', level: 'hard' },
-  { id: 450, en: 'Robotics', he: 'רובוטיקה', level: 'hard' },
+  // Extreme level (401-450) - המילים הכי קשות
+  { id: 401, en: 'Architecture', he: 'אדריכלות', level: 'extreme' },
+  { id: 402, en: 'Engineering', he: 'הנדסה', level: 'extreme' },
+  { id: 403, en: 'Mathematics', he: 'מתמטיקה', level: 'extreme' },
+  { id: 404, en: 'Physics', he: 'פיזיקה', level: 'extreme' },
+  { id: 405, en: 'Chemistry', he: 'כימיה', level: 'extreme' },
+  { id: 406, en: 'Biology', he: 'ביולוגיה', level: 'extreme' },
+  { id: 407, en: 'Astronomy', he: 'אסטרונומיה', level: 'extreme' },
+  { id: 408, en: 'Geology', he: 'גיאולוגיה', level: 'extreme' },
+  { id: 409, en: 'Psychology', he: 'פסיכולוגיה', level: 'extreme' },
+  { id: 410, en: 'Philosophy', he: 'פילוסופיה', level: 'extreme' },
+  { id: 411, en: 'Literature', he: 'ספרות', level: 'extreme' },
+  { id: 412, en: 'Linguistics', he: 'בלשנות', level: 'extreme' },
+  { id: 413, en: 'Anthropology', he: 'אנתרופולוגיה', level: 'extreme' },
+  { id: 414, en: 'Sociology', he: 'סוציולוגיה', level: 'extreme' },
+  { id: 415, en: 'Economics', he: 'כלכלה', level: 'extreme' },
+  { id: 416, en: 'Politics', he: 'פוליטיקה', level: 'extreme' },
+  { id: 417, en: 'History', he: 'היסטוריה', level: 'extreme' },
+  { id: 418, en: 'Geography', he: 'גיאוגרפיה', level: 'extreme' },
+  { id: 419, en: 'Medicine', he: 'רפואה', level: 'extreme' },
+  { id: 420, en: 'Law', he: 'משפטים', level: 'extreme' },
+  { id: 421, en: 'Education', he: 'חינוך', level: 'extreme' },
+  { id: 422, en: 'Journalism', he: 'עיתונות', level: 'extreme' },
+  { id: 423, en: 'Communication', he: 'תקשורת', level: 'extreme' },
+  { id: 424, en: 'Marketing', he: 'שיווק', level: 'extreme' },
+  { id: 425, en: 'Business', he: 'עסקים', level: 'extreme' },
+  { id: 426, en: 'Management', he: 'ניהול', level: 'extreme' },
+  { id: 427, en: 'Finance', he: 'פיננסים', level: 'extreme' },
+  { id: 428, en: 'Accounting', he: 'חשבונאות', level: 'extreme' },
+  { id: 429, en: 'Statistics', he: 'סטטיסטיקה', level: 'extreme' },
+  { id: 430, en: 'Computer Science', he: 'מדעי המחשב', level: 'extreme' },
+  { id: 431, en: 'Information Technology', he: 'טכנולוגיית מידע', level: 'extreme' },
+  { id: 432, en: 'Artificial Intelligence', he: 'בינה מלאכותית', level: 'extreme' },
+  { id: 433, en: 'Machine Learning', he: 'למידת מכונה', level: 'extreme' },
+  { id: 434, en: 'Data Science', he: 'מדעי הנתונים', level: 'extreme' },
+  { id: 435, en: 'Cybersecurity', he: 'אבטחת סייבר', level: 'extreme' },
+  { id: 436, en: 'Software Engineering', he: 'הנדסת תוכנה', level: 'extreme' },
+  { id: 437, en: 'Web Development', he: 'פיתוח אתרים', level: 'extreme' },
+  { id: 438, en: 'Mobile Development', he: 'פיתוח מובייל', level: 'extreme' },
+  { id: 439, en: 'Game Development', he: 'פיתוח משחקים', level: 'extreme' },
+  { id: 440, en: 'User Experience', he: 'חוויית משתמש', level: 'extreme' },
+  { id: 441, en: 'User Interface', he: 'ממשק משתמש', level: 'extreme' },
+  { id: 442, en: 'Database', he: 'מסד נתונים', level: 'extreme' },
+  { id: 443, en: 'Cloud Computing', he: 'מחשוב ענן', level: 'extreme' },
+  { id: 444, en: 'Blockchain', he: 'בלוקצ׳יין', level: 'extreme' },
+  { id: 445, en: 'Cryptocurrency', he: 'מטבע קריפטו', level: 'extreme' },
+  { id: 446, en: 'Virtual Reality', he: 'מציאות מדומה', level: 'extreme' },
+  { id: 447, en: 'Augmented Reality', he: 'מציאות רבודה', level: 'extreme' },
+  { id: 448, en: 'Internet of Things', he: 'אינטרנט של הדברים', level: 'extreme' },
+  { id: 449, en: 'Quantum Computing', he: 'מחשוב קוונטי', level: 'extreme' },
+  { id: 450, en: 'Robotics', he: 'רובוטיקה', level: 'extreme' },
 ];
 
 function getRandomPairs(count: number, level: string = 'easy') {
   const levelWords = WORD_BANK.filter(word => word.level === level);
+  if (levelWords.length === 0) {
+    console.warn(`No words found for level: ${level}`);
+    return [];
+  }
   const shuffled = [...levelWords].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return shuffled.slice(0, Math.min(count, levelWords.length));
 }
 
 const difficulties = [
@@ -606,6 +612,7 @@ export default function MatchingPairsWrapper() {
 
 function MatchingPairs() {
   const searchParams = useSearchParams();
+  const { user } = useAuthUser();
   const levelParam = searchParams?.get('level') || 'easy';
   // Map level names to difficulty keys
   const levelMap: Record<string, string> = {
@@ -616,7 +623,7 @@ function MatchingPairs() {
   };
   const mappedLevel = levelMap[levelParam] || 'easy';
   const [difficulty, setDifficulty] = useState(mappedLevel);
-  const [cards, setCards] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]); // התחל עם מערך ריק כדי שהאופציה תופיע
   const [flipped, setFlipped] = useState<number[]>([]);
   const [matched, setMatched] = useState<number[]>([]);
   const [score, setScore] = useState(0);
@@ -641,6 +648,13 @@ function MatchingPairs() {
   const [currentEmoji, setCurrentEmoji] = useState<string>('');
   const [emojiHistory, setEmojiHistory] = useState<{emoji: string, timestamp: number}[]>([]);
   const [achievements, setAchievements] = useState<string[]>([]);
+  const [learnedWordsList, setLearnedWordsList] = useState<Array<{word: string, translation: string}>>([]);
+  const [useLearnedWords, setUseLearnedWords] = useState(false);
+  const [learnedWordsData, setLearnedWordsData] = useState<Array<{word: string, translation: string}>>([]);
+  const [loadingLearnedWords, setLoadingLearnedWords] = useState(false);
+  const [selectedWordsCount, setSelectedWordsCount] = useState<number | null>(null);
+  const [selectedWords, setSelectedWords] = useState<Array<{id: number, en: string, he: string, level: string}>>([]);
+  const [showWordSelector, setShowWordSelector] = useState(false);
 
   // הישגים למשחק Matching Pairs
   const MATCHING_ACHIEVEMENTS = [
@@ -678,15 +692,132 @@ function MatchingPairs() {
     return () => clearInterval(interval);
   }, []);
 
+  // טען מילים שנלמדו מה-API
+  const loadLearnedWords = async () => {
+    if (!user) {
+      console.log('Cannot load learned words - no user logged in');
+      return;
+    }
+    
+    try {
+      setLoadingLearnedWords(true);
+      const response = await fetch(`/api/learned-words?userId=${user.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to load learned words');
+      }
+      
+      const data = await response.json();
+      const words = data.learnedWords || [];
+      
+      setLearnedWordsData(words);
+      console.log('Loaded learned words:', words.length);
+      
+      // אם יש כמות נבחרת, אתחל את המילים שנבחרו
+      if (selectedWordsCount !== null) {
+        const pairs = words.map((w: any, index: number) => ({
+          id: index + 1,
+          en: w.word,
+          he: w.translation || w.word,
+          level: w.difficulty || 'easy'
+        }));
+        setSelectedWords([...pairs].sort(() => Math.random() - 0.5));
+      }
+    } catch (error) {
+      console.error('Error loading learned words:', error);
+      setLearnedWordsData([]);
+    } finally {
+      setLoadingLearnedWords(false);
+    }
+  };
+
+  // טען מילים שנלמדו כשהמשתמש מחליף למצב learned words
+  useEffect(() => {
+    if (useLearnedWords && user && learnedWordsData.length === 0 && !loadingLearnedWords) {
+      loadLearnedWords();
+    }
+  }, [useLearnedWords, user]);
+  
+  // לא מתחיל אוטומטית - המשתמש צריך ללחוץ על כפתור "התחל משחק"
+
   // אתחול המשחק לפי רמת קושי
   const initGame = (diff = difficulty) => {
+    console.log('Initializing game with difficulty:', diff);
     const diffObj = difficulties.find((d) => d.key === diff) || difficulties[0];
-    const selectedPairs = getRandomPairs(diffObj.count, diff);
+    console.log('Difficulty object:', diffObj);
+    
+    let selectedPairs: any[] = [];
+    
+    if (useLearnedWords && learnedWordsData.length > 0) {
+      // השתמש במילים שנלמדו
+      console.log('Using learned words mode');
+      
+      // קודם כל בדוק אם יש מילים שנבחרו ספציפית
+      let availableWords: Array<{id: number, en: string, he: string, level: string}>;
+      if (selectedWords.length > 0) {
+        // אם יש מילים שנבחרו ספציפית, השתמש בהן
+        availableWords = selectedWords;
+      } else if (selectedWordsCount !== null) {
+        // אם יש כמות נבחרת, בחר אקראית מהמילים
+        const allWords = learnedWordsData.map((w: any, index: number) => ({
+          id: index + 1,
+          en: w.word,
+          he: w.translation || w.word,
+          level: w.difficulty || 'easy'
+        }));
+        availableWords = [...allWords].sort(() => Math.random() - 0.5).slice(0, selectedWordsCount);
+      } else {
+        // אחרת, השתמש בכל המילים
+        availableWords = learnedWordsData.map((w: any, index: number) => ({
+          id: index + 1,
+          en: w.word,
+          he: w.translation || w.word,
+          level: w.difficulty || 'easy'
+        }));
+      }
+      
+      console.log('Available learned words:', availableWords.length);
+      
+      if (availableWords.length === 0) {
+        alert('אין מילים שנלמדו עדיין! אנא שחק במשחקים אחרים כדי ללמוד מילים.');
+        return;
+      }
+      
+      // בחר מילים אקראיות מהמילים שנלמדו
+      const maxPairs = Math.min(diffObj.count, Math.floor(availableWords.length / 2));
+      selectedPairs = availableWords
+        .sort(() => Math.random() - 0.5)
+        .slice(0, maxPairs);
+      
+      console.log('Selected pairs from learned words:', selectedPairs.length);
+    } else {
+      // השתמש במילים הרגילות
+      console.log('Using regular word bank');
+    const levelWords = WORD_BANK.filter(word => word.level === diff);
+    console.log('Available words for level:', levelWords.length);
+    
+    // בחר מילים אקראיות
+      selectedPairs = levelWords
+      .sort(() => Math.random() - 0.5)
+      .slice(0, diffObj.count);
+    
+    console.log('Selected pairs:', selectedPairs);
+    }
+    
+    if (selectedPairs.length === 0) {
+      alert('אין מספיק מילים למשחק. אנא בחר רמת קושי אחרת או שחק במשחקים אחרים כדי ללמוד מילים.');
+      return;
+    }
+    
+    // צור כרטיסים
     const allCards = shuffle([
       ...selectedPairs.map((p, i) => ({ id: i * 2, text: p.en, pair: i })),
       ...selectedPairs.map((p, i) => ({ id: i * 2 + 1, text: p.he, pair: i })),
     ]);
+    
+    console.log('All cards:', allCards);
     setCards(allCards);
+    setPairs(selectedPairs);
     setFlipped([]);
     setMatched([]);
     setScore(0);
@@ -696,6 +827,7 @@ function MatchingPairs() {
     setLastMatch(null);
     setShowSolution(false);
     setNewHighScore(false);
+    setLearnedWordsList([]);
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (diffObj.key === 'extreme') {
       setExtremeTimeLeft(diffObj.timer);
@@ -728,19 +860,154 @@ function MatchingPairs() {
   }, [difficulty]);
 
   useEffect(() => {
-    // כאשר הפרמטר משתנה, אתחל את המשחק
-    setDifficulty(levelParam);
-    initGame(levelParam);
+    // כאשר הפרמטר משתנה, עדכן את רמת הקושי (אבל אל תתחיל את המשחק אוטומטית)
+    console.log('Level param changed:', levelParam);
+    setDifficulty(mappedLevel);
+    // אל תתחיל את המשחק אוטומטית - המשתמש צריך לבחור מצב משחק
+    // initGame(mappedLevel);
     // eslint-disable-next-line
   }, [levelParam]);
 
+  // פונקציה לחילוץ מילים אנגליות
+  const extractEnglishWords = (text: string): string[] => {
+    if (!text) return [];
+    const englishWords = text.match(/[A-Za-z]+/g) || [];
+    return englishWords
+      .map(word => word.toLowerCase())
+      .filter(word => 
+        word.length > 2 && 
+        !['the', 'and', 'is', 'are', 'was', 'were', 'has', 'have', 'had', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'from'].includes(word)
+      );
+  };
+
+  // אסוף את כל המילים מכל הזוגות במשחק
+  const collectAllWordsFromGame = () => {
+    const wordsMap = new Map<string, string>();
+    
+    if (!pairs || pairs.length === 0) {
+      return [];
+    }
+    
+    pairs.forEach((pair) => {
+      // הוסף את המילה האנגלית
+      if (pair.en) {
+        const enWord = pair.en.toLowerCase();
+        if (!wordsMap.has(enWord)) {
+          wordsMap.set(enWord, pair.he || enWord);
+        }
+      }
+    });
+    
+    return Array.from(wordsMap.entries()).map(([word, translation]) => ({
+      word,
+      translation: translation || word
+    }));
+  };
+
+  const saveLearnedWord = async (word: string, translation: string, isCorrect: boolean) => {
+    if (!user) {
+      console.log('Cannot save word - no user logged in');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/learned-words/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          word: word,
+          translation: translation,
+          gameName: 'MatchingPairs',
+          difficulty: difficulty,
+          isCorrect: isCorrect
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Failed to save word "${word}":`, response.status, errorData);
+        throw new Error(`Failed to save word: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Failed to save learned word "${word}":`, error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     if (matched.length === cards.length && cards.length > 0) {
+      // זה סוף המשחק - אסוף את כל המילים לפני סיום המשחק
+      console.log('Game finished! Collecting words...');
+      const allWords = collectAllWordsFromGame();
+      console.log('All collected words:', allWords);
+      
+      // עדכן את ה-state עם המילים
+      setLearnedWordsList(allWords);
+      
+      // שמור את כל המילים (רק אם המשתמש מחובר ולא משחק עם מילים שנלמדו)
+      // בדוק אילו מילים כבר קיימות במסד הנתונים לפני השמירה
+      if (user && allWords.length > 0 && !useLearnedWords) {
+        console.log('User is logged in, checking existing words before saving...');
+        (async () => {
+          try {
+            // טען את כל המילים הקיימות של המשתמש
+            const existingWordsResponse = await fetch(`/api/learned-words?userId=${user.id}`);
+            if (!existingWordsResponse.ok) {
+              throw new Error('Failed to fetch existing words');
+            }
+            const existingWordsData = await existingWordsResponse.json();
+            const existingWords = existingWordsData.learnedWords || [];
+            
+            // צור Set של מילים קיימות (בכל המשחקים) לבדיקה מהירה
+            const existingWordsSet = new Set(
+              existingWords.map((w: any) => w.word.toLowerCase())
+            );
+            
+            // סנן רק את המילים החדשות (שאינן קיימות בכל המשחקים)
+            const newWords = allWords.filter(wordData => {
+              return !existingWordsSet.has(wordData.word.toLowerCase());
+            });
+            
+            console.log(`Found ${existingWords.length} existing words, ${newWords.length} new words to save`);
+            
+            // הצג את כל המילים שלמד במשחק (לא רק החדשות)
+            // אבל שמור רק את המילים החדשות
+            setLearnedWordsList(allWords);
+            
+            // שמור רק את המילים החדשות
+            if (newWords.length > 0) {
+              console.log('Saving', newWords.length, 'new words to database...');
+              const savePromises = newWords.map(wordData => 
+          saveLearnedWord(wordData.word, wordData.translation, true)
+        );
+              const results = await Promise.allSettled(savePromises);
+          const successful = results.filter((r: any) => r.status === 'fulfilled').length;
+          const failed = results.filter((r: any) => r.status === 'rejected').length;
+          console.log(`Words save completed: ${successful} successful, ${failed} failed`);
+            } else {
+              console.log('No new words to save - all words already exist');
+            }
+          } catch (error) {
+            console.error('Error checking/saving words:', error);
+            // במקרה של שגיאה, נסה לשמור את כל המילים (fallback)
+            const savePromises = allWords.map(wordData => 
+              saveLearnedWord(wordData.word, wordData.translation, true)
+            );
+            Promise.allSettled(savePromises).catch(err => 
+              console.error('Error in fallback save:', err)
+            );
+          }
+        })();
+      }
+      
       setGameOver(true);
       setShowConfetti(true);
       if (intervalRef.current) clearInterval(intervalRef.current);
     }
-  }, [matched, cards]);
+  }, [matched, cards, pairs, user]);
 
 
   // בדוק שיא חדש
@@ -796,6 +1063,24 @@ function MatchingPairs() {
         setScore((s) => s + 10);
         setLastMatch('success');
         
+        // שמור מילה נלמדת - רק אם המשחק לא עם מילים שנלמדו
+        if (!useLearnedWords) {
+        const card = cards[first];
+        if (card && card.text) {
+          // אם זה קלף אנגלי, שמור את המילה האנגלית
+          if (card.lang === 'en') {
+            saveLearnedWord(card.text, WORD_BANK.find(w => w.en === card.text)?.he || card.text, true);
+          }
+          // אם זה קלף עברי, חפש את המילה האנגלית המתאימה
+          else if (card.lang === 'he') {
+            const englishWord = WORD_BANK.find(w => w.he === card.text);
+            if (englishWord) {
+              saveLearnedWord(englishWord.en, card.text, true);
+              }
+            }
+          }
+        }
+        
         // השמע רק את קובץ ההקלטה המקורי
         if (successAudio.current) {
           successAudio.current.currentTime = 0;
@@ -806,6 +1091,22 @@ function MatchingPairs() {
       } else {
         setScore((s) => Math.max(0, s - 2)); // עונש של 2 נקודות על טעות
         setLastMatch('fail');
+        
+        // שמור מילה שנענתה לא נכון - רק אם המשחק לא עם מילים שנלמדו
+        if (!useLearnedWords) {
+        const card = cards[first];
+        if (card && card.text) {
+          if (card.lang === 'en') {
+            saveLearnedWord(card.text, WORD_BANK.find(w => w.en === card.text)?.he || card.text, false);
+          } else if (card.lang === 'he') {
+            const englishWord = WORD_BANK.find(w => w.he === card.text);
+            if (englishWord) {
+              saveLearnedWord(englishWord.en, card.text, false);
+              }
+            }
+          }
+        }
+        
         if (failAudio.current) {
           failAudio.current.currentTime = 0;
           failAudio.current.play();
@@ -814,7 +1115,7 @@ function MatchingPairs() {
       }
       setTimeout(() => setFlipped([]), 900);
     }
-  }, [flipped, cards]);
+  }, [flipped, cards, difficulty]);
 
   const restart = () => {
     initGame(difficulty);
@@ -839,10 +1140,6 @@ function MatchingPairs() {
     }, 2000); // 2 שניות בלבד
   };
 
-  useEffect(() => {
-    setPairs(pickPairs(WORD_BANK, 15));
-    // ... שאר אתחול המשחק ...
-  }, [/* תלוי ברמת קושי/שפה אם יש */]);
 
   // טען את האינבנטורי מהחנות
   useEffect(() => {
@@ -888,6 +1185,265 @@ function MatchingPairs() {
       )}
       <div className="max-w-2xl w-full mx-auto">
         <h1 className="text-3xl md:text-4xl font-extrabold text-white text-center mb-6 drop-shadow-lg">משחק הזיכרון</h1>
+        
+        {/* בחירת מצב משחק - רגיל או מילים שנלמדו */}
+        {cards.length === 0 && (
+          <div className="mb-6 bg-white bg-opacity-90 rounded-2xl p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">בחר מצב משחק:</h2>
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={() => {
+                  setUseLearnedWords(false);
+                  initGame();
+                }}
+                className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                  !useLearnedWords
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white scale-105'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                🎮 משחק רגיל
+              </button>
+              <button
+                onClick={() => {
+                  if (!user) {
+                    alert('אנא התחבר כדי לשחק עם המילים שלמדת');
+                    return;
+                  }
+                  setUseLearnedWords(true);
+                  if (learnedWordsData.length === 0) {
+                    loadLearnedWords();
+                  }
+                }}
+                disabled={!user || loadingLearnedWords}
+                className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                  useLearnedWords
+                    ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white scale-105'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {loadingLearnedWords ? (
+                  '⏳ טוען מילים...'
+                ) : (
+                  <>
+                    📚 משחק עם מילים שנלמדו
+                    {learnedWordsData.length > 0 && (
+                      <span className="block text-sm mt-1">({learnedWordsData.length} מילים זמינות)</span>
+                    )}
+                  </>
+                )}
+              </button>
+              
+              {/* כפתור התחל משחק - רק כשמשחקים עם מילים שנלמדו */}
+              {useLearnedWords && learnedWordsData.length > 0 && !loadingLearnedWords && cards.length === 0 && (
+                <button
+                  onClick={() => {
+                    if (showWordSelector && selectedWords.length === 0) {
+                      alert('אנא בחר לפחות מילה אחת למשחק.');
+                      return;
+                    }
+                    initGame();
+                  }}
+                  disabled={showWordSelector && selectedWords.length === 0}
+                  className="mt-4 w-full bg-gradient-to-r from-green-400 to-blue-500 text-white px-12 py-4 rounded-full text-2xl font-bold shadow-lg hover:from-green-500 hover:to-blue-600 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  התחל משחק
+                </button>
+              )}
+              {!user && (
+                <p className="text-sm text-gray-600 text-center mt-2">
+                  💡 התחבר כדי לשחק עם המילים שלמדת
+                </p>
+              )}
+            </div>
+            
+            {/* בחירת רמת קושי - רק אם לא במצב מילים שנלמדו */}
+            {/* בחירת כמות מילים (רק אם יש מילים שנלמדו) */}
+            {useLearnedWords && learnedWordsData.length > 0 && !loadingLearnedWords && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                <label className="block text-sm font-bold text-blue-800 mb-2 text-center">
+                  בחר מילים למשחק:
+                </label>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3 justify-center">
+                    <input
+                      type="radio"
+                      id="all-words-mp"
+                      name="word-selection-mp"
+                      checked={selectedWordsCount === null && selectedWords.length === 0 && !showWordSelector}
+                      onChange={() => {
+                        setSelectedWordsCount(null);
+                        setSelectedWords([]);
+                        setShowWordSelector(false);
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <label htmlFor="all-words-mp" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                      כל המילים ({learnedWordsData.length})
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-3 justify-center">
+                    <input
+                      type="radio"
+                      id="custom-count-mp"
+                      name="word-selection-mp"
+                      checked={selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector}
+                      onChange={() => {
+                        const count = Math.min(40, learnedWordsData.length);
+                        setSelectedWordsCount(count);
+                        setSelectedWords([]);
+                        setShowWordSelector(false);
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <label htmlFor="custom-count-mp" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                      כמות אקראית:
+                    </label>
+                    {selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector && (
+                      <input
+                        type="number"
+                        min="1"
+                        max={learnedWordsData.length}
+                        value={selectedWordsCount}
+                        onChange={(e) => {
+                          const count = parseInt(e.target.value) || 1;
+                          const maxCount = Math.min(count, learnedWordsData.length);
+                          setSelectedWordsCount(maxCount);
+                          setSelectedWords([]);
+                        }}
+                        className="w-20 px-2 py-1 border-2 border-blue-300 rounded-lg text-center font-bold"
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 justify-center">
+                    <input
+                      type="radio"
+                      id="select-words-mp"
+                      name="word-selection-mp"
+                      checked={showWordSelector || selectedWords.length > 0}
+                      onChange={() => {
+                        setSelectedWordsCount(null);
+                        setShowWordSelector(true);
+                        if (selectedWords.length === 0) {
+                          setSelectedWords([]);
+                        }
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <label htmlFor="select-words-mp" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                      בחר מילים ספציפיות
+                    </label>
+                  </div>
+                  {selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector && (
+                    <p className="text-xs text-gray-600 text-center mt-2">
+                      המילים נבחרות אקראית מתוך {learnedWordsData.length} מילים זמינות
+                    </p>
+                  )}
+                  {selectedWords.length > 0 && (
+                    <p className="text-xs text-green-600 text-center mt-2 font-bold">
+                      נבחרו {selectedWords.length} מילים
+                    </p>
+                  )}
+                </div>
+                
+                {/* רשימת בחירת מילים */}
+                {(showWordSelector || selectedWords.length > 0) && (
+                  <div className="mt-4 max-h-60 overflow-y-auto border-2 border-blue-300 rounded-lg p-3 bg-white">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {learnedWordsData.map((wordData, index) => {
+                        const isSelected = selectedWords.some(w => w.en.toLowerCase() === wordData.word.toLowerCase());
+                        return (
+                          <label
+                            key={index}
+                            className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-blue-100 ${
+                              isSelected ? 'bg-blue-200' : ''
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  const pair = {
+                                    id: index + 1,
+                                    en: wordData.word,
+                                    he: wordData.translation || wordData.word,
+                                    level: (wordData as any).difficulty || 'easy'
+                                  };
+                                  setSelectedWords([...selectedWords, pair]);
+                                  setSelectedWordsCount(null);
+                                  setShowWordSelector(true);
+                                } else {
+                                  setSelectedWords(selectedWords.filter(w => w.en.toLowerCase() !== wordData.word.toLowerCase()));
+                                }
+                              }}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-sm font-semibold text-gray-800">{wordData.word}</span>
+                            <span className="text-xs text-gray-600">({getTranslationWithFallback(wordData.word, undefined, wordData.translation)})</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {selectedWords.length > 0 && (
+                      <div className="mt-3 flex gap-2 justify-center">
+                        <button
+                          onClick={() => {
+                            setSelectedWords([]);
+                            setShowWordSelector(false);
+                          }}
+                          className="px-4 py-1 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600"
+                        >
+                          נקה בחירה
+                        </button>
+                        <button
+                          onClick={() => {
+                            const allPairs = learnedWordsData.map((w: any, index: number) => ({
+                              id: index + 1,
+                              en: w.word,
+                              he: w.translation || w.word,
+                              level: (w as any).difficulty || 'easy'
+                            }));
+                            setSelectedWords(allPairs);
+                            setShowWordSelector(true);
+                          }}
+                          className="px-4 py-1 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600"
+                        >
+                          בחר הכל
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {!useLearnedWords && (
+              <div className="mt-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-3 text-center">רמת קושי:</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {difficulties.map((diff) => (
+                    <button
+                      key={diff.key}
+                      onClick={() => {
+                        setDifficulty(diff.key);
+                        initGame(diff.key);
+                      }}
+                      className={`px-4 py-2 rounded-xl font-bold shadow transition-all ${
+                        difficulty === diff.key
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white scale-105'
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      {diff.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
         <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
           <div className="bg-white bg-opacity-80 rounded-xl px-6 py-2 text-lg font-bold text-blue-700 shadow">ניקוד: {score}</div>
           <div className="bg-white bg-opacity-80 rounded-xl px-6 py-2 text-lg font-bold text-green-700 shadow">מהלכים: {moves}</div>
@@ -1049,23 +1605,39 @@ function MatchingPairs() {
               {' '}| מהלכים: {moves} | זמן: {difficulty === 'extreme' ? (difficulties.find(d=>d.key==='extreme')!.timer! - (extremeTimeLeft ?? 0)) : timer} שניות
             </div>
             
-            <div className="mt-4 mb-2">
-              <div className="text-white text-lg font-bold mb-2">מילים שנלמדו:</div>
-              <div className="flex flex-wrap justify-center gap-2">
-                {cards.filter((c, i) => c.id % 2 === 0).map((c, i) => {
-                  const imgSrc = IMAGE_MAP[c.text] || null;
-                  return (
-                    <span key={i} className="bg-white bg-opacity-80 rounded-full px-4 py-2 text-blue-700 font-bold shadow flex items-center gap-2">
-                      {imgSrc && <img src={imgSrc} alt={c.text} className="w-7 h-7 rounded-full object-cover border-2 border-white" />}
-                      {c.text} - {cards.find(x => x.pair === c.pair && x.id !== c.id)?.text}
-                    </span>
-                  );
-                })}
+            {/* רשימת המילים שנלמדו */}
+            {learnedWordsList && learnedWordsList.length > 0 && (
+              <div className="mb-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-300">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">📚 המילים שלמדת במשחק הזה:</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+                  {learnedWordsList.map((wordData, index) => (
+                    <div key={index} className="bg-white rounded-lg p-3 shadow-md border border-blue-200">
+                      <div className="font-bold text-blue-700 text-lg">{wordData.word}</div>
+                      <div className="text-sm text-gray-600">{wordData.translation}</div>
+                    </div>
+                  ))}
+                </div>
+                {user && (
+                  <div className="mt-4 text-sm text-gray-600">
+                    ✅ המילים נשמרו בדף המילים שנלמדו
+                  </div>
+                )}
               </div>
+            )}
+            
+            <div className="flex flex-wrap gap-4 justify-center">
+              <button onClick={restart} className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-3 rounded-full text-xl font-bold shadow-lg hover:from-blue-500 hover:to-green-400 transition-all duration-200">
+                שחק שוב
+              </button>
+              {user && learnedWordsList && learnedWordsList.length > 0 && (
+                <a
+                  href="/learned-words"
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-400 to-purple-500 text-white rounded-full text-xl font-bold shadow-lg hover:from-indigo-500 hover:to-purple-600 transition-transform transform hover:scale-105"
+                >
+                  📚 צפה בכל המילים
+                </a>
+              )}
             </div>
-            <button onClick={restart} className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-8 py-3 rounded-full text-xl font-bold shadow-lg hover:from-blue-500 hover:to-green-400 transition-all duration-200">
-              שחק שוב
-            </button>
           </div>
         )}
       </div>

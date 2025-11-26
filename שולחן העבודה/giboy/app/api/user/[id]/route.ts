@@ -26,8 +26,14 @@ export async function GET(
         points: true,
         gamesPlayed: true,
         gamesWon: true,
+        isAdmin: true,
         createdAt: true,
         updatedAt: true,
+        profileImage: true,
+        avatarId: true,
+        ownedAvatars: true,
+        selectedTag: true,
+        ownedTags: true,
         gameStat: true,
         houseItems: {
           include: {

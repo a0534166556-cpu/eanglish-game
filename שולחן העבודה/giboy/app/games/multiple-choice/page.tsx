@@ -3,6 +3,8 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from 'next/navigation';
 import useAuthUser from "@/lib/useAuthUser";
 import AdManager from "@/app/components/ads/AdManager";
+import { getTranslationWithFallback } from "@/lib/translations";
+import LevelUpModal from '@/app/components/common/LevelUpModal';
 
 interface MultipleChoiceQuestion {
   id: number;
@@ -14,300 +16,187 @@ interface MultipleChoiceQuestion {
   explanationHe?: string;
 }
 
-const QUESTIONS: MultipleChoiceQuestion[] = [
-  { id: 1, lang: "en", question: "What color is the sky?", options: ["Blue", "Red", "Green", "Yellow"], answer: "Blue", explanation: "The sky appears blue due to the scattering of sunlight." },
-  { id: 2, lang: "en", question: "Which animal barks?", options: ["Cat", "Dog", "Fish", "Bird"], answer: "Dog", explanation: "Dogs bark; cats meow." },
-  { id: 3, lang: "en", question: "What do you drink in the morning?", options: ["Tea", "Juice", "Soda", "Wine"], answer: "Tea", explanation: "Tea is a common morning drink." },
-  { id: 4, lang: "en", question: "Which is a fruit?", options: ["Apple", "Car", "Chair", "Book"], answer: "Apple", explanation: "Apple is a fruit; the others are not." },
-  { id: 5, lang: "en", question: "What do you use to write?", options: ["Pen", "Spoon", "Shoe", "Hat"], answer: "Pen" },
-  { id: 6, lang: "en", question: "Which is a day of the week?", options: ["Monday", "January", "Summer", "Dog"], answer: "Monday" },
-  { id: 7, lang: "en", question: "What do you wear on your feet?", options: ["Socks", "Gloves", "Hat", "Shirt"], answer: "Socks" },
-  { id: 8, lang: "en", question: "Which is a vegetable?", options: ["Carrot", "Apple", "Cake", "Milk"], answer: "Carrot" },
-  { id: 9, lang: "en", question: "What do you read?", options: ["Book", "Shoe", "Egg", "Tree"], answer: "Book" },
-  { id: 10, lang: "en", question: "Which is a season?", options: ["Winter", "Monday", "Dog", "Pen"], answer: "Winter" },
-  { id: 11, lang: "en", question: "What do you eat for breakfast?", options: ["Eggs", "Shoes", "Books", "Cars"], answer: "Eggs" },
-  { id: 12, lang: "en", question: "Which animal can fly?", options: ["Bird", "Dog", "Cat", "Fish"], answer: "Bird" },
-  { id: 13, lang: "en", question: "What do you use to cut paper?", options: ["Scissors", "Pen", "Book", "Spoon"], answer: "Scissors" },
-  { id: 14, lang: "en", question: "Which is a drink?", options: ["Juice", "Chair", "Hat", "Shoe"], answer: "Juice" },
-  { id: 15, lang: "en", question: "What do you wear on your head?", options: ["Hat", "Socks", "Book", "Car"], answer: "Hat" },
-  { id: 16, lang: "en", question: "Which is a pet?", options: ["Cat", "Car", "Book", "Tree"], answer: "Cat" },
-  { id: 17, lang: "en", question: "What do you use to eat soup?", options: ["Spoon", "Pen", "Shoe", "Hat"], answer: "Spoon" },
-  { id: 18, lang: "en", question: "Which is a color?", options: ["Red", "Dog", "Book", "Car"], answer: "Red" },
-  { id: 19, lang: "en", question: "What do you use to call someone?", options: ["Phone", "Book", "Shoe", "Pen"], answer: "Phone" },
-  { id: 20, lang: "en", question: "Which is a vehicle?", options: ["Car", "Dog", "Book", "Pen"], answer: "Car" },
-  { id: 21, lang: "en", question: "Which animal can swim?", options: ["Fish", "Cat", "Dog", "Bird"], answer: "Fish" },
-  { id: 22, lang: "en", question: "What do you use to open a door?", options: ["Key", "Book", "Pen", "Spoon"], answer: "Key" },
-  { id: 23, lang: "en", question: "Which is a month?", options: ["January", "Monday", "Summer", "Dog"], answer: "January" },
-  { id: 24, lang: "en", question: "What do you wear on your hands?", options: ["Gloves", "Socks", "Hat", "Shirt"], answer: "Gloves" },
-  { id: 25, lang: "en", question: "Which is a drink?", options: ["Water", "Book", "Car", "Pen"], answer: "Water" },
-  { id: 26, lang: "en", question: "What do you use to see?", options: ["Eyes", "Ears", "Nose", "Mouth"], answer: "Eyes" },
-  { id: 27, lang: "en", question: "Which is a fruit?", options: ["Banana", "Carrot", "Milk", "Dog"], answer: "Banana" },
-  { id: 28, lang: "en", question: "What do you use to listen to music?", options: ["Ears", "Eyes", "Nose", "Mouth"], answer: "Ears" },
-  { id: 29, lang: "en", question: "Which is a vegetable?", options: ["Tomato", "Apple", "Cake", "Milk"], answer: "Tomato" },
-  { id: 30, lang: "en", question: "What do you use to eat with?", options: ["Fork", "Pen", "Book", "Shoe"], answer: "Fork" },
-  { id: 31, lang: "en", question: "Which is a color?", options: ["Green", "Dog", "Book", "Car"], answer: "Green" },
-  { id: 32, lang: "en", question: "What do you use to write on?", options: ["Paper", "Spoon", "Shoe", "Hat"], answer: "Paper" },
-  { id: 33, lang: "en", question: "Which animal can fly?", options: ["Bird", "Dog", "Cat", "Fish"], answer: "Bird" },
-  { id: 34, lang: "en", question: "What do you use to cut food?", options: ["Knife", "Pen", "Book", "Spoon"], answer: "Knife" },
-  { id: 35, lang: "en", question: "Which is a pet?", options: ["Dog", "Car", "Book", "Tree"], answer: "Dog" },
-  { id: 36, lang: "en", question: "What do you use to call someone?", options: ["Phone", "Book", "Shoe", "Pen"], answer: "Phone" },
-  { id: 37, lang: "en", question: "Which is a vehicle?", options: ["Bus", "Dog", "Book", "Pen"], answer: "Bus" },
-  { id: 38, lang: "en", question: "What do you use to drink soup?", options: ["Spoon", "Pen", "Shoe", "Hat"], answer: "Spoon" },
-  { id: 39, lang: "en", question: "Which is a day of the week?", options: ["Friday", "January", "Summer", "Dog"], answer: "Friday", explanation: "Friday is a day of the week." },
-  { id: 40, lang: "en", question: "What do you wear on your body?", options: ["Shirt", "Socks", "Book", "Car"], answer: "Shirt", explanation: "A shirt is clothing worn on the body." },
-  { id: 41, lang: "en", question: "Which animal has a long neck?", options: ["Giraffe", "Dog", "Cat", "Fish"], answer: "Giraffe", explanation: "A giraffe is known for its very long neck." },
-  { id: 42, lang: "en", question: "What do you use to brush your teeth?", options: ["Toothbrush", "Spoon", "Pen", "Book"], answer: "Toothbrush", explanation: "A toothbrush is used for dental hygiene." },
-  { id: 43, lang: "en", question: "Which is a type of transport?", options: ["Train", "Dog", "Book", "Tree"], answer: "Train" },
-  { id: 44, lang: "en", question: "What do you use to see the time?", options: ["Clock", "Shoe", "Car", "Pen"], answer: "Clock" },
-  { id: 45, lang: "en", question: "Which is a farm animal?", options: ["Cow", "Dog", "Cat", "Fish"], answer: "Cow" },
-  { id: 46, lang: "en", question: "What do you use to write on a blackboard?", options: ["Chalk", "Pen", "Book", "Spoon"], answer: "Chalk" },
-  { id: 47, lang: "en", question: "Which is a wild animal?", options: ["Lion", "Dog", "Cat", "Fish"], answer: "Lion" },
-  { id: 48, lang: "en", question: "What do you use to eat ice cream?", options: ["Spoon", "Pen", "Book", "Shoe"], answer: "Spoon" },
-  { id: 49, lang: "en", question: "Which is a fruit?", options: ["Orange", "Carrot", "Milk", "Dog"], answer: "Orange" },
-  { id: 50, lang: "en", question: "What do you use to wash your hands?", options: ["Soap", "Book", "Car", "Pen"], answer: "Soap" },
-  { id: 51, lang: "en", question: "Which is a color?", options: ["Yellow", "Dog", "Book", "Car"], answer: "Yellow" },
-  { id: 52, lang: "en", question: "What do you use to make a phone call?", options: ["Phone", "Book", "Shoe", "Pen"], answer: "Phone" },
-  { id: 53, lang: "en", question: "Which is a pet?", options: ["Rabbit", "Car", "Book", "Tree"], answer: "Rabbit" },
-  { id: 54, lang: "en", question: "What do you use to drink tea?", options: ["Cup", "Pen", "Book", "Shoe"], answer: "Cup" },
-  { id: 55, lang: "en", question: "Which is a vegetable?", options: ["Cucumber", "Apple", "Cake", "Milk"], answer: "Cucumber" },
-  { id: 56, lang: "en", question: "What do you use to see far away?", options: ["Binoculars", "Spoon", "Shoe", "Hat"], answer: "Binoculars" },
-  { id: 57, lang: "en", question: "Which animal can jump?", options: ["Kangaroo", "Dog", "Cat", "Fish"], answer: "Kangaroo" },
-  { id: 58, lang: "en", question: "What do you use to eat salad?", options: ["Fork", "Pen", "Book", "Shoe"], answer: "Fork" },
-  { id: 59, lang: "en", question: "Which is a day of the week?", options: ["Sunday", "January", "Summer", "Dog"], answer: "Sunday" },
-  { id: 60, lang: "en", question: "What do you wear on your legs?", options: ["Pants", "Socks", "Book", "Car"], answer: "Pants" },
-  
-  // Easy level - Additional questions (61-80)
-  { id: 61, lang: "en", question: "What do you use to brush your hair?", options: ["Comb", "Spoon", "Book", "Car"], answer: "Comb" },
-  { id: 62, lang: "en", question: "Which is a sweet food?", options: ["Candy", "Salt", "Vinegar", "Pepper"], answer: "Candy" },
-  { id: 63, lang: "en", question: "What do you use to clean your teeth?", options: ["Toothbrush", "Spoon", "Book", "Car"], answer: "Toothbrush" },
-  { id: 64, lang: "en", question: "Which is a cold drink?", options: ["Ice cream", "Coffee", "Tea", "Soup"], answer: "Ice cream" },
-  { id: 65, lang: "en", question: "What do you use to open a can?", options: ["Can opener", "Spoon", "Book", "Car"], answer: "Can opener" },
-  { id: 66, lang: "en", question: "Which is a hot drink?", options: ["Coffee", "Ice", "Snow", "Cold water"], answer: "Coffee" },
-  { id: 67, lang: "en", question: "What do you use to measure time?", options: ["Clock", "Spoon", "Book", "Car"], answer: "Clock" },
-  { id: 68, lang: "en", question: "Which is a round fruit?", options: ["Orange", "Banana", "Carrot", "Cucumber"], answer: "Orange" },
-  { id: 69, lang: "en", question: "What do you use to cut bread?", options: ["Knife", "Spoon", "Book", "Car"], answer: "Knife" },
-  { id: 70, lang: "en", question: "Which is a green vegetable?", options: ["Lettuce", "Tomato", "Carrot", "Potato"], answer: "Lettuce" },
-  { id: 71, lang: "en", question: "What do you use to dry your hands?", options: ["Towel", "Spoon", "Book", "Car"], answer: "Towel" },
-  { id: 72, lang: "en", question: "Which is a yellow fruit?", options: ["Banana", "Apple", "Grape", "Orange"], answer: "Banana" },
-  { id: 73, lang: "en", question: "What do you use to light a room?", options: ["Lamp", "Spoon", "Book", "Car"], answer: "Lamp" },
-  { id: 74, lang: "en", question: "Which is a red fruit?", options: ["Strawberry", "Banana", "Lemon", "Lime"], answer: "Strawberry" },
-  { id: 75, lang: "en", question: "What do you use to listen to music?", options: ["Headphones", "Spoon", "Book", "Car"], answer: "Headphones" },
-  { id: 76, lang: "en", question: "Which is a white drink?", options: ["Milk", "Coffee", "Tea", "Juice"], answer: "Milk" },
-  { id: 77, lang: "en", question: "What do you use to take photos?", options: ["Camera", "Spoon", "Book", "Car"], answer: "Camera" },
-  { id: 78, lang: "en", question: "Which is a brown food?", options: ["Chocolate", "Milk", "Snow", "Ice"], answer: "Chocolate" },
-  { id: 79, lang: "en", question: "What do you use to play music?", options: ["Radio", "Spoon", "Book", "Car"], answer: "Radio" },
-  { id: 80, lang: "en", question: "Which is a purple fruit?", options: ["Grape", "Apple", "Banana", "Orange"], answer: "Grape" },
-  
-  // Medium level - Additional questions (81-120)
-  { id: 81, lang: "en", question: "What do you use to store food in the refrigerator?", options: ["Container", "Spoon", "Book", "Car"], answer: "Container" },
-  { id: 82, lang: "en", question: "Which is a type of transportation?", options: ["Bicycle", "Book", "Pen", "Spoon"], answer: "Bicycle" },
-  { id: 83, lang: "en", question: "What do you use to clean windows?", options: ["Window cleaner", "Spoon", "Book", "Car"], answer: "Window cleaner" },
-  { id: 84, lang: "en", question: "Which is a type of weather?", options: ["Rainy", "Book", "Pen", "Spoon"], answer: "Rainy" },
-  { id: 85, lang: "en", question: "What do you use to measure weight?", options: ["Scale", "Spoon", "Book", "Car"], answer: "Scale" },
-  { id: 86, lang: "en", question: "Which is a type of sport?", options: ["Tennis", "Book", "Pen", "Spoon"], answer: "Tennis" },
-  { id: 87, lang: "en", question: "What do you use to water plants?", options: ["Watering can", "Spoon", "Book", "Car"], answer: "Watering can" },
-  { id: 88, lang: "en", question: "Which is a type of building?", options: ["Hospital", "Book", "Pen", "Spoon"], answer: "Hospital" },
-  { id: 89, lang: "en", question: "What do you use to lock a door?", options: ["Lock", "Spoon", "Book", "Car"], answer: "Lock" },
-  { id: 90, lang: "en", question: "Which is a type of clothing?", options: ["Jacket", "Book", "Pen", "Spoon"], answer: "Jacket" },
-  { id: 91, lang: "en", question: "What do you use to iron clothes?", options: ["Iron", "Spoon", "Book", "Car"], answer: "Iron" },
-  { id: 92, lang: "en", question: "Which is a type of furniture?", options: ["Sofa", "Book", "Pen", "Spoon"], answer: "Sofa" },
-  { id: 93, lang: "en", question: "What do you use to vacuum the floor?", options: ["Vacuum cleaner", "Spoon", "Book", "Car"], answer: "Vacuum cleaner" },
-  { id: 94, lang: "en", question: "Which is a type of animal?", options: ["Elephant", "Book", "Pen", "Spoon"], answer: "Elephant" },
-  { id: 95, lang: "en", question: "What do you use to wash dishes?", options: ["Dish soap", "Spoon", "Book", "Car"], answer: "Dish soap" },
-  { id: 96, lang: "en", question: "Which is a type of fruit?", options: ["Pineapple", "Book", "Pen", "Spoon"], answer: "Pineapple" },
-  { id: 97, lang: "en", question: "What do you use to hang clothes?", options: ["Hanger", "Spoon", "Book", "Car"], answer: "Hanger" },
-  { id: 98, lang: "en", question: "Which is a type of vegetable?", options: ["Broccoli", "Book", "Pen", "Spoon"], answer: "Broccoli" },
-  { id: 99, lang: "en", question: "What do you use to clean your face?", options: ["Face wash", "Spoon", "Book", "Car"], answer: "Face wash" },
-  { id: 100, lang: "en", question: "Which is a type of drink?", options: ["Smoothie", "Book", "Pen", "Spoon"], answer: "Smoothie" },
-  { id: 101, lang: "en", question: "What do you use to organize papers?", options: ["Folder", "Spoon", "Book", "Car"], answer: "Folder" },
-  { id: 102, lang: "en", question: "Which is a type of tool?", options: ["Hammer", "Book", "Pen", "Spoon"], answer: "Hammer" },
-  { id: 103, lang: "en", question: "What do you use to measure temperature?", options: ["Thermometer", "Spoon", "Book", "Car"], answer: "Thermometer" },
-  { id: 104, lang: "en", question: "Which is a type of flower?", options: ["Rose", "Book", "Pen", "Spoon"], answer: "Rose" },
-  { id: 105, lang: "en", question: "What do you use to cut paper?", options: ["Scissors", "Spoon", "Book", "Car"], answer: "Scissors" },
-  { id: 106, lang: "en", question: "Which is a type of bird?", options: ["Eagle", "Book", "Pen", "Spoon"], answer: "Eagle" },
-  { id: 107, lang: "en", question: "What do you use to stick things together?", options: ["Glue", "Spoon", "Book", "Car"], answer: "Glue" },
-  { id: 108, lang: "en", question: "Which is a type of fish?", options: ["Salmon", "Book", "Pen", "Spoon"], answer: "Salmon" },
-  { id: 109, lang: "en", question: "What do you use to wrap gifts?", options: ["Wrapping paper", "Spoon", "Book", "Car"], answer: "Wrapping paper" },
-  { id: 110, lang: "en", question: "Which is a type of tree?", options: ["Oak", "Book", "Pen", "Spoon"], answer: "Oak" },
-  { id: 111, lang: "en", question: "What do you use to clean your ears?", options: ["Cotton swab", "Spoon", "Book", "Car"], answer: "Cotton swab" },
-  { id: 112, lang: "en", question: "Which is a type of insect?", options: ["Butterfly", "Book", "Pen", "Spoon"], answer: "Butterfly" },
-  { id: 113, lang: "en", question: "What do you use to store money?", options: ["Wallet", "Spoon", "Book", "Car"], answer: "Wallet" },
-  { id: 114, lang: "en", question: "Which is a type of meat?", options: ["Chicken", "Book", "Pen", "Spoon"], answer: "Chicken" },
-  { id: 115, lang: "en", question: "What do you use to clean your shoes?", options: ["Shoe polish", "Spoon", "Book", "Car"], answer: "Shoe polish" },
-  { id: 116, lang: "en", question: "Which is a type of grain?", options: ["Rice", "Book", "Pen", "Spoon"], answer: "Rice" },
-  { id: 117, lang: "en", question: "What do you use to clean your nails?", options: ["Nail clipper", "Spoon", "Book", "Car"], answer: "Nail clipper" },
-  { id: 118, lang: "en", question: "Which is a type of nut?", options: ["Almond", "Book", "Pen", "Spoon"], answer: "Almond" },
-  { id: 119, lang: "en", question: "What do you use to clean your glasses?", options: ["Lens cleaner", "Spoon", "Book", "Car"], answer: "Lens cleaner" },
-  { id: 120, lang: "en", question: "Which is a type of spice?", options: ["Cinnamon", "Book", "Pen", "Spoon"], answer: "Cinnamon" },
-  
-  // Hard level - Additional questions (121-160)
-  { id: 121, lang: "en", question: "What do you use to measure distance?", options: ["Ruler", "Spoon", "Book", "Car"], answer: "Ruler" },
-  { id: 122, lang: "en", question: "Which is a type of instrument?", options: ["Violin", "Book", "Pen", "Spoon"], answer: "Violin" },
-  { id: 123, lang: "en", question: "What do you use to clean your computer screen?", options: ["Screen cleaner", "Spoon", "Book", "Car"], answer: "Screen cleaner" },
-  { id: 124, lang: "en", question: "Which is a type of gemstone?", options: ["Diamond", "Book", "Pen", "Spoon"], answer: "Diamond" },
-  { id: 125, lang: "en", question: "What do you use to measure volume?", options: ["Measuring cup", "Spoon", "Book", "Car"], answer: "Measuring cup" },
-  { id: 126, lang: "en", question: "Which is a type of metal?", options: ["Gold", "Book", "Pen", "Spoon"], answer: "Gold" },
-  { id: 127, lang: "en", question: "What do you use to clean your keyboard?", options: ["Keyboard cleaner", "Spoon", "Book", "Car"], answer: "Keyboard cleaner" },
-  { id: 128, lang: "en", question: "Which is a type of planet?", options: ["Mars", "Book", "Pen", "Spoon"], answer: "Mars" },
-  { id: 129, lang: "en", question: "What do you use to measure speed?", options: ["Speedometer", "Spoon", "Book", "Car"], answer: "Speedometer" },
-  { id: 130, lang: "en", question: "Which is a type of chemical element?", options: ["Oxygen", "Book", "Pen", "Spoon"], answer: "Oxygen" },
-  { id: 131, lang: "en", question: "What do you use to clean your car?", options: ["Car wash", "Spoon", "Book", "Car"], answer: "Car wash" },
-  { id: 132, lang: "en", question: "Which is a type of constellation?", options: ["Orion", "Book", "Pen", "Spoon"], answer: "Orion" },
-  { id: 133, lang: "en", question: "What do you use to measure pressure?", options: ["Barometer", "Spoon", "Book", "Car"], answer: "Barometer" },
-  { id: 134, lang: "en", question: "Which is a type of bacteria?", options: ["E.coli", "Book", "Pen", "Spoon"], answer: "E.coli" },
-  { id: 135, lang: "en", question: "What do you use to clean your jewelry?", options: ["Jewelry cleaner", "Spoon", "Book", "Car"], answer: "Jewelry cleaner" },
-  { id: 136, lang: "en", question: "Which is a type of virus?", options: ["Influenza", "Book", "Pen", "Spoon"], answer: "Influenza" },
-  { id: 137, lang: "en", question: "What do you use to measure humidity?", options: ["Hygrometer", "Spoon", "Book", "Car"], answer: "Hygrometer" },
-  { id: 138, lang: "en", question: "Which is a type of fungus?", options: ["Mushroom", "Book", "Pen", "Spoon"], answer: "Mushroom" },
-  { id: 139, lang: "en", question: "What do you use to clean your watch?", options: ["Watch cleaner", "Spoon", "Book", "Car"], answer: "Watch cleaner" },
-  { id: 140, lang: "en", question: "Which is a type of mineral?", options: ["Quartz", "Book", "Pen", "Spoon"], answer: "Quartz" },
-  { id: 141, lang: "en", question: "What do you use to measure light intensity?", options: ["Light meter", "Spoon", "Book", "Car"], answer: "Light meter" },
-  { id: 142, lang: "en", question: "Which is a type of protein?", options: ["Hemoglobin", "Book", "Pen", "Spoon"], answer: "Hemoglobin" },
-  { id: 143, lang: "en", question: "What do you use to clean your camera lens?", options: ["Lens cleaner", "Spoon", "Book", "Car"], answer: "Lens cleaner" },
-  { id: 144, lang: "en", question: "Which is a type of enzyme?", options: ["Amylase", "Book", "Pen", "Spoon"], answer: "Amylase" },
-  { id: 145, lang: "en", question: "What do you use to measure sound intensity?", options: ["Decibel meter", "Spoon", "Book", "Car"], answer: "Decibel meter" },
-  { id: 146, lang: "en", question: "Which is a type of hormone?", options: ["Insulin", "Book", "Pen", "Spoon"], answer: "Insulin" },
-  { id: 147, lang: "en", question: "What do you use to clean your microscope?", options: ["Microscope cleaner", "Spoon", "Book", "Car"], answer: "Microscope cleaner" },
-  { id: 148, lang: "en", question: "Which is a type of vitamin?", options: ["Vitamin C", "Book", "Pen", "Spoon"], answer: "Vitamin C" },
-  { id: 149, lang: "en", question: "What do you use to measure magnetic field?", options: ["Magnetometer", "Spoon", "Book", "Car"], answer: "Magnetometer" },
-  { id: 150, lang: "en", question: "Which is a type of amino acid?", options: ["Glycine", "Book", "Pen", "Spoon"], answer: "Glycine" },
-  { id: 151, lang: "en", question: "What do you use to clean your telescope?", options: ["Telescope cleaner", "Spoon", "Book", "Car"], answer: "Telescope cleaner" },
-  { id: 152, lang: "en", question: "Which is a type of carbohydrate?", options: ["Glucose", "Book", "Pen", "Spoon"], answer: "Glucose" },
-  { id: 153, lang: "en", question: "What do you use to measure radiation?", options: ["Geiger counter", "Spoon", "Book", "Car"], answer: "Geiger counter" },
-  { id: 154, lang: "en", question: "Which is a type of lipid?", options: ["Cholesterol", "Book", "Pen", "Spoon"], answer: "Cholesterol" },
-  { id: 155, lang: "en", question: "What do you use to clean your spectroscope?", options: ["Spectroscope cleaner", "Spoon", "Book", "Car"], answer: "Spectroscope cleaner" },
-  { id: 156, lang: "en", question: "Which is a type of nucleic acid?", options: ["DNA", "Book", "Pen", "Spoon"], answer: "DNA" },
-  { id: 157, lang: "en", question: "What do you use to measure pH level?", options: ["pH meter", "Spoon", "Book", "Car"], answer: "pH meter" },
-  { id: 158, lang: "en", question: "Which is a type of antibody?", options: ["Immunoglobulin", "Book", "Pen", "Spoon"], answer: "Immunoglobulin" },
-  { id: 159, lang: "en", question: "What do you use to clean your centrifuge?", options: ["Centrifuge cleaner", "Spoon", "Book", "Car"], answer: "Centrifuge cleaner" },
-  { id: 160, lang: "en", question: "Which is a type of neurotransmitter?", options: ["Dopamine", "Book", "Pen", "Spoon"], answer: "Dopamine" },
-  
-  // Easy level - More questions (161-200)
-  { id: 161, lang: "en", question: "What do you use to clean your hair?", options: ["Shampoo", "Spoon", "Book", "Car"], answer: "Shampoo" },
-  { id: 162, lang: "en", question: "Which is a type of weather?", options: ["Sunny", "Book", "Pen", "Spoon"], answer: "Sunny" },
-  { id: 163, lang: "en", question: "What do you use to dry your hair?", options: ["Hair dryer", "Spoon", "Book", "Car"], answer: "Hair dryer" },
-  { id: 164, lang: "en", question: "Which is a type of fruit?", options: ["Mango", "Book", "Pen", "Spoon"], answer: "Mango" },
-  { id: 165, lang: "en", question: "What do you use to brush your teeth?", options: ["Toothbrush", "Spoon", "Book", "Car"], answer: "Toothbrush" },
-  { id: 166, lang: "en", question: "Which is a type of vegetable?", options: ["Spinach", "Book", "Pen", "Spoon"], answer: "Spinach" },
-  { id: 167, lang: "en", question: "What do you use to wash your hands?", options: ["Soap", "Spoon", "Book", "Car"], answer: "Soap" },
-  { id: 168, lang: "en", question: "Which is a type of drink?", options: ["Coffee", "Book", "Pen", "Spoon"], answer: "Coffee" },
-  { id: 169, lang: "en", question: "What do you use to cut your nails?", options: ["Nail clipper", "Spoon", "Book", "Car"], answer: "Nail clipper" },
-  { id: 170, lang: "en", question: "Which is a type of animal?", options: ["Penguin", "Book", "Pen", "Spoon"], answer: "Penguin" },
-  { id: 171, lang: "en", question: "What do you use to clean your glasses?", options: ["Lens cleaner", "Spoon", "Book", "Car"], answer: "Lens cleaner" },
-  { id: 172, lang: "en", question: "Which is a type of sport?", options: ["Swimming", "Book", "Pen", "Spoon"], answer: "Swimming" },
-  { id: 173, lang: "en", question: "What do you use to measure your height?", options: ["Ruler", "Spoon", "Book", "Car"], answer: "Ruler" },
-  { id: 174, lang: "en", question: "Which is a type of music?", options: ["Jazz", "Book", "Pen", "Spoon"], answer: "Jazz" },
-  { id: 175, lang: "en", question: "What do you use to open a bottle?", options: ["Bottle opener", "Spoon", "Book", "Car"], answer: "Bottle opener" },
-  { id: 176, lang: "en", question: "Which is a type of building?", options: ["School", "Book", "Pen", "Spoon"], answer: "School" },
-  { id: 177, lang: "en", question: "What do you use to clean your shoes?", options: ["Shoe polish", "Spoon", "Book", "Car"], answer: "Shoe polish" },
-  { id: 178, lang: "en", question: "Which is a type of flower?", options: ["Tulip", "Book", "Pen", "Spoon"], answer: "Tulip" },
-  { id: 179, lang: "en", question: "What do you use to clean your car?", options: ["Car wash", "Spoon", "Book", "Car"], answer: "Car wash" },
-  { id: 180, lang: "en", question: "Which is a type of tree?", options: ["Pine", "Book", "Pen", "Spoon"], answer: "Pine" },
-  { id: 181, lang: "en", question: "What do you use to clean your windows?", options: ["Window cleaner", "Spoon", "Book", "Car"], answer: "Window cleaner" },
-  { id: 182, lang: "en", question: "Which is a type of bird?", options: ["Parrot", "Book", "Pen", "Spoon"], answer: "Parrot" },
-  { id: 183, lang: "en", question: "What do you use to clean your floor?", options: ["Mop", "Spoon", "Book", "Car"], answer: "Mop" },
-  { id: 184, lang: "en", question: "Which is a type of fish?", options: ["Tuna", "Book", "Pen", "Spoon"], answer: "Tuna" },
-  { id: 185, lang: "en", question: "What do you use to clean your dishes?", options: ["Dish soap", "Spoon", "Book", "Car"], answer: "Dish soap" },
-  { id: 186, lang: "en", question: "Which is a type of insect?", options: ["Bee", "Book", "Pen", "Spoon"], answer: "Bee" },
-  { id: 187, lang: "en", question: "What do you use to clean your clothes?", options: ["Laundry detergent", "Spoon", "Book", "Car"], answer: "Laundry detergent" },
-  { id: 188, lang: "en", question: "Which is a type of nut?", options: ["Walnut", "Book", "Pen", "Spoon"], answer: "Walnut" },
-  { id: 189, lang: "en", question: "What do you use to clean your bathroom?", options: ["Bathroom cleaner", "Spoon", "Book", "Car"], answer: "Bathroom cleaner" },
-  { id: 190, lang: "en", question: "Which is a type of spice?", options: ["Pepper", "Book", "Pen", "Spoon"], answer: "Pepper" },
-  { id: 191, lang: "en", question: "What do you use to clean your kitchen?", options: ["Kitchen cleaner", "Spoon", "Book", "Car"], answer: "Kitchen cleaner" },
-  { id: 192, lang: "en", question: "Which is a type of meat?", options: ["Beef", "Book", "Pen", "Spoon"], answer: "Beef" },
-  { id: 193, lang: "en", question: "What do you use to clean your furniture?", options: ["Furniture polish", "Spoon", "Book", "Car"], answer: "Furniture polish" },
-  { id: 194, lang: "en", question: "Which is a type of grain?", options: ["Wheat", "Book", "Pen", "Spoon"], answer: "Wheat" },
-  { id: 195, lang: "en", question: "What do you use to clean your computer?", options: ["Computer cleaner", "Spoon", "Book", "Car"], answer: "Computer cleaner" },
-  { id: 196, lang: "en", question: "Which is a type of cheese?", options: ["Cheddar", "Book", "Pen", "Spoon"], answer: "Cheddar" },
-  { id: 197, lang: "en", question: "What do you use to clean your phone?", options: ["Phone cleaner", "Spoon", "Book", "Car"], answer: "Phone cleaner" },
-  { id: 198, lang: "en", question: "Which is a type of bread?", options: ["Sourdough", "Book", "Pen", "Spoon"], answer: "Sourdough" },
-  { id: 199, lang: "en", question: "What do you use to clean your jewelry?", options: ["Jewelry cleaner", "Spoon", "Book", "Car"], answer: "Jewelry cleaner" },
-  { id: 200, lang: "en", question: "Which is a type of pasta?", options: ["Spaghetti", "Book", "Pen", "Spoon"], answer: "Spaghetti" },
-  
-  // Medium level - More questions (201-240)
-  { id: 201, lang: "en", question: "What do you use to measure temperature?", options: ["Thermometer", "Spoon", "Book", "Car"], answer: "Thermometer" },
-  { id: 202, lang: "en", question: "Which is a type of instrument?", options: ["Guitar", "Book", "Pen", "Spoon"], answer: "Guitar" },
-  { id: 203, lang: "en", question: "What do you use to measure weight?", options: ["Scale", "Spoon", "Book", "Car"], answer: "Scale" },
-  { id: 204, lang: "en", question: "Which is a type of vehicle?", options: ["Motorcycle", "Book", "Pen", "Spoon"], answer: "Motorcycle" },
-  { id: 205, lang: "en", question: "What do you use to measure distance?", options: ["Ruler", "Spoon", "Book", "Car"], answer: "Ruler" },
-  { id: 206, lang: "en", question: "Which is a type of profession?", options: ["Engineer", "Book", "Pen", "Spoon"], answer: "Engineer" },
-  { id: 207, lang: "en", question: "What do you use to measure time?", options: ["Stopwatch", "Spoon", "Book", "Car"], answer: "Stopwatch" },
-  { id: 208, lang: "en", question: "Which is a type of art?", options: ["Painting", "Book", "Pen", "Spoon"], answer: "Painting" },
-  { id: 209, lang: "en", question: "What do you use to measure volume?", options: ["Measuring cup", "Spoon", "Book", "Car"], answer: "Measuring cup" },
-  { id: 210, lang: "en", question: "Which is a type of science?", options: ["Biology", "Book", "Pen", "Spoon"], answer: "Biology" },
-  { id: 211, lang: "en", question: "What do you use to measure speed?", options: ["Speedometer", "Spoon", "Book", "Car"], answer: "Speedometer" },
-  { id: 212, lang: "en", question: "Which is a type of literature?", options: ["Poetry", "Book", "Pen", "Spoon"], answer: "Poetry" },
-  { id: 213, lang: "en", question: "What do you use to measure pressure?", options: ["Barometer", "Spoon", "Book", "Car"], answer: "Barometer" },
-  { id: 214, lang: "en", question: "Which is a type of dance?", options: ["Ballet", "Book", "Pen", "Spoon"], answer: "Ballet" },
-  { id: 215, lang: "en", question: "What do you use to measure humidity?", options: ["Hygrometer", "Spoon", "Book", "Car"], answer: "Hygrometer" },
-  { id: 216, lang: "en", question: "Which is a type of theater?", options: ["Drama", "Book", "Pen", "Spoon"], answer: "Drama" },
-  { id: 217, lang: "en", question: "What do you use to measure light?", options: ["Light meter", "Spoon", "Book", "Car"], answer: "Light meter" },
-  { id: 218, lang: "en", question: "Which is a type of film?", options: ["Documentary", "Book", "Pen", "Spoon"], answer: "Documentary" },
-  { id: 219, lang: "en", question: "What do you use to measure sound?", options: ["Decibel meter", "Spoon", "Book", "Car"], answer: "Decibel meter" },
-  { id: 220, lang: "en", question: "Which is a type of photography?", options: ["Portrait", "Book", "Pen", "Spoon"], answer: "Portrait" },
-  { id: 221, lang: "en", question: "What do you use to measure radiation?", options: ["Geiger counter", "Spoon", "Book", "Car"], answer: "Geiger counter" },
-  { id: 222, lang: "en", question: "Which is a type of sculpture?", options: ["Statue", "Book", "Pen", "Spoon"], answer: "Statue" },
-  { id: 223, lang: "en", question: "What do you use to measure pH?", options: ["pH meter", "Spoon", "Book", "Car"], answer: "pH meter" },
-  { id: 224, lang: "en", question: "Which is a type of architecture?", options: ["Gothic", "Book", "Pen", "Spoon"], answer: "Gothic" },
-  { id: 225, lang: "en", question: "What do you use to measure magnetic field?", options: ["Magnetometer", "Spoon", "Book", "Car"], answer: "Magnetometer" },
-  { id: 226, lang: "en", question: "Which is a type of design?", options: ["Graphic", "Book", "Pen", "Spoon"], answer: "Graphic" },
-  { id: 227, lang: "en", question: "What do you use to measure current?", options: ["Ammeter", "Spoon", "Book", "Car"], answer: "Ammeter" },
-  { id: 228, lang: "en", question: "Which is a type of fashion?", options: ["Haute couture", "Book", "Pen", "Spoon"], answer: "Haute couture" },
-  { id: 229, lang: "en", question: "What do you use to measure voltage?", options: ["Voltmeter", "Spoon", "Book", "Car"], answer: "Voltmeter" },
-  { id: 230, lang: "en", question: "Which is a type of cuisine?", options: ["Italian", "Book", "Pen", "Spoon"], answer: "Italian" },
-  { id: 231, lang: "en", question: "What do you use to measure resistance?", options: ["Ohmmeter", "Spoon", "Book", "Car"], answer: "Ohmmeter" },
-  { id: 232, lang: "en", question: "Which is a type of wine?", options: ["Chardonnay", "Book", "Pen", "Spoon"], answer: "Chardonnay" },
-  { id: 233, lang: "en", question: "What do you use to measure frequency?", options: ["Frequency meter", "Spoon", "Book", "Car"], answer: "Frequency meter" },
-  { id: 234, lang: "en", question: "Which is a type of coffee?", options: ["Espresso", "Book", "Pen", "Spoon"], answer: "Espresso" },
-  { id: 235, lang: "en", question: "What do you use to measure capacitance?", options: ["Capacitance meter", "Spoon", "Book", "Car"], answer: "Capacitance meter" },
-  { id: 236, lang: "en", question: "Which is a type of tea?", options: ["Green tea", "Book", "Pen", "Spoon"], answer: "Green tea" },
-  { id: 237, lang: "en", question: "What do you use to measure inductance?", options: ["Inductance meter", "Spoon", "Book", "Car"], answer: "Inductance meter" },
-  { id: 238, lang: "en", question: "Which is a type of beer?", options: ["Lager", "Book", "Pen", "Spoon"], answer: "Lager" },
-  { id: 239, lang: "en", question: "What do you use to measure power?", options: ["Wattmeter", "Spoon", "Book", "Car"], answer: "Wattmeter" },
-  { id: 240, lang: "en", question: "Which is a type of cocktail?", options: ["Martini", "Book", "Pen", "Spoon"], answer: "Martini" },
-  
-  // Hard level - More questions (241-280)
-  { id: 241, lang: "en", question: "What do you use to measure energy?", options: ["Energy meter", "Spoon", "Book", "Car"], answer: "Energy meter" },
-  { id: 242, lang: "en", question: "Which is a type of quantum particle?", options: ["Photon", "Book", "Pen", "Spoon"], answer: "Photon" },
-  { id: 243, lang: "en", question: "What do you use to measure force?", options: ["Force meter", "Spoon", "Book", "Car"], answer: "Force meter" },
-  { id: 244, lang: "en", question: "Which is a type of subatomic particle?", options: ["Electron", "Book", "Pen", "Spoon"], answer: "Electron" },
-  { id: 245, lang: "en", question: "What do you use to measure acceleration?", options: ["Accelerometer", "Spoon", "Book", "Car"], answer: "Accelerometer" },
-  { id: 246, lang: "en", question: "Which is a type of fundamental force?", options: ["Gravity", "Book", "Pen", "Spoon"], answer: "Gravity" },
-  { id: 247, lang: "en", question: "What do you use to measure velocity?", options: ["Velocimeter", "Spoon", "Book", "Car"], answer: "Velocimeter" },
-  { id: 248, lang: "en", question: "Which is a type of wave?", options: ["Electromagnetic", "Book", "Pen", "Spoon"], answer: "Electromagnetic" },
-  { id: 249, lang: "en", question: "What do you use to measure wavelength?", options: ["Wavelength meter", "Spoon", "Book", "Car"], answer: "Wavelength meter" },
-  { id: 250, lang: "en", question: "Which is a type of field?", options: ["Magnetic", "Book", "Pen", "Spoon"], answer: "Magnetic" },
-  { id: 251, lang: "en", question: "What do you use to measure amplitude?", options: ["Amplitude meter", "Spoon", "Book", "Car"], answer: "Amplitude meter" },
-  { id: 252, lang: "en", question: "Which is a type of spectrum?", options: ["Electromagnetic", "Book", "Pen", "Spoon"], answer: "Electromagnetic" },
-  { id: 253, lang: "en", question: "What do you use to measure phase?", options: ["Phase meter", "Spoon", "Book", "Car"], answer: "Phase meter" },
-  { id: 254, lang: "en", question: "Which is a type of resonance?", options: ["Nuclear", "Book", "Pen", "Spoon"], answer: "Nuclear" },
-  { id: 255, lang: "en", question: "What do you use to measure impedance?", options: ["Impedance meter", "Spoon", "Book", "Car"], answer: "Impedance meter" },
-  { id: 256, lang: "en", question: "Which is a type of oscillation?", options: ["Harmonic", "Book", "Pen", "Spoon"], answer: "Harmonic" },
-  { id: 257, lang: "en", question: "What do you use to measure torque?", options: ["Torque meter", "Spoon", "Book", "Car"], answer: "Torque meter" },
-  { id: 258, lang: "en", question: "Which is a type of vibration?", options: ["Mechanical", "Book", "Pen", "Spoon"], answer: "Mechanical" },
-  { id: 259, lang: "en", question: "What do you use to measure strain?", options: ["Strain gauge", "Spoon", "Book", "Car"], answer: "Strain gauge" },
-  { id: 260, lang: "en", question: "Which is a type of stress?", options: ["Tensile", "Book", "Pen", "Spoon"], answer: "Tensile" },
-  { id: 261, lang: "en", question: "What do you use to measure elasticity?", options: ["Elasticity meter", "Spoon", "Book", "Car"], answer: "Elasticity meter" },
-  { id: 262, lang: "en", question: "Which is a type of deformation?", options: ["Plastic", "Book", "Pen", "Spoon"], answer: "Plastic" },
-  { id: 263, lang: "en", question: "What do you use to measure viscosity?", options: ["Viscometer", "Spoon", "Book", "Car"], answer: "Viscometer" },
-  { id: 264, lang: "en", question: "Which is a type of fluid?", options: ["Newtonian", "Book", "Pen", "Spoon"], answer: "Newtonian" },
-  { id: 265, lang: "en", question: "What do you use to measure density?", options: ["Densimeter", "Spoon", "Book", "Car"], answer: "Densimeter" },
-  { id: 266, lang: "en", question: "Which is a type of material?", options: ["Composite", "Book", "Pen", "Spoon"], answer: "Composite" },
-  { id: 267, lang: "en", question: "What do you use to measure hardness?", options: ["Hardness tester", "Spoon", "Book", "Car"], answer: "Hardness tester" },
-  { id: 268, lang: "en", question: "Which is a type of crystal?", options: ["Cubic", "Book", "Pen", "Spoon"], answer: "Cubic" },
-  { id: 269, lang: "en", question: "What do you use to measure conductivity?", options: ["Conductivity meter", "Spoon", "Book", "Car"], answer: "Conductivity meter" },
-  { id: 270, lang: "en", question: "Which is a type of semiconductor?", options: ["Silicon", "Book", "Pen", "Spoon"], answer: "Silicon" },
-  { id: 271, lang: "en", question: "What do you use to measure resistivity?", options: ["Resistivity meter", "Spoon", "Book", "Car"], answer: "Resistivity meter" },
-  { id: 272, lang: "en", question: "Which is a type of insulator?", options: ["Ceramic", "Book", "Pen", "Spoon"], answer: "Ceramic" },
-  { id: 273, lang: "en", question: "What do you use to measure permittivity?", options: ["Permittivity meter", "Spoon", "Book", "Car"], answer: "Permittivity meter" },
-  { id: 274, lang: "en", question: "Which is a type of dielectric?", options: ["Polymer", "Book", "Pen", "Spoon"], answer: "Polymer" },
-  { id: 275, lang: "en", question: "What do you use to measure permeability?", options: ["Permeability meter", "Spoon", "Book", "Car"], answer: "Permeability meter" },
-  { id: 276, lang: "en", question: "Which is a type of ferromagnet?", options: ["Iron", "Book", "Pen", "Spoon"], answer: "Iron" },
-  { id: 277, lang: "en", question: "What do you use to measure coercivity?", options: ["Coercivity meter", "Spoon", "Book", "Car"], answer: "Coercivity meter" },
-  { id: 278, lang: "en", question: "Which is a type of superconductor?", options: ["Type I", "Book", "Pen", "Spoon"], answer: "Type I" },
-  { id: 279, lang: "en", question: "What do you use to measure critical temperature?", options: ["Critical temperature meter", "Spoon", "Book", "Car"], answer: "Critical temperature meter" },
-  { id: 280, lang: "en", question: "Which is a type of quantum state?", options: ["Ground", "Book", "Pen", "Spoon"], answer: "Ground" },
-  
+// שאלות לפי רמות קושי אמיתיות
+const QUESTIONS_BY_DIFFICULTY = {
+  // רמה 1: מתחילים - מילים בסיסיות ביותר
+  beginner: [
+    { id: 1, lang: "en", question: "What color is the sky?", options: ["Blue", "Red", "Green", "Yellow"], answer: "Blue", explanation: "The sky appears blue due to the scattering of sunlight.", explanationHe: "השמיים כחולים בגלל פיזור אור השמש" },
+    { id: 2, lang: "en", question: "Which animal barks?", options: ["Cat", "Dog", "Fish", "Bird"], answer: "Dog", explanation: "Dogs bark; cats meow.", explanationHe: "כלבים נובחים; חתולים אומרים מיאו" },
+    { id: 3, lang: "en", question: "What do you drink in the morning?", options: ["Tea", "Juice", "Soda", "Wine"], answer: "Tea", explanation: "Tea is a common morning drink.", explanationHe: "תה הוא משקה נפוץ בבוקר" },
+    { id: 4, lang: "en", question: "Which is a fruit?", options: ["Apple", "Car", "Chair", "Book"], answer: "Apple", explanation: "Apple is a fruit; the others are not.", explanationHe: "תפוח הוא פרי; השאר לא" },
+    { id: 5, lang: "en", question: "What do you use to write?", options: ["Pen", "Spoon", "Shoe", "Hat"], answer: "Pen", explanationHe: "עט משמש לכתיבה" },
+    { id: 6, lang: "en", question: "Which is a day of the week?", options: ["Monday", "January", "Summer", "Dog"], answer: "Monday", explanationHe: "יום שני הוא יום בשבוע" },
+    { id: 7, lang: "en", question: "What do you wear on your feet?", options: ["Socks", "Gloves", "Hat", "Shirt"], answer: "Socks", explanationHe: "גרביים לובשים על הרגליים" },
+    { id: 8, lang: "en", question: "Which is a vegetable?", options: ["Carrot", "Apple", "Cake", "Milk"], answer: "Carrot", explanationHe: "גזר הוא ירק" },
+    { id: 9, lang: "en", question: "What do you read?", options: ["Book", "Shoe", "Egg", "Tree"], answer: "Book", explanationHe: "ספר קוראים" },
+    { id: 10, lang: "en", question: "Which is a season?", options: ["Winter", "Monday", "Dog", "Pen"], answer: "Winter", explanationHe: "חורף הוא עונה" },
+    { id: 11, lang: "en", question: "What do you eat for breakfast?", options: ["Eggs", "Shoes", "Books", "Cars"], answer: "Eggs", explanationHe: "ביצים אוכלים לארוחת בוקר" },
+    { id: 12, lang: "en", question: "Which animal can fly?", options: ["Bird", "Dog", "Cat", "Fish"], answer: "Bird", explanationHe: "ציפורים יכולות לעוף" },
+    { id: 13, lang: "en", question: "What do you use to cut paper?", options: ["Scissors", "Pen", "Book", "Spoon"], answer: "Scissors", explanationHe: "מספריים משמשים לחיתוך נייר" },
+    { id: 14, lang: "en", question: "Which is a drink?", options: ["Juice", "Chair", "Hat", "Shoe"], answer: "Juice", explanationHe: "מיץ הוא משקה" },
+    { id: 15, lang: "en", question: "What do you wear on your head?", options: ["Hat", "Socks", "Book", "Car"], answer: "Hat", explanationHe: "כובע לובשים על הראש" },
+    { id: 16, lang: "en", question: "Which is a pet?", options: ["Cat", "Car", "Book", "Tree"], answer: "Cat", explanationHe: "חתול הוא חיית מחמד" },
+    { id: 17, lang: "en", question: "What do you use to eat soup?", options: ["Spoon", "Pen", "Shoe", "Hat"], answer: "Spoon", explanationHe: "כפית משמשת לאכילת מרק" },
+    { id: 18, lang: "en", question: "Which is a color?", options: ["Red", "Dog", "Book", "Car"], answer: "Red", explanationHe: "אדום הוא צבע" },
+    { id: 19, lang: "en", question: "What do you use to call someone?", options: ["Phone", "Book", "Shoe", "Pen"], answer: "Phone", explanationHe: "טלפון משמש להתקשרות" },
+    { id: 20, lang: "en", question: "Which is a vehicle?", options: ["Car", "Dog", "Book", "Pen"], answer: "Car", explanationHe: "מכונית היא כלי רכב" },
+    { id: 21, lang: "en", question: "What do you sleep on?", options: ["Bed", "Chair", "Floor", "Wall"], answer: "Bed", explanationHe: "מיטה משמשת לשינה" },
+    { id: 22, lang: "en", question: "Which animal says moo?", options: ["Cow", "Dog", "Cat", "Bird"], answer: "Cow", explanationHe: "פרה אומרת מוּ" },
+    { id: 23, lang: "en", question: "What do you use to eat?", options: ["Mouth", "Nose", "Ear", "Eye"], answer: "Mouth", explanationHe: "פה משמש לאכילה" },
+    { id: 24, lang: "en", question: "Which is hot?", options: ["Fire", "Ice", "Snow", "Water"], answer: "Fire", explanationHe: "אש חמה" },
+    { id: 25, lang: "en", question: "What do you sit on?", options: ["Chair", "Wall", "Door", "Window"], answer: "Chair", explanationHe: "כיסא משמש לישיבה" },
+    { id: 26, lang: "en", question: "Which is cold?", options: ["Ice", "Fire", "Sun", "Oven"], answer: "Ice", explanationHe: "קרח קר" },
+    { id: 27, lang: "en", question: "What do you wear?", options: ["Clothes", "Food", "Water", "Air"], answer: "Clothes", explanationHe: "בגדים לובשים" },
+    { id: 28, lang: "en", question: "Which is round?", options: ["Ball", "Book", "Door", "Wall"], answer: "Ball", explanationHe: "כדור עגול" },
+    { id: 29, lang: "en", question: "What gives light?", options: ["Sun", "Moon", "Star", "Cloud"], answer: "Sun", explanationHe: "שמש נותנת אור" },
+    { id: 30, lang: "en", question: "Which is sweet?", options: ["Sugar", "Salt", "Pepper", "Vinegar"], answer: "Sugar", explanationHe: "סוכר מתוק" },
+    { id: 31, lang: "en", question: "What do you drink?", options: ["Water", "Sand", "Stone", "Wood"], answer: "Water", explanationHe: "מים שותים" },
+    { id: 32, lang: "en", question: "Which is big?", options: ["Elephant", "Ant", "Bee", "Fly"], answer: "Elephant", explanationHe: "פיל גדול" },
+    { id: 33, lang: "en", question: "What is green?", options: ["Grass", "Sky", "Sun", "Moon"], answer: "Grass", explanationHe: "דשא ירוק" },
+    { id: 34, lang: "en", question: "Which can swim?", options: ["Fish", "Bird", "Dog", "Cat"], answer: "Fish", explanationHe: "דג יכול לשחות" },
+    { id: 35, lang: "en", question: "What is yellow?", options: ["Banana", "Apple", "Grape", "Orange"], answer: "Banana", explanationHe: "בננה צהובה" },
+    { id: 36, lang: "en", question: "Which is small?", options: ["Mouse", "Elephant", "Horse", "Cow"], answer: "Mouse", explanationHe: "עכבר קטן" },
+    { id: 37, lang: "en", question: "What is white?", options: ["Snow", "Grass", "Sun", "Tree"], answer: "Snow", explanationHe: "שלג לבן" },
+    { id: 38, lang: "en", question: "Which is fast?", options: ["Rabbit", "Turtle", "Snail", "Worm"], answer: "Rabbit", explanationHe: "ארנב מהיר" },
+    { id: 39, lang: "en", question: "What is soft?", options: ["Pillow", "Rock", "Stone", "Metal"], answer: "Pillow", explanationHe: "כרית רכה" },
+    { id: 40, lang: "en", question: "Which is loud?", options: ["Thunder", "Whisper", "Silence", "Sleep"], answer: "Thunder", explanationHe: "רעם רועש" },
+  ],
+
+  // רמה 2: בינוני - מילים יומיומיות
+  intermediate: [
+    { id: 21, lang: "en", question: "Which animal can swim?", options: ["Fish", "Cat", "Dog", "Bird"], answer: "Fish", explanationHe: "דגים שוחים במים" },
+    { id: 22, lang: "en", question: "What do you use to open a door?", options: ["Key", "Book", "Pen", "Spoon"], answer: "Key", explanationHe: "מפתח משמש לפתיחת דלת" },
+    { id: 23, lang: "en", question: "Which is a month?", options: ["January", "Monday", "Summer", "Dog"], answer: "January", explanationHe: "ינואר הוא חודש" },
+    { id: 24, lang: "en", question: "What do you wear on your hands?", options: ["Gloves", "Socks", "Hat", "Shirt"], answer: "Gloves", explanationHe: "כפפות לובשים על הידיים" },
+    { id: 25, lang: "en", question: "Which is a drink?", options: ["Water", "Book", "Car", "Pen"], answer: "Water", explanationHe: "מים הם משקה" },
+    { id: 26, lang: "en", question: "What do you use to see?", options: ["Eyes", "Ears", "Nose", "Mouth"], answer: "Eyes", explanationHe: "עיניים משמשות לראייה" },
+    { id: 27, lang: "en", question: "Which is a fruit?", options: ["Banana", "Carrot", "Milk", "Dog"], answer: "Banana", explanationHe: "בננה היא פרי" },
+    { id: 28, lang: "en", question: "What do you use to listen to music?", options: ["Ears", "Eyes", "Nose", "Mouth"], answer: "Ears", explanationHe: "אוזניים משמשות לשמיעה" },
+    { id: 29, lang: "en", question: "Which is a vegetable?", options: ["Tomato", "Apple", "Cake", "Milk"], answer: "Tomato", explanationHe: "עגבניה היא ירק" },
+    { id: 30, lang: "en", question: "What do you use to eat with?", options: ["Fork", "Pen", "Book", "Shoe"], answer: "Fork", explanationHe: "מזלג משמש לאכילה" },
+    { id: 31, lang: "en", question: "Which is a color?", options: ["Green", "Dog", "Book", "Car"], answer: "Green", explanationHe: "ירוק הוא צבע" },
+    { id: 32, lang: "en", question: "What do you use to write on?", options: ["Paper", "Spoon", "Shoe", "Hat"], answer: "Paper", explanationHe: "נייר משמש לכתיבה" },
+    { id: 33, lang: "en", question: "Which animal can fly?", options: ["Bird", "Dog", "Cat", "Fish"], answer: "Bird", explanationHe: "ציפורים יכולות לעוף" },
+    { id: 34, lang: "en", question: "What do you use to cut food?", options: ["Knife", "Pen", "Book", "Spoon"], answer: "Knife", explanationHe: "סכין משמשת לחיתוך אוכל" },
+    { id: 35, lang: "en", question: "Which is a pet?", options: ["Dog", "Car", "Book", "Tree"], answer: "Dog", explanationHe: "כלב הוא חיית מחמד" },
+    { id: 36, lang: "en", question: "What do you use to call someone?", options: ["Phone", "Book", "Shoe", "Pen"], answer: "Phone", explanationHe: "טלפון משמש להתקשרות" },
+    { id: 37, lang: "en", question: "Which is a vehicle?", options: ["Bus", "Dog", "Book", "Pen"], answer: "Bus", explanationHe: "אוטובוס הוא כלי רכב" },
+    { id: 38, lang: "en", question: "What do you use to drink soup?", options: ["Spoon", "Pen", "Shoe", "Hat"], answer: "Spoon", explanationHe: "כפית משמשת לשתיית מרק" },
+    { id: 39, lang: "en", question: "Which is a day of the week?", options: ["Friday", "January", "Summer", "Dog"], answer: "Friday", explanation: "Friday is a day of the week.", explanationHe: "יום שישי הוא יום בשבוע" },
+    { id: 40, lang: "en", question: "What do you wear on your body?", options: ["Shirt", "Socks", "Book", "Car"], answer: "Shirt", explanation: "A shirt is clothing worn on the body.", explanationHe: "חולצה לובשים על הגוף" },
+    { id: 41, lang: "en", question: "What do you use to wash dishes?", options: ["Soap", "Sugar", "Salt", "Flour"], answer: "Soap", explanationHe: "סבון משמש לשטיפת כלים" },
+    { id: 42, lang: "en", question: "Which grows in a garden?", options: ["Flower", "Car", "Phone", "Book"], answer: "Flower", explanationHe: "פרח גדל בגינה" },
+    { id: 43, lang: "en", question: "What do you use to clean the floor?", options: ["Broom", "Knife", "Pen", "Cup"], answer: "Broom", explanationHe: "מטאטא משמש לניקוי רצפה" },
+    { id: 44, lang: "en", question: "Which animal has stripes?", options: ["Zebra", "Dog", "Cat", "Cow"], answer: "Zebra", explanationHe: "לזברה יש פסים" },
+    { id: 45, lang: "en", question: "What do you use to tell time?", options: ["Watch", "Shoe", "Hat", "Glove"], answer: "Watch", explanationHe: "שעון משמש לראיית הזמן" },
+    { id: 46, lang: "en", question: "Which is sour?", options: ["Lemon", "Sugar", "Honey", "Candy"], answer: "Lemon", explanationHe: "לימון חמוץ" },
+    { id: 47, lang: "en", question: "What do you use to carry things?", options: ["Bag", "Shoe", "Hat", "Sock"], answer: "Bag", explanationHe: "תיק משמש לנשיאת דברים" },
+    { id: 48, lang: "en", question: "Which is a tool?", options: ["Hammer", "Apple", "Bread", "Milk"], answer: "Hammer", explanationHe: "פטיש הוא כלי" },
+    { id: 49, lang: "en", question: "What do you use to lock a door?", options: ["Lock", "Spoon", "Pen", "Cup"], answer: "Lock", explanationHe: "מנעול משמש לנעילת דלת" },
+    { id: 50, lang: "en", question: "Which is a body part?", options: ["Hand", "Car", "Tree", "Book"], answer: "Hand", explanationHe: "יד היא חלק בגוף" },
+    { id: 51, lang: "en", question: "What do you use to dry yourself?", options: ["Towel", "Knife", "Fork", "Spoon"], answer: "Towel", explanationHe: "מגבת משמשת להתייבשות" },
+    { id: 52, lang: "en", question: "Which is a number?", options: ["Five", "Dog", "Cat", "Tree"], answer: "Five", explanationHe: "חמש הוא מספר" },
+    { id: 53, lang: "en", question: "What do you use to cook?", options: ["Stove", "Bed", "Chair", "Table"], answer: "Stove", explanationHe: "כיריים משמשות לבישול" },
+    { id: 54, lang: "en", question: "Which is a shape?", options: ["Circle", "Dog", "Cat", "Tree"], answer: "Circle", explanationHe: "עיגול הוא צורה" },
+    { id: 55, lang: "en", question: "What do you use to measure?", options: ["Ruler", "Spoon", "Cup", "Plate"], answer: "Ruler", explanationHe: "סרגל משמש למדידה" },
+    { id: 56, lang: "en", question: "Which is a room?", options: ["Kitchen", "Car", "Tree", "Sky"], answer: "Kitchen", explanationHe: "מטבח הוא חדר" },
+    { id: 57, lang: "en", question: "What do you use to open a bottle?", options: ["Opener", "Hammer", "Saw", "Drill"], answer: "Opener", explanationHe: "פותחן משמש לפתיחת בקבוק" },
+    { id: 58, lang: "en", question: "Which is a direction?", options: ["North", "Dog", "Cat", "Tree"], answer: "North", explanationHe: "צפון הוא כיוון" },
+    { id: 59, lang: "en", question: "What do you use to paint?", options: ["Brush", "Spoon", "Fork", "Knife"], answer: "Brush", explanationHe: "מברשת משמשת לציור" },
+    { id: 60, lang: "en", question: "Which is a weather?", options: ["Rain", "Dog", "Cat", "Tree"], answer: "Rain", explanationHe: "גשם הוא מזג אוויר" },
+  ],
+
+  // רמה 3: מתקדם - מילים מורכבות יותר
+  advanced: [
+    { id: 41, lang: "en", question: "Which animal has a long neck?", options: ["Giraffe", "Dog", "Cat", "Fish"], answer: "Giraffe", explanation: "A giraffe is known for its very long neck.", explanationHe: "ג'ירף ידוע בצווארו הארוך" },
+    { id: 42, lang: "en", question: "What do you use to brush your teeth?", options: ["Toothbrush", "Spoon", "Pen", "Book"], answer: "Toothbrush", explanation: "A toothbrush is used for dental hygiene.", explanationHe: "מברשת שיניים משמשת להיגיינת הפה" },
+    { id: 43, lang: "en", question: "Which is a type of transport?", options: ["Train", "Dog", "Book", "Tree"], answer: "Train", explanationHe: "רכבת היא סוג של תחבורה" },
+    { id: 44, lang: "en", question: "What do you use to see the time?", options: ["Clock", "Shoe", "Car", "Pen"], answer: "Clock", explanationHe: "שעון משמש לראיית הזמן" },
+    { id: 45, lang: "en", question: "Which is a farm animal?", options: ["Cow", "Dog", "Cat", "Fish"], answer: "Cow", explanationHe: "פרה היא חיה חקלאית" },
+    { id: 46, lang: "en", question: "What do you use to write on a blackboard?", options: ["Chalk", "Pen", "Book", "Spoon"], answer: "Chalk", explanationHe: "גיר משמש לכתיבה על לוח" },
+    { id: 47, lang: "en", question: "Which is a wild animal?", options: ["Lion", "Dog", "Cat", "Fish"], answer: "Lion", explanationHe: "אריה הוא חיה פראית" },
+    { id: 48, lang: "en", question: "What do you use to eat ice cream?", options: ["Spoon", "Pen", "Book", "Shoe"], answer: "Spoon", explanationHe: "כפית משמשת לאכילת גלידה" },
+    { id: 49, lang: "en", question: "Which is a fruit?", options: ["Orange", "Carrot", "Milk", "Dog"], answer: "Orange", explanationHe: "תפוז הוא פרי" },
+    { id: 50, lang: "en", question: "What do you use to wash your hands?", options: ["Soap", "Book", "Car", "Pen"], answer: "Soap", explanationHe: "סבון משמש לרחיצת ידיים" },
+    { id: 51, lang: "en", question: "Which is a color?", options: ["Yellow", "Dog", "Book", "Car"], answer: "Yellow", explanationHe: "צהוב הוא צבע" },
+    { id: 52, lang: "en", question: "What do you use to make a phone call?", options: ["Phone", "Book", "Shoe", "Pen"], answer: "Phone", explanationHe: "טלפון משמש לביצוע שיחה" },
+    { id: 53, lang: "en", question: "Which is a pet?", options: ["Rabbit", "Car", "Book", "Tree"], answer: "Rabbit", explanationHe: "ארנב הוא חיית מחמד" },
+    { id: 54, lang: "en", question: "What do you use to drink tea?", options: ["Cup", "Pen", "Book", "Shoe"], answer: "Cup", explanationHe: "כוס משמשת לשתיית תה" },
+    { id: 55, lang: "en", question: "Which is a vegetable?", options: ["Cucumber", "Apple", "Cake", "Milk"], answer: "Cucumber", explanationHe: "מלפפון הוא ירק" },
+    { id: 56, lang: "en", question: "What do you use to see far away?", options: ["Binoculars", "Spoon", "Shoe", "Hat"], answer: "Binoculars", explanationHe: "משקפת משמשת לראייה למרחק" },
+    { id: 57, lang: "en", question: "Which animal can jump?", options: ["Kangaroo", "Dog", "Cat", "Fish"], answer: "Kangaroo", explanationHe: "קנגורו יכול לקפוץ" },
+    { id: 58, lang: "en", question: "What do you use to eat salad?", options: ["Fork", "Pen", "Book", "Shoe"], answer: "Fork", explanationHe: "מזלג משמש לאכילת סלט" },
+    { id: 59, lang: "en", question: "Which is a day of the week?", options: ["Sunday", "January", "Summer", "Dog"], answer: "Sunday", explanationHe: "יום ראשון הוא יום בשבוע" },
+    { id: 60, lang: "en", question: "What do you wear on your legs?", options: ["Pants", "Socks", "Book", "Car"], answer: "Pants", explanationHe: "מכנסיים לובשים על הרגליים" },
+    { id: 61, lang: "en", question: "Which animal lives in the desert?", options: ["Camel", "Penguin", "Dolphin", "Whale"], answer: "Camel", explanationHe: "גמל חי במדבר" },
+    { id: 62, lang: "en", question: "What do you use to sew clothes?", options: ["Needle", "Hammer", "Saw", "Drill"], answer: "Needle", explanationHe: "מחט משמשת לתפירת בגדים" },
+    { id: 63, lang: "en", question: "Which is a musical note?", options: ["Do", "Cat", "Dog", "Tree"], answer: "Do", explanationHe: "דו הוא תו מוזיקלי" },
+    { id: 64, lang: "en", question: "What do you use to fix things?", options: ["Screwdriver", "Spoon", "Cup", "Plate"], answer: "Screwdriver", explanationHe: "מברג משמש לתיקון דברים" },
+    { id: 65, lang: "en", question: "Which is a continent?", options: ["Europe", "Paris", "London", "Tokyo"], answer: "Europe", explanationHe: "אירופה היא יבשת" },
+    { id: 66, lang: "en", question: "What do you use to iron clothes?", options: ["Iron", "Hammer", "Saw", "Drill"], answer: "Iron", explanationHe: "מגהץ משמש לגיהוץ בגדים" },
+    { id: 67, lang: "en", question: "Which is a planet?", options: ["Mars", "Sun", "Moon", "Star"], answer: "Mars", explanationHe: "מאדים הוא כוכב לכת" },
+    { id: 68, lang: "en", question: "What do you use to cut wood?", options: ["Saw", "Spoon", "Cup", "Plate"], answer: "Saw", explanationHe: "מסור משמש לחיתוך עץ" },
+    { id: 69, lang: "en", question: "Which is an ocean?", options: ["Pacific", "River", "Lake", "Pond"], answer: "Pacific", explanationHe: "האוקיינוס השקט הוא אוקיינוס" },
+    { id: 70, lang: "en", question: "What do you use to measure weight?", options: ["Scale", "Ruler", "Clock", "Watch"], answer: "Scale", explanationHe: "משקל משמש לשקילה" },
+    { id: 71, lang: "en", question: "Which is a precious stone?", options: ["Diamond", "Rock", "Sand", "Dirt"], answer: "Diamond", explanationHe: "יהלום הוא אבן יקרה" },
+    { id: 72, lang: "en", question: "What do you use to start a fire?", options: ["Match", "Water", "Ice", "Snow"], answer: "Match", explanationHe: "גפרור משמש להדלקת אש" },
+    { id: 73, lang: "en", question: "Which is a type of tree?", options: ["Oak", "Rose", "Tulip", "Daisy"], answer: "Oak", explanationHe: "אלון הוא סוג של עץ" },
+    { id: 74, lang: "en", question: "What do you use to navigate?", options: ["Compass", "Spoon", "Cup", "Plate"], answer: "Compass", explanationHe: "מצפן משמש לניווט" },
+    { id: 75, lang: "en", question: "Which is a metal?", options: ["Gold", "Wood", "Plastic", "Glass"], answer: "Gold", explanationHe: "זהב הוא מתכת" },
+    { id: 76, lang: "en", question: "What do you use to protect from rain?", options: ["Umbrella", "Hat", "Shoe", "Glove"], answer: "Umbrella", explanationHe: "מטריה מגינה מגשם" },
+    { id: 77, lang: "en", question: "Which is a type of fish?", options: ["Salmon", "Dog", "Cat", "Bird"], answer: "Salmon", explanationHe: "סלמון הוא סוג של דג" },
+    { id: 78, lang: "en", question: "What do you use to climb?", options: ["Ladder", "Spoon", "Cup", "Plate"], answer: "Ladder", explanationHe: "סולם משמש לטיפוס" },
+    { id: 79, lang: "en", question: "Which is a type of bird?", options: ["Eagle", "Dog", "Cat", "Fish"], answer: "Eagle", explanationHe: "נשר הוא סוג של ציפור" },
+    { id: 80, lang: "en", question: "What do you use to store water?", options: ["Bottle", "Shoe", "Hat", "Sock"], answer: "Bottle", explanationHe: "בקבוק משמש לאחסון מים" },
+  ],
+
+  // רמה 4: קיצוני - מילים מורכבות מאוד (מקצועות, מדע, טכנולוגיה)
+  extreme: [
+    { id: 61, lang: "en", question: "Which profession treats patients in hospitals?", options: ["Doctor", "Teacher", "Engineer", "Artist"], answer: "Doctor", explanationHe: "רופא מטפל בחולים בבתי חולים" },
+    { id: 62, lang: "en", question: "What device do you use to calculate numbers?", options: ["Calculator", "Hammer", "Scissors", "Spoon"], answer: "Calculator", explanationHe: "מחשבון משמש לחישוב מספרים" },
+    { id: 63, lang: "en", question: "Which instrument measures temperature?", options: ["Thermometer", "Barometer", "Speedometer", "Compass"], answer: "Thermometer", explanationHe: "מדחום מודד טמפרטורה" },
+    { id: 64, lang: "en", question: "What profession designs buildings?", options: ["Architect", "Painter", "Writer", "Singer"], answer: "Architect", explanationHe: "אדריכל מתכנן בניינים" },
+    { id: 65, lang: "en", question: "Which device connects computers worldwide?", options: ["Internet", "Television", "Radio", "Telephone"], answer: "Internet", explanationHe: "אינטרנט מחבר מחשבים ברחבי העולם" },
+    { id: 66, lang: "en", question: "What profession performs surgeries?", options: ["Surgeon", "Dentist", "Pharmacist", "Nurse"], answer: "Surgeon", explanationHe: "מנתח מבצע ניתוחים" },
+    { id: 67, lang: "en", question: "Which instrument examines tiny organisms?", options: ["Microscope", "Telescope", "Binoculars", "Magnifier"], answer: "Microscope", explanationHe: "מיקרוסקופ בודק אורגניזמים זעירים" },
+    { id: 68, lang: "en", question: "What profession creates software programs?", options: ["Programmer", "Mechanic", "Electrician", "Plumber"], answer: "Programmer", explanationHe: "מתכנת יוצר תוכנות מחשב" },
+    { id: 69, lang: "en", question: "Which device stores digital information?", options: ["Computer", "Hammer", "Scissors", "Broom"], answer: "Computer", explanationHe: "מחשב מאחסן מידע דיגיטלי" },
+    { id: 70, lang: "en", question: "What profession studies ancient civilizations?", options: ["Archaeologist", "Biologist", "Chemist", "Physicist"], answer: "Archaeologist", explanationHe: "ארכיאולוג חוקר תרבויות עתיקות" },
+    { id: 71, lang: "en", question: "Which instrument observes distant stars?", options: ["Telescope", "Microscope", "Stethoscope", "Periscope"], answer: "Telescope", explanationHe: "טלסקופ צופה בכוכבים רחוקים" },
+    { id: 72, lang: "en", question: "What profession defends people in court?", options: ["Lawyer", "Judge", "Police", "Detective"], answer: "Lawyer", explanationHe: "עורך דין מגן על אנשים בבית משפט" },
+    { id: 73, lang: "en", question: "Which device measures atmospheric pressure?", options: ["Barometer", "Thermometer", "Hygrometer", "Anemometer"], answer: "Barometer", explanationHe: "ברומטר מודד לחץ אטמוספרי" },
+    { id: 74, lang: "en", question: "What profession researches chemical reactions?", options: ["Chemist", "Physicist", "Biologist", "Geologist"], answer: "Chemist", explanationHe: "כימאי חוקר תגובות כימיות" },
+    { id: 75, lang: "en", question: "Which technology transmits voices wirelessly?", options: ["Telephone", "Telegraph", "Television", "Radio"], answer: "Telephone", explanationHe: "טלפון משדר קולות באופן אלחוטי" },
+    { id: 76, lang: "en", question: "What profession investigates crimes?", options: ["Detective", "Lawyer", "Judge", "Witness"], answer: "Detective", explanationHe: "בלש חוקר פשעים" },
+    { id: 77, lang: "en", question: "Which instrument measures earthquake intensity?", options: ["Seismograph", "Thermometer", "Barometer", "Compass"], answer: "Seismograph", explanationHe: "סיסמוגרף מודד עוצמת רעידות אדמה" },
+    { id: 78, lang: "en", question: "What profession treats dental problems?", options: ["Dentist", "Doctor", "Surgeon", "Nurse"], answer: "Dentist", explanationHe: "רופא שיניים מטפל בבעיות שיניים" },
+    { id: 79, lang: "en", question: "Which device generates electricity?", options: ["Generator", "Motor", "Battery", "Switch"], answer: "Generator", explanationHe: "גנרטור מייצר חשמל" },
+    { id: 80, lang: "en", question: "What profession studies living organisms?", options: ["Biologist", "Chemist", "Physicist", "Geologist"], answer: "Biologist", explanationHe: "ביולוג חוקר אורגניזמים חיים" },
+    { id: 81, lang: "en", question: "Which instrument analyzes chemical composition?", options: ["Spectrometer", "Thermometer", "Barometer", "Clock"], answer: "Spectrometer", explanationHe: "ספקטרומטר מנתח הרכב כימי" },
+    { id: 82, lang: "en", question: "What profession studies celestial bodies?", options: ["Astronomer", "Biologist", "Chemist", "Geologist"], answer: "Astronomer", explanationHe: "אסטרונום חוקר גרמי שמיים" },
+    { id: 83, lang: "en", question: "Which device amplifies sound waves?", options: ["Amplifier", "Thermometer", "Barometer", "Clock"], answer: "Amplifier", explanationHe: "מגבר מחזק גלי קול" },
+    { id: 84, lang: "en", question: "What profession designs electronic circuits?", options: ["Engineer", "Artist", "Writer", "Singer"], answer: "Engineer", explanationHe: "מהנדס מתכנן מעגלים אלקטרוניים" },
+    { id: 85, lang: "en", question: "Which instrument measures radiation?", options: ["Geiger counter", "Thermometer", "Barometer", "Clock"], answer: "Geiger counter", explanationHe: "מונה גייגר מודד קרינה" },
+    { id: 86, lang: "en", question: "What profession studies fossils?", options: ["Paleontologist", "Biologist", "Chemist", "Physicist"], answer: "Paleontologist", explanationHe: "פליאונטולוג חוקר מאובנים" },
+    { id: 87, lang: "en", question: "Which device converts sunlight to electricity?", options: ["Solar panel", "Battery", "Generator", "Motor"], answer: "Solar panel", explanationHe: "פאנל סולארי ממיר אור שמש לחשמל" },
+    { id: 88, lang: "en", question: "What profession studies weather patterns?", options: ["Meteorologist", "Biologist", "Chemist", "Physicist"], answer: "Meteorologist", explanationHe: "מטאורולוג חוקר דפוסי מזג אוויר" },
+    { id: 89, lang: "en", question: "Which instrument measures magnetic fields?", options: ["Magnetometer", "Thermometer", "Barometer", "Clock"], answer: "Magnetometer", explanationHe: "מגנטומטר מודד שדות מגנטיים" },
+    { id: 90, lang: "en", question: "What profession studies human behavior?", options: ["Psychologist", "Biologist", "Chemist", "Physicist"], answer: "Psychologist", explanationHe: "פסיכולוג חוקר התנהגות אנושית" },
+    { id: 91, lang: "en", question: "Which device measures electrical current?", options: ["Ammeter", "Thermometer", "Barometer", "Clock"], answer: "Ammeter", explanationHe: "אמפרמטר מודד זרם חשמלי" },
+    { id: 92, lang: "en", question: "What profession studies ocean life?", options: ["Marine biologist", "Chemist", "Physicist", "Geologist"], answer: "Marine biologist", explanationHe: "ביולוג ימי חוקר חיים באוקיינוס" },
+    { id: 93, lang: "en", question: "Which instrument measures light intensity?", options: ["Photometer", "Thermometer", "Barometer", "Clock"], answer: "Photometer", explanationHe: "פוטומטר מודד עוצמת אור" },
+    { id: 94, lang: "en", question: "What profession studies genetic inheritance?", options: ["Geneticist", "Biologist", "Chemist", "Physicist"], answer: "Geneticist", explanationHe: "גנטיקאי חוקר תורשה גנטית" },
+    { id: 95, lang: "en", question: "Which device measures voltage?", options: ["Voltmeter", "Thermometer", "Barometer", "Clock"], answer: "Voltmeter", explanationHe: "וולטמטר מודד מתח חשמלי" },
+    { id: 96, lang: "en", question: "What profession studies Earth's structure?", options: ["Geologist", "Biologist", "Chemist", "Physicist"], answer: "Geologist", explanationHe: "גיאולוג חוקר מבנה כדור הארץ" },
+    { id: 97, lang: "en", question: "Which instrument measures humidity?", options: ["Hygrometer", "Thermometer", "Barometer", "Clock"], answer: "Hygrometer", explanationHe: "היגרומטר מודד לחות" },
+    { id: 98, lang: "en", question: "What profession studies plant life?", options: ["Botanist", "Zoologist", "Chemist", "Physicist"], answer: "Botanist", explanationHe: "בוטנאי חוקר חיי צמחים" },
+    { id: 99, lang: "en", question: "Which device measures wind speed?", options: ["Anemometer", "Thermometer", "Barometer", "Clock"], answer: "Anemometer", explanationHe: "אנמומטר מודד מהירות רוח" },
+    { id: 100, lang: "en", question: "What profession studies animal behavior?", options: ["Zoologist", "Botanist", "Chemist", "Physicist"], answer: "Zoologist", explanationHe: "זואולוג חוקר התנהגות בעלי חיים" },
+  ]
+};
+
+// שאלות עבריות (נשארות כפי שהן)
+const HEBREW_QUESTIONS: MultipleChoiceQuestion[] = [
   { id: 101, lang: "he", question: "איזה צבע יש לשמים?", options: ["כחול", "אדום", "ירוק", "צהוב"], answer: "כחול" },
   { id: 102, lang: "he", question: "איזה חיה נובחת?", options: ["חתול", "כלב", "דג", "ציפור"], answer: "כלב" },
   { id: 103, lang: "he", question: "מה שותים בבוקר?", options: ["תה", "מיץ", "סודה", "יין"], answer: "תה" },
@@ -320,26 +209,30 @@ const QUESTIONS: MultipleChoiceQuestion[] = [
   { id: 110, lang: "he", question: "איזו עונה?", options: ["חורף", "שני", "כלב", "עט"], answer: "חורף" },
 ];
 
-const difficulties = [
-  { key: "easy", label: "קל", min: 0, max: 4, count: 15 },
-  { key: "medium", label: "בינוני", min: 5, max: 7, count: 20 },
-  { key: "hard", label: "קשה", min: 8, max: 9, count: 25 },
-];
-
-const levelMap: Record<string, string> = {
-  beginner: 'easy',
-  intermediate: 'medium',
-  advanced: 'hard',
-  extreme: 'hard',
-  easy: 'easy',
-  medium: 'medium',
-  hard: 'hard',
+// פונקציה לבחירת שאלות לפי רמת קושי
+const getQuestionsByDifficulty = (difficulty: string): MultipleChoiceQuestion[] => {
+  switch (difficulty) {
+    case 'beginner':
+      return QUESTIONS_BY_DIFFICULTY.beginner;
+    case 'intermediate':
+      return QUESTIONS_BY_DIFFICULTY.intermediate;
+    case 'advanced':
+      return QUESTIONS_BY_DIFFICULTY.advanced;
+    case 'extreme':
+      return QUESTIONS_BY_DIFFICULTY.extreme;
+    default:
+      return QUESTIONS_BY_DIFFICULTY.beginner;
+  }
 };
 
-const levelLabels: Record<string, { label: string, icon: string, color: string }> = {
-  easy: { label: 'קל', icon: '🌱', color: 'from-green-400 to-green-600' },
-  medium: { label: 'בינוני', icon: '🌿', color: 'from-yellow-400 to-yellow-600' },
-  hard: { label: 'קשה', icon: '🌳', color: 'from-purple-400 to-purple-600' },
+const levelMap: Record<string, string> = {
+  beginner: 'beginner',
+  intermediate: 'intermediate',
+  advanced: 'advanced',
+  extreme: 'extreme',
+  easy: 'beginner',
+  medium: 'intermediate',
+  hard: 'advanced',
 };
 
 function getMistakeStats() {
@@ -356,355 +249,1048 @@ function addMistake(id: number) {
   localStorage.setItem('mc-mistakes', JSON.stringify(stats));
 }
 
-function resetMistakes() {
-  localStorage.removeItem('mc-mistakes');
-}
-
-function pickQuestions(all: MultipleChoiceQuestion[], lang: string, count: number) {
-  const pool = all.filter((q: MultipleChoiceQuestion) => q.lang === lang);
-  const stats = getMistakeStats();
-  
-  // מערבב את כל השאלות כדי לקבל שאלות שונות בכל פעם
-  const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
-  
-  // לוקח רק כמה שאלות עם שגיאות (אם יש)
-  const mistakeQuestions = shuffledPool.filter((q: MultipleChoiceQuestion) => stats[q.id] > 0);
-  const boostedCount = Math.min(3, mistakeQuestions.length); // רק 3 שאלות עם שגיאות
-  const boosted = mistakeQuestions.slice(0, boostedCount);
-
-  // לוקח שאלות אקראיות מהשאר
-  const remainingQuestions = shuffledPool.filter((q: MultipleChoiceQuestion) => !boosted.includes(q));
-  const randomRest = remainingQuestions.slice(0, count - boosted.length);
-  
-  // מערבב הכל יחד
-  return [...boosted, ...randomRest].sort(() => Math.random() - 0.5);
-}
-
-export default function MultipleChoiceWrapper() {
+export default function MultipleChoiceGameWrapper() {
   return (
-    <Suspense fallback={<div>טוען...</div>}>
-      <MultipleChoice />
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">
+      <div className="text-2xl">טוען...</div>
+    </div>}>
+      <MultipleChoiceGame />
     </Suspense>
   );
 }
 
-function MultipleChoice() {
-  const { user } = useAuthUser();
+function MultipleChoiceGame() {
   const searchParams = useSearchParams();
-  const levelParam = searchParams?.get('level') || 'easy';
-  const mappedLevel = levelMap[levelParam] || 'easy';
-  const [difficulty] = useState(mappedLevel);
-  const [lang, setLang] = useState<'en' | 'he'>('en');
+  const level = searchParams?.get('level') || 'beginner';
+  const { user, loading, updateUser } = useAuthUser();
+  
+  // בחר שאלות לפי רמת קושי
+  const selectedQuestions = getQuestionsByDifficulty(levelMap[level] || 'beginner');
+  
   const [questions, setQuestions] = useState<MultipleChoiceQuestion[]>([]);
   const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
   const [score, setScore] = useState(0);
-  const [timer, setTimer] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [wrongAnswers, setWrongAnswers] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [started, setStarted] = useState(false);
-  const [inventory, setInventory] = useState<Record<string, number>>({});
+  const [finished, setFinished] = useState(false);
+  const [time, setTime] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [learnedWordsList, setLearnedWordsList] = useState<Array<{word: string, translation: string}>>([]);
+  const [newlyCompletedAchievements, setNewlyCompletedAchievements] = useState<Array<{id: string, name: string, icon: string, reward: number, xpReward: number}>>([]);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [useLearnedWords, setUseLearnedWords] = useState(false);
+  const [learnedWordsData, setLearnedWordsData] = useState<Array<{word: string, translation: string}>>([]);
+  const [loadingLearnedWords, setLoadingLearnedWords] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [selectedWordsCount, setSelectedWordsCount] = useState<number | null>(null);
+  const [selectedWords, setSelectedWords] = useState<Array<{word: string, translation: string}>>([]);
+  const [showWordSelector, setShowWordSelector] = useState(false);
+  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [levelUpData, setLevelUpData] = useState<{ oldLevel: number; newLevel: number } | null>(null);
+  
   const successAudio = useRef<HTMLAudioElement | null>(null);
   const failAudio = useRef<HTMLAudioElement | null>(null);
 
-  const finalScore = score;
-  const gamesWon = finalScore > (questions.length * 100) / 2;
+  // טען מילים שנלמדו מה-API
+  const loadLearnedWords = async () => {
+    if (!user) {
+      console.log('Cannot load learned words - no user logged in');
+      return;
+    }
+    
+    try {
+      setLoadingLearnedWords(true);
+      const response = await fetch(`/api/learned-words?userId=${user.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to load learned words');
+      }
+      
+      const data = await response.json();
+      const words = data.learnedWords || [];
+      
+      setLearnedWordsData(words);
+      console.log('Loaded learned words:', words.length);
+    } catch (error) {
+      console.error('Error loading learned words:', error);
+      setLearnedWordsData([]);
+    } finally {
+      setLoadingLearnedWords(false);
+    }
+  };
+
+  // המר מילים שנלמדו לשאלות
+  const createQuestionsFromLearnedWords = (words: Array<{word: string, translation: string}>, count: number): MultipleChoiceQuestion[] => {
+    const questions: MultipleChoiceQuestion[] = [];
+    const usedWords = new Set<string>();
+    
+    words.forEach((wordData, index) => {
+      if (questions.length >= count) return;
+      if (usedWords.has(wordData.word.toLowerCase())) return;
+      
+      const word = wordData.word;
+      const translation = wordData.translation || word;
+      
+      // נסה למצוא שאלה קיימת שהמילה היא התשובה הנכונה שלה
+      const existingQuestion = Object.values(QUESTIONS_BY_DIFFICULTY).flat().find(q => 
+        q.answer.toLowerCase() === word.toLowerCase()
+      );
+      
+      if (existingQuestion) {
+        questions.push(existingQuestion);
+        usedWords.add(word.toLowerCase());
+      } else {
+        // צור שאלה חדשה מהמילה
+        const similarWords = Object.values(QUESTIONS_BY_DIFFICULTY)
+          .flat()
+          .map(q => q.answer)
+          .filter(opt => opt.toLowerCase() !== word.toLowerCase())
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3);
+        
+        const options = [word, ...similarWords].sort(() => Math.random() - 0.5);
+        
+        // נסה למצוא תרגום טוב יותר אם התרגום זהה למילה
+        let finalTranslation = translation;
+        if (translation === word || !translation || translation.trim() === '') {
+          // נסה למצוא תרגום מהשאלות הקיימות
+          const existingQuestion = Object.values(QUESTIONS_BY_DIFFICULTY).flat().find(q => 
+            q.answer.toLowerCase() === word.toLowerCase()
+          );
+          if (existingQuestion?.explanationHe) {
+            finalTranslation = existingQuestion.explanationHe.split('-')[0]?.trim() || word;
+          } else {
+            finalTranslation = word; // אם אין תרגום, נשתמש במילה עצמה
+          }
+        }
+        
+        // צור הסבר משמעותי
+        const explanationHe = finalTranslation !== word
+          ? `המילה "${word}" פירושה "${finalTranslation}"`
+          : `המילה "${word}" היא מילה באנגלית`;
+        
+        questions.push({
+          id: 10000 + index,
+          lang: 'en',
+          question: finalTranslation !== word 
+            ? `What is the English word for "${finalTranslation}"?`
+            : `What is the English word "${word}"?`,
+          options: options,
+          answer: word,
+          explanation: `The English word "${word}"${finalTranslation !== word ? ` means "${finalTranslation}"` : ''}.`,
+          explanationHe: explanationHe
+        });
+        usedWords.add(word.toLowerCase());
+      }
+    });
+    
+    return questions.slice(0, count);
+  };
 
   useEffect(() => {
-    if (finished && user) {
-      fetch('/api/games/update-stats', {
+    if (gameStarted) {
+      if (useLearnedWords && learnedWordsData.length > 0) {
+        // השתמש במילים שנלמדו - קודם כל בדוק אם יש מילים שנבחרו ספציפית
+        let wordsToUse: Array<{word: string, translation: string}>;
+        if (selectedWords.length > 0) {
+          // אם יש מילים שנבחרו ספציפית, השתמש בהן
+          wordsToUse = selectedWords;
+        } else if (selectedWordsCount !== null) {
+          // אם יש כמות נבחרת, בחר אקראית מהמילים
+          wordsToUse = [...learnedWordsData].sort(() => Math.random() - 0.5).slice(0, selectedWordsCount);
+        } else {
+          // אחרת, השתמש בכל המילים
+          wordsToUse = learnedWordsData;
+        }
+        
+        const learnedQuestions = createQuestionsFromLearnedWords(wordsToUse, 10);
+        if (learnedQuestions.length > 0) {
+          const shuffled = [...learnedQuestions].sort(() => Math.random() - 0.5);
+          setQuestions(shuffled);
+        } else {
+          // אם אין מספיק שאלות, השתמש בשאלות רגילות
+          const shuffled = [...selectedQuestions].sort(() => Math.random() - 0.5);
+          setQuestions(shuffled.slice(0, 10));
+        }
+      } else {
+    // בחר שאלות אקראיות
+    const shuffled = [...selectedQuestions].sort(() => Math.random() - 0.5);
+    setQuestions(shuffled.slice(0, 10));
+      }
+      setCurrent(0);
+      setScore(0);
+      setCorrectAnswers(0);
+      setWrongAnswers(0);
+      setTime(0);
+      setFinished(false);
+      setSelected(null);
+      setFeedback(null);
+      setShowHint(false);
+    }
+  }, [gameStarted, useLearnedWords, learnedWordsData, selectedWordsCount, selectedWords]);
+
+  // טען מילים שנלמדו כשהמשתמש בוחר במצב learned words
+  useEffect(() => {
+    if (useLearnedWords && user && learnedWordsData.length === 0 && !loadingLearnedWords) {
+      loadLearnedWords();
+    }
+  }, [useLearnedWords, user]);
+
+  useEffect(() => {
+    if (!finished) {
+      const timer = setInterval(() => setTime(prev => prev + 1), 1000);
+      return () => clearInterval(timer);
+    }
+  }, [finished]);
+  
+  // פונקציה לחילוץ מילים אנגליות מטקסט
+  const extractEnglishWords = (text: string): string[] => {
+    if (!text) return [];
+    const englishWords = text.match(/[A-Za-z]+/g) || [];
+    return englishWords
+      .map(word => word.toLowerCase())
+      .filter(word => 
+        word.length > 2 && 
+        !['the', 'and', 'is', 'are', 'was', 'were', 'has', 'have', 'had', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'from', 'what', 'which', 'do', 'you', 'use', 'can', 'does'].includes(word)
+      );
+  };
+
+  // אסוף את כל המילים מכל השאלות במשחק
+  // מילון תרגומים מקומי - אם מילה לא נמצאת כאן, יחפש במילון המרכזי
+  const getTranslationForWord = (word: string): string | null => {
+    const wordLower = word.toLowerCase();
+    
+    // מילון תרגומים מקומי (נשאר כמו שהיה)
+    const localTranslations: Record<string, string> = {
+      // בעלי חיים
+      'dog': 'כלב', 'cat': 'חתול', 'bird': 'ציפור', 'fish': 'דג', 'frog': 'צפרדע',
+      'bear': 'דוב', 'lion': 'אריה', 'whale': 'לווייתן', 'monkey': 'קוף', 'deer': 'צבי',
+      'owl': 'ינשוף', 'rabbit': 'ארנב', 'duck': 'ברווז', 'eagle': 'נשר', 'snake': 'נחש',
+      'cow': 'פרה', 'elephant': 'פיל', 'mouse': 'עכבר', 'zebra': 'זברה',
+      // אוכל
+      'apple': 'תפוח', 'banana': 'בננה', 'water': 'מים', 'milk': 'חלב', 'tea': 'תה',
+      'bread': 'לחם', 'rice': 'אורז', 'cake': 'עוגה', 'soup': 'מרק', 'egg': 'ביצה',
+      'pasta': 'פסטה', 'curry': 'קארי', 'lemonade': 'לימונדה', 'honey': 'דבש',
+      'toast': 'טוסט', 'ice cream': 'גלידה', 'sushi': 'סושי', 'pizza': 'פיצה',
+      'juice': 'מיץ', 'sugar': 'סוכר', 'salt': 'מלח', 'lemon': 'לימון', 'carrot': 'גזר',
+      'tomato': 'עגבניה',
+      // חפצים
+      'book': 'ספר', 'pen': 'עט', 'cup': 'כוס', 'ball': 'כדור', 'hat': 'כובע',
+      'shoes': 'נעליים', 'shoe': 'נעל', 'chair': 'כיסא', 'bed': 'מיטה', 'bike': 'אופניים',
+      'camera': 'מצלמה', 'television': 'טלוויזיה', 'headphones': 'אוזניות',
+      'clock': 'שעון', 'key': 'מפתח', 'telescope': 'טלסקופ', 'blanket': 'שמיכה',
+      'toothbrush': 'מברשת שיניים', 'phone': 'טלפון', 'pillow': 'כרית',
+      'socks': 'גרביים', 'gloves': 'כפפות', 'shirt': 'חולצה', 'spoon': 'כפית',
+      'scissors': 'מספריים', 'fork': 'מזלג', 'knife': 'סכין', 'broom': 'מטאטא',
+      'watch': 'שעון', 'bag': 'תיק', 'hammer': 'פטיש', 'lock': 'מנעול',
+      'towel': 'מגבת', 'stove': 'כיריים', 'ruler': 'סרגל',
+      // טבע
+      'sun': 'שמש', 'moon': 'ירח', 'sky': 'שמיים', 'tree': 'עץ', 'flower': 'פרח',
+      'grass': 'דשא', 'cloud': 'ענן', 'snow': 'שלג', 'rain': 'גשם', 'sea': 'ים',
+      'hill': 'גבעה', 'mountain': 'הר', 'ocean': 'אוקיינוס', 'forest': 'יער',
+      'volcano': 'הר געש', 'river': 'נהר', 'rainbow': 'קשת', 'cave': 'מערה',
+      'fire': 'אש', 'ice': 'קרח', 'thunder': 'רעם',
+      // אנשים
+      'mom': 'אמא', 'dad': 'אבא', 'sister': 'אחות', 'brother': 'אח', 'family': 'משפחה',
+      'daughter': 'בת', 'son': 'בן', 'father': 'אבא', 'mother': 'אמא',
+      'grandmother': 'סבתא', 'teenager': 'נער', 'friend': 'חבר', 'teacher': 'מורה',
+      'baby': 'תינוק', 'child': 'ילד',
+      // מקומות
+      'home': 'בית', 'school': 'בית ספר', 'house': 'בית', 'bedroom': 'חדר שינה',
+      'kitchen': 'מטבח', 'living room': 'סלון', 'bathroom': 'חדר אמבטיה',
+      'garage': 'מוסך', 'garden': 'גינה', 'basement': 'מרתף', 'library': 'ספרייה',
+      'office': 'משרד',
+      // תחבורה
+      'car': 'מכונית', 'bus': 'אוטובוס', 'airplane': 'מטוס', 'train': 'רכבת',
+      'boat': 'סירה', 'motorcycle': 'אופנוע', 'taxi': 'מונית', 'bicycle': 'אופניים',
+      'ship': 'אונייה', 'subway': 'רכבת תחתית', 'truck': 'משאית', 'scooter': 'קורקינט',
+      // תכונות
+      'soft': 'רך', 'hard': 'קשה', 'big': 'גדול', 'small': 'קטן', 'hot': 'חם',
+      'cold': 'קר', 'sweet': 'מתוק', 'sour': 'חמוץ', 'round': 'עגול', 'loud': 'רועש',
+      'tall': 'גבוה', 'fast': 'מהיר', 'green': 'ירוק', 'yellow': 'צהוב', 'white': 'לבן',
+      'red': 'אדום', 'blue': 'כחול',
+      // חומרים
+      'metal': 'מתכת', 'rock': 'סלע', 'stone': 'אבן', 'wood': 'עץ', 'glass': 'זכוכית',
+      'plastic': 'פלסטיק', 'gold': 'זהב', 'diamond': 'יהלום', 'sand': 'חול',
+      // חלקי גוף
+      'hand': 'יד', 'eye': 'עין', 'ear': 'אוזן', 'nose': 'אף', 'mouth': 'פה',
+      'eyes': 'עיניים', 'ears': 'אוזניים',
+      // ימים וחודשים
+      'monday': 'יום שני', 'friday': 'יום שישי', 'winter': 'חורף',
+      'january': 'ינואר', 'summer': 'קיץ',
+      // מספרים
+      'five': 'חמש',
+      // צורות
+      'circle': 'עיגול',
+      // בגדים
+      'clothes': 'בגדים',
+      // מקצועות
+      'programmer': 'מתכנת', 'mechanic': 'מכונאי', 'electrician': 'חשמלאי', 'plumber': 'שרברב',
+      'manager': 'מנהל',
+      // מקומות ותחבורה
+      'road': 'כביש', 'street': 'רחוב',
+      // טכנולוגיה
+      'monitor': 'מסך', 'keyboard': 'מקלדת', 'computer': 'מחשב',
+      // משקאות
+      'wine': 'יין', 'soda': 'סודה',
+      // פעולות
+      'gives': 'נותן', 'give': 'נותן', 'star': 'כוכב',
+      // קטגוריות
+      'vegetable': 'ירק', 'vegetables': 'ירקות', 'fruit': 'פרי', 'fruits': 'פירות',
+      'season': 'עונה', 'seasons': 'עונות', 'drink': 'משקה', 'drinks': 'משקאות',
+      'vehicle': 'כלי רכב', 'vehicles': 'כלי רכב', 'tool': 'כלי', 'tools': 'כלים',
+      'planet': 'כוכב לכת', 'planets': 'כוכבי לכת',
+    };
+    
+    // חפש קודם במילון המקומי, ואם לא נמצא - במילון המרכזי
+    const translation = getTranslationWithFallback(wordLower, localTranslations, '');
+    return translation || null;
+  };
+
+  // מצא תרגום מהשאלות הקיימות
+  const findTranslationFromQuestions = (word: string): string | null => {
+    const wordLower = word.toLowerCase();
+    
+    // חפש בשאלות הקיימות
+    for (const difficulty in QUESTIONS_BY_DIFFICULTY) {
+      const questions = QUESTIONS_BY_DIFFICULTY[difficulty as keyof typeof QUESTIONS_BY_DIFFICULTY];
+      for (const q of questions) {
+        // אם המילה היא התשובה הנכונה, קח את התרגום מההסבר
+        if (q.answer.toLowerCase() === wordLower && q.explanationHe) {
+          // נסה לחלץ את התרגום מההסבר
+          // ההסבר יכול להיות "כרית רכה" או "כרית רכה - Pillow is soft"
+          const parts = q.explanationHe.split('-');
+          if (parts.length > 0) {
+            const translation = parts[0].trim();
+            // אם התרגום הוא מילה אחת או שתיים, קח אותו
+            if (translation.split(/\s+/).length <= 2) {
+              return translation;
+            }
+          }
+        }
+      }
+    }
+    
+    return null;
+  };
+
+  const collectAllWordsFromGame = () => {
+    const wordsMap = new Map<string, string>();
+    
+    if (!questions || questions.length === 0) {
+      return [];
+    }
+    
+    questions.forEach((question) => {
+      // הוסף את התשובה הנכונה - רק מהמילון הבסיסי!
+      if (question.answer) {
+        const answerWord = question.answer.toLowerCase();
+        if (!wordsMap.has(answerWord)) {
+          // השתמש רק במילון הבסיסי - אל תנסה לחלץ מההסבר!
+          const translation = getTranslationForWord(answerWord);
+          
+          // אם יש תרגום טוב מהמילון, שמור אותו
+          if (translation && translation !== answerWord) {
+          wordsMap.set(answerWord, translation);
+          }
+        }
+      }
+      
+      // הוסף מילים מהאפשרויות - רק מהמילון הבסיסי!
+      if (question.options) {
+        question.options.forEach(option => {
+          const optionWords = extractEnglishWords(option);
+          optionWords.forEach(word => {
+            if (!wordsMap.has(word.toLowerCase())) {
+              // השתמש רק במילון הבסיסי - אל תנסה לחלץ מההסבר!
+              const translation = getTranslationForWord(word);
+              
+              // אם יש תרגום טוב מהמילון, שמור אותו
+              if (translation && translation !== word) {
+                wordsMap.set(word.toLowerCase(), translation);
+              }
+            }
+          });
+        });
+      }
+    });
+    
+    // החזר רק מילים עם תרגום תקף
+    return Array.from(wordsMap.entries())
+      .filter(([word, translation]) => translation && translation !== word)
+      .map(([word, translation]) => ({
+      word,
+        translation: translation
+    }));
+  };
+
+  const saveLearnedWord = async (word: string, translation: string, isCorrect: boolean) => {
+    if (!user) {
+      console.log('Cannot save word - no user logged in');
+      return;
+    }
+    
+    try {
+      // ודא שהתרגום הוא הנכון - קודם כל מהמילון הבסיסי
+      let finalTranslation = getTranslationForWord(word);
+      
+      // אם אין במילון, נסה למצוא מהשאלות הקיימות
+      if (!finalTranslation) {
+        finalTranslation = findTranslationFromQuestions(word);
+      }
+      
+      // אם עדיין אין, נסה להשתמש בתרגום שקיבלנו (אבל רק אם הוא טוב)
+      if (!finalTranslation && translation && translation !== word && !translation.includes('המילה') && !translation.includes('באנגלית')) {
+        // בדוק אם התרגום הוא מילה אחת או שתיים (לא משפט ארוך)
+        if (translation.split(/\s+/).length <= 2) {
+          finalTranslation = translation;
+        }
+      }
+      
+      // אם אין תרגום טוב, שמור את המילה עם התרגום "לא ידוע" (נצטרך להוסיף למילון מאוחר יותר)
+      if (!finalTranslation || finalTranslation === word || finalTranslation.includes('המילה') || finalTranslation.includes('באנגלית')) {
+        // שמור את המילה עם סימן שאלה - נצטרך להוסיף למילון מאוחר יותר
+        finalTranslation = 'לא ידוע';
+      }
+      
+      console.log(`Saving word: ${word} (${finalTranslation})`);
+      const response = await fetch('/api/learned-words/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
-          gameName: 'multiple-choice',
-          score: finalScore,
-          won: gamesWon,
-        }),
-      }).catch(err => console.error("Failed to update stats:", err));
+          word: word,
+          translation: finalTranslation,
+          gameName: 'MultipleChoice',
+          difficulty: levelMap[level] || 'beginner',
+          isCorrect: isCorrect
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Failed to save word "${word}":`, response.status, errorData);
+        throw new Error(`Failed to save word: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log(`Word "${word}" saved successfully:`, result);
+      return result;
+    } catch (error) {
+      console.error(`Failed to save learned word "${word}":`, error);
+      throw error;
     }
-  }, [finished, user, finalScore, gamesWon]);
+  };
 
-  useEffect(() => {
-    if (!started) return;
-    const interval = setInterval(() => setTimer((t) => t + 1), 1000);
-    return () => clearInterval(interval);
-  }, [started]);
-
-  useEffect(() => {
-    const diff = difficulties.find((d) => d.key === difficulty)!;
-    // Filter questions by difficulty level
-    const levelQuestions = QUESTIONS.filter(q => {
-      if (difficulty === 'easy') return q.id >= 1 && q.id <= 200;
-      if (difficulty === 'medium') return q.id >= 201 && q.id <= 240;
-      if (difficulty === 'hard') return q.id >= 241 && q.id <= 280;
-      return true; // fallback
-    });
-    setQuestions(pickQuestions(levelQuestions, lang, diff.count));
-    setCurrent(0);
-    setScore(0);
-    setTimer(0);
-    setFinished(false);
-    setFeedback(null);
-    setStarted(false);
-    setSelected(null);
-    setShowHint(false);
-  }, [difficulty, lang]);
-
-  useEffect(() => {
-    // Load inventory from shop
-    try {
-      const inv = JSON.parse(localStorage.getItem('quiz-inventory') || '{}');
-      setInventory(inv);
-    } catch {}
-  }, []);
-
-  const handleSelect = (option: string) => {
-    setSelected(option);
+  const handleSelect = async (option: string) => {
+    if (feedback) return;
+    
     const question = questions[current];
     const isCorrect = option === question.answer;
+    
+    setSelected(option);
 
     if (isCorrect) {
-      setFeedback('נכון!');
-      setScore((s) => s + 100);
+      const explanation = question.explanationHe || question.explanation || `התשובה הנכונה היא "${question.answer}".`;
+      setFeedback(`נכון! 🎉\n\nהסבר: ${explanation}`);
+      setScore(prev => prev + 3);
+      setCorrectAnswers(prev => prev + 1);
       if (successAudio.current) {
         successAudio.current.currentTime = 0;
-        successAudio.current.play();
+        successAudio.current.play().catch(err => console.error('Error playing success audio:', err));
       }
     } else {
-      const explanation = question.explanation || `התשובה הנכונה היא "${question.answer}".`;
-      setFeedback(explanation);
+      const explanation = question.explanationHe || question.explanation || `התשובה הנכונה היא "${question.answer}".`;
+      setFeedback(`לא נכון! ❌\n\nהסבר: ${explanation}`);
+      setScore(prev => Math.max(0, prev - 2));
+      setWrongAnswers(prev => prev + 1);
       addMistake(question.id);
       if (failAudio.current) {
         failAudio.current.currentTime = 0;
-        failAudio.current.play();
+        failAudio.current.play().catch(err => console.error('Error playing fail audio:', err));
       }
     }
   };
-
-  const handleNext = () => {
-    setFeedback(null);
-    setSelected(null);
-    if (current === questions.length - 1) {
-      setFinished(true);
-    } else {
-      setCurrent((c) => c + 1);
-    }
-  };
-
-  const startGame = () => {
-    setStarted(true);
-    setTimer(0);
-    setScore(0);
-    setCurrent(0);
-    setFinished(false);
-    setFeedback(null);
-    setSelected(null);
-  };
-
-  const restart = () => {
-    setStarted(false);
-    setCurrent(0);
-    setScore(0);
-    setTimer(0);
-    setFinished(false);
+  
+  const handleNext = async () => {
     setFeedback(null);
     setSelected(null);
     setShowHint(false);
-  };
-
-  const useShopItem = (itemId: string) => {
-    if (!inventory[itemId] || inventory[itemId] <= 0) return;
-    setInventory(inv => {
-      const newInv = { ...inv, [itemId]: inv[itemId] - 1 };
-      localStorage.setItem('quiz-inventory', JSON.stringify(newInv));
-      return newInv;
-    });
     
-    switch (itemId) {
-      case 'hint':
-        setShowHint(true);
-        break;
-      case 'skip':
-        if (current < questions.length - 1) {
-          setCurrent(c => c + 1);
-          setSelected(null);
-          setFeedback(null);
-          setShowHint(false);
-        } else {
-          setFinished(true);
+    if (current < questions.length - 1) {
+      setCurrent(prev => prev + 1);
+    } else {
+      // זה השאלה האחרונה - אסוף את כל המילים לפני סיום המשחק
+      console.log('Game finished! Collecting words...');
+      const allWords = collectAllWordsFromGame();
+      console.log('All collected words:', allWords);
+      
+      // עדכן את ה-state עם המילים
+      setLearnedWordsList(allWords);
+      
+      // שמור את כל המילים (רק אם המשתמש מחובר ולא משחק עם מילים שנלמדו)
+      // בדוק אילו מילים כבר קיימות במסד הנתונים לפני השמירה
+      if (user && allWords.length > 0 && !useLearnedWords) {
+        console.log('User is logged in, checking existing words before saving...');
+        try {
+          // טען את כל המילים הקיימות של המשתמש
+          const existingWordsResponse = await fetch(`/api/learned-words?userId=${user.id}`);
+          if (!existingWordsResponse.ok) {
+            throw new Error('Failed to fetch existing words');
+          }
+          const existingWordsData = await existingWordsResponse.json();
+          const existingWords = existingWordsData.learnedWords || [];
+          
+          // צור Set של מילים קיימות (בכל המשחקים) לבדיקה מהירה
+          const existingWordsSet = new Set(
+            existingWords.map((w: any) => w.word.toLowerCase())
+          );
+          
+          // סנן רק את המילים החדשות (שאינן קיימות בכל המשחקים)
+          const newWords = allWords.filter(wordData => {
+            return !existingWordsSet.has(wordData.word.toLowerCase());
+          });
+          
+          console.log(`Found ${existingWords.length} existing words, ${newWords.length} new words to save`);
+          
+          // הצג את כל המילים שלמד במשחק (לא רק החדשות)
+          // אבל שמור רק את המילים החדשות
+          setLearnedWordsList(allWords);
+          
+          // שמור רק את המילים החדשות
+          if (newWords.length > 0) {
+            console.log('Saving', newWords.length, 'new words to database...');
+            const savePromises = newWords.map(wordData => 
+          saveLearnedWord(wordData.word, wordData.translation, true)
+        );
+          const results = await Promise.allSettled(savePromises);
+          const successful = results.filter(r => r.status === 'fulfilled').length;
+          const failed = results.filter(r => r.status === 'rejected').length;
+          console.log(`Words save completed: ${successful} successful, ${failed} failed`);
+          } else {
+            console.log('No new words to save - all words already exist');
+          }
+        } catch (error) {
+          console.error('Error checking/saving words:', error);
+          // במקרה של שגיאה, נסה לשמור את כל המילים (fallback)
+          const savePromises = allWords.map(wordData => 
+            saveLearnedWord(wordData.word, wordData.translation, true)
+          );
+          Promise.allSettled(savePromises).catch(err => 
+            console.error('Error in fallback save:', err)
+          );
         }
-        break;
-      case 'extra_time':
-        // Add 10 seconds to timer
-        setTimer(t => t - 10);
-        break;
-      case 'score_boost':
-        // Add bonus points
-        setScore(s => s + 50);
-        break;
+      }
+      
+      setFinished(true);
+      
+      if (user) {
+        try {
+          const totalQuestions = questions.length;
+          const won = correctAnswers > (totalQuestions / 2); // ניצחון אם ענה על יותר מ-50% נכון
+          const perfectScore = correctAnswers === totalQuestions && wrongAnswers === 0; // בקיאות מלאה אם ענה על כל השאלות נכון
+          
+          const response = await fetch('/api/games/update-stats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              gameName: 'MultipleChoice',
+              score,
+              won: won,
+              correctAnswers: correctAnswers,
+              totalQuestions: totalQuestions,
+              perfectScore: perfectScore,
+              time,
+            }),
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.newlyCompletedAchievements && data.newlyCompletedAchievements.length > 0) {
+              setNewlyCompletedAchievements(data.newlyCompletedAchievements);
+              setShowAchievementModal(true);
+              
+              // עדכן את המשתמש עם המתנות החדשות
+              if (updateUser && user) {
+                updateUser(user);
+              }
+            }
+            // בדוק אם המשתמש עלה רמה
+            if (data.levelUp && data.oldLevel !== undefined && data.newLevel !== undefined) {
+              setLevelUpData({
+                oldLevel: data.oldLevel,
+                newLevel: data.newLevel
+              });
+              setShowLevelUpModal(true);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to update game stats:', error);
+        }
+      }
     }
   };
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl">טוען...</div>
+      </div>
+    );
+  }
 
-  const isRTL = lang === 'he';
+  if (!gameStarted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-purple-300 to-purple-500 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl p-8 text-center border-4 border-blue-200">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">בחירה מרובה</h1>
+          <p className="text-xl text-gray-600 mb-8">בחר את התשובה הנכונה</p>
+          
+          {/* בחירת מצב משחק - רגיל או מילים שנלמדו */}
+          <div className="mb-6 bg-white bg-opacity-90 rounded-2xl p-6 shadow-xl">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">בחר מצב משחק:</h2>
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={() => {
+                  setUseLearnedWords(false);
+                }}
+                className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                  !useLearnedWords
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white scale-105'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                🎮 משחק רגיל
+              </button>
+              <button
+                onClick={() => {
+                  if (!user) {
+                    alert('אנא התחבר כדי לשחק עם המילים שלמדת');
+                    return;
+                  }
+                  setUseLearnedWords(true);
+                  if (learnedWordsData.length === 0) {
+                    loadLearnedWords();
+                  }
+                }}
+                disabled={!user || loadingLearnedWords}
+                className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                  useLearnedWords
+                    ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white scale-105'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {loadingLearnedWords ? (
+                  '⏳ טוען מילים...'
+                ) : (
+                  <>
+                    📚 משחק עם מילים שנלמדו
+                    {learnedWordsData.length > 0 && (
+                      <span className="block text-sm mt-1">({learnedWordsData.length} מילים זמינות)</span>
+                    )}
+                  </>
+                )}
+              </button>
+              {!user && (
+                <p className="text-sm text-gray-600 text-center mt-2">
+                  💡 התחבר כדי לשחק עם המילים שלמדת
+                </p>
+              )}
+            </div>
+            {useLearnedWords && learnedWordsData.length === 0 && !loadingLearnedWords && user && (
+              <p className="text-red-500 text-center mt-4 font-bold">
+                אין מספיק מילים שנלמדו כדי לשחק. אנא שחק במשחקים אחרים כדי ללמוד מילים.
+              </p>
+            )}
+            
+            {/* בחירת כמות מילים (רק אם יש מילים שנלמדו) */}
+            {useLearnedWords && learnedWordsData.length > 0 && !loadingLearnedWords && (
+              <div className="mt-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                <label className="block text-sm font-bold text-blue-800 mb-2 text-center">
+                  בחר מילים למשחק:
+                </label>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3 justify-center">
+                    <input
+                      type="radio"
+                      id="all-words-mc"
+                      name="word-selection-mc"
+                      checked={selectedWordsCount === null && selectedWords.length === 0 && !showWordSelector}
+                      onChange={() => {
+                        setSelectedWordsCount(null);
+                        setSelectedWords([]);
+                        setShowWordSelector(false);
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <label htmlFor="all-words-mc" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                      כל המילים ({learnedWordsData.length})
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-3 justify-center">
+                    <input
+                      type="radio"
+                      id="custom-count-mc"
+                      name="word-selection-mc"
+                      checked={selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector}
+                      onChange={() => {
+                        setSelectedWordsCount(Math.min(40, learnedWordsData.length));
+                        setSelectedWords([]);
+                        setShowWordSelector(false);
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <label htmlFor="custom-count-mc" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                      כמות אקראית:
+                    </label>
+                    {selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector && (
+                      <input
+                        type="number"
+                        min="1"
+                        max={learnedWordsData.length}
+                        value={selectedWordsCount}
+                        onChange={(e) => {
+                          const count = parseInt(e.target.value) || 1;
+                          const maxCount = Math.min(count, learnedWordsData.length);
+                          setSelectedWordsCount(maxCount);
+                          setSelectedWords([]);
+                        }}
+                        className="w-20 px-2 py-1 border-2 border-blue-300 rounded-lg text-center font-bold"
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 justify-center">
+                    <input
+                      type="radio"
+                      id="select-words-mc"
+                      name="word-selection-mc"
+                      checked={showWordSelector || selectedWords.length > 0}
+                      onChange={() => {
+                        setSelectedWordsCount(null);
+                        setShowWordSelector(true);
+                        if (selectedWords.length === 0) {
+                          setSelectedWords([]);
+                        }
+                      }}
+                      className="w-5 h-5"
+                    />
+                    <label htmlFor="select-words-mc" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                      בחר מילים ספציפיות
+                    </label>
+                  </div>
+                  {selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector && (
+                    <p className="text-xs text-gray-600 text-center mt-2">
+                      המילים נבחרות אקראית מתוך {learnedWordsData.length} מילים זמינות
+                    </p>
+                  )}
+                  {selectedWords.length > 0 && (
+                    <p className="text-xs text-green-600 text-center mt-2 font-bold">
+                      נבחרו {selectedWords.length} מילים
+                    </p>
+                  )}
+                </div>
+                
+                {/* רשימת בחירת מילים */}
+                {(showWordSelector || selectedWords.length > 0) && (
+                  <div className="mt-4 max-h-60 overflow-y-auto border-2 border-blue-300 rounded-lg p-3 bg-white">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {learnedWordsData.map((wordData, index) => {
+                        const isSelected = selectedWords.some(w => w.word.toLowerCase() === wordData.word.toLowerCase());
+                        return (
+                          <label
+                            key={index}
+                            className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-blue-100 ${
+                              isSelected ? 'bg-blue-200' : ''
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedWords([...selectedWords, wordData]);
+                                  setSelectedWordsCount(null);
+                                  setShowWordSelector(true);
+                                } else {
+                                  setSelectedWords(selectedWords.filter(w => w.word.toLowerCase() !== wordData.word.toLowerCase()));
+                                }
+                              }}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-sm font-semibold text-gray-800">{wordData.word}</span>
+                            <span className="text-xs text-gray-600">({getTranslationWithFallback(wordData.word, undefined, wordData.translation)})</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {selectedWords.length > 0 && (
+                      <div className="mt-3 flex gap-2 justify-center">
+                        <button
+                          onClick={() => {
+                            setSelectedWords([]);
+                            setShowWordSelector(false);
+                          }}
+                          className="px-4 py-1 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600"
+                        >
+                          נקה בחירה
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedWords([...learnedWordsData]);
+                            setShowWordSelector(true);
+                          }}
+                          className="px-4 py-1 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600"
+                        >
+                          בחר הכל
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+            <button
+              onClick={() => {
+                if (useLearnedWords && learnedWordsData.length === 0) {
+                  alert('אין מספיק מילים שנלמדו כדי לשחק. אנא שחק במשחקים אחרים כדי ללמוד מילים.');
+                  return;
+                }
+                if (useLearnedWords && showWordSelector && selectedWords.length === 0) {
+                  alert('אנא בחר לפחות מילה אחת למשחק.');
+                  return;
+                }
+                setGameStarted(true);
+              }}
+              disabled={useLearnedWords && (learnedWordsData.length === 0 || (showWordSelector && selectedWords.length === 0))}
+            className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-12 py-4 rounded-full text-2xl font-bold shadow-lg hover:from-green-500 hover:to-blue-600 transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            התחל משחק
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  const progress = questions.length > 0 ? ((current + 1) / questions.length) * 100 : 0;
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl">טוען שאלות...</div>
+      </div>
+    );
+  }
+  
+  if (finished) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-purple-300 to-purple-500 flex items-center justify-center p-4">
+        <div className="max-w-4xl w-full bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl p-8 text-center border-4 border-blue-200">
+          {correctAnswers === questions.length && wrongAnswers === 0 ? (
+            <div className="mb-6">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-4 animate-pulse">🏆 ניצחת בבקיאות מלאה!</h1>
+              <p className="text-3xl text-yellow-600 font-bold mb-2">כל הכבוד! ענית נכון על כל השאלות!</p>
+            </div>
+          ) : correctAnswers > (questions.length / 2) ? (
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6">🎉 כל הכבוד! ניצחת!</h1>
+          ) : (
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">📊 המשחק הסתיים</h1>
+          )}
+          <p className="text-2xl text-blue-600 mb-2 font-bold">הציון שלך: {score} נקודות</p>
+          <p className="text-xl text-gray-600 mb-2">תשובות נכונות: {correctAnswers} / {questions.length}</p>
+          <p className="text-xl text-purple-600 mb-8 font-semibold">זמן: {Math.floor(time / 60)}:{(time % 60).toString().padStart(2, '0')}</p>
+          
+          {/* רשימת המילים שנלמדו */}
+          {learnedWordsList && learnedWordsList.length > 0 && (
+            <div className="mb-8 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-300">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">📚 המילים שלמדת במשחק הזה:</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+                {learnedWordsList.map((wordData, index) => (
+                  <div key={index} className="bg-white rounded-lg p-3 shadow-md border border-blue-200">
+                    <div className="font-bold text-blue-700 text-lg">{wordData.word}</div>
+                    <div className="text-sm text-gray-600">{wordData.translation}</div>
+                  </div>
+                ))}
+              </div>
+              {user && (
+                <div className="mt-4 text-sm text-gray-600">
+                  ✅ המילים נשמרו בדף המילים שנלמדו
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="flex flex-wrap gap-4 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xl font-bold shadow-lg hover:from-blue-600 hover:to-purple-700 transition-transform transform hover:scale-105"
+            >
+              שחק שוב 🔄
+            </button>
+            {user && learnedWordsList && learnedWordsList.length > 0 && (
+              <a
+                href="/learned-words"
+                className="px-8 py-3 bg-gradient-to-r from-indigo-400 to-purple-500 text-white rounded-full text-xl font-bold shadow-lg hover:from-indigo-500 hover:to-purple-600 transition-transform transform hover:scale-105"
+              >
+                📚 צפה בכל המילים
+              </a>
+            )}
+            <button
+              onClick={() => window.location.href = '/games'}
+              className="px-8 py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-full text-xl font-bold shadow-lg hover:from-green-600 hover:to-teal-700 transition-transform transform hover:scale-105"
+            >
+              משחקים נוספים 🎮
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  const question = questions[current];
 
   return (
-    <main className={`min-h-screen bg-gradient-to-br from-blue-200 via-yellow-200 to-green-200 flex flex-col items-center justify-center p-4 ${isRTL ? 'rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      {/* Top Banner Ad */}
-      <AdManager showBanner={true} bannerPosition="top" testMode={false} />
-      
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-purple-300 to-purple-500 p-4">
+      {/* נגן צלילים */}
       <audio ref={successAudio} src="/voise/הצלחה.dat" preload="auto" />
       <audio ref={failAudio} src="/voise/כשלון.dat" preload="auto" />
-      <div className="max-w-2xl w-full mx-auto bg-white bg-opacity-90 rounded-2xl shadow-2xl p-8">
-        {/* Progress Bar */}
-        {started && questions.length > 0 && (
-          <div className="w-full h-3 bg-blue-100 rounded-full mb-6 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+      
+      <AdManager showBanner={true} bannerPosition="top" testMode={false} />
+      
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-xl p-6 mb-6 text-white">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-2xl font-bold text-white">
+              שאלה {current + 1}/{questions.length}
           </div>
-        )}
-        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-          <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 text-center drop-shadow-lg flex items-center gap-4">
-            בחירה מרובה
-            <span className={`inline-flex items-center gap-2 px-6 py-2 rounded-full font-bold text-xl shadow bg-gradient-to-r ${levelLabels[difficulty].color} text-white ml-4`}>
-              <span className="text-2xl">{levelLabels[difficulty].icon}</span> {levelLabels[difficulty].label}
-            </span>
-          </h1>
-        </div>
-        {!started && (
-          <div className="flex flex-col gap-4 items-center mb-8">
-            <div className="flex gap-4 mb-4">
-              <button onClick={() => setLang('en')} className={`px-6 py-2 rounded-full font-bold shadow text-lg ${lang==='en'?'bg-green-600 text-white scale-105':'bg-white text-green-700 hover:bg-green-100'}`}>English</button>
-              <button onClick={() => setLang('he')} className={`px-6 py-2 rounded-full font-bold shadow text-lg ${lang==='he'?'bg-pink-600 text-white scale-105':'bg-white text-pink-700 hover:bg-pink-100'}`}>עברית</button>
+            <div className="text-xl text-blue-100">
+              ⏱️ {Math.floor(time / 60)}:{(time % 60).toString().padStart(2, '0')}
             </div>
-            <button onClick={startGame} className="bg-gradient-to-r from-yellow-400 via-green-400 to-blue-500 text-white px-12 py-4 rounded-full text-2xl font-bold shadow-lg hover:from-blue-500 hover:to-green-400 transition-all duration-200 mt-4">התחל</button>
-          </div>
-        )}
-        {started && !finished && questions.length > 0 && (
-          <>
-            <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
-              <div className="bg-white bg-opacity-80 rounded-xl px-6 py-2 text-lg font-bold text-blue-700 shadow">ניקוד: {score}</div>
-              <div className="bg-white bg-opacity-80 rounded-xl px-6 py-2 text-lg font-bold text-green-700 shadow">שאלה: {current+1}/{questions.length}</div>
-              <div className="bg-white bg-opacity-80 rounded-xl px-6 py-2 text-lg font-bold text-pink-700 shadow">זמן: {timer} שניות</div>
+            <div className="text-xl font-bold text-yellow-200">
+              🏆 {score}
             </div>
-            {/* כפתורי עזר */}
-            {selected === null && (
-              <div className="flex flex-wrap gap-2 justify-center mb-4">
-                {/* כפתור רמז */}
-                {inventory['hint'] > 0 && !showHint && (
-                  <button
-                    onClick={() => useShopItem('hint')}
-                    className="px-4 py-2 rounded-full bg-yellow-300 text-yellow-900 font-bold shadow hover:bg-yellow-400 flex items-center gap-2 text-sm"
-                  >
-                    <span className="text-xl">💡</span> רמז ({inventory['hint']})
-                  </button>
-                )}
-                {/* כפתור דילוג */}
-                {inventory['skip'] > 0 && (
-                  <button
-                    onClick={() => useShopItem('skip')}
-                    className="px-4 py-2 rounded-full bg-blue-300 text-blue-900 font-bold shadow hover:bg-blue-400 flex items-center gap-2 text-sm"
-                  >
-                    <span className="text-xl">⏭️</span> דלג ({inventory['skip']})
-                  </button>
-                )}
-                {/* כפתור תוספת זמן */}
-                {inventory['extra_time'] > 0 && (
-                  <button
-                    onClick={() => useShopItem('extra_time')}
-                    className="px-4 py-2 rounded-full bg-green-300 text-green-900 font-bold shadow hover:bg-green-400 flex items-center gap-2 text-sm"
-                  >
-                    <span className="text-xl">⏰</span> זמן ({inventory['extra_time']})
-                  </button>
-                )}
-                {/* כפתור בונוס ניקוד */}
-                {inventory['score_boost'] > 0 && (
-                  <button
-                    onClick={() => useShopItem('score_boost')}
-                    className="px-4 py-2 rounded-full bg-purple-300 text-purple-900 font-bold shadow hover:bg-purple-400 flex items-center gap-2 text-sm"
-                  >
-                    <span className="text-xl">🚀</span> בונוס ({inventory['score_boost']})
-                  </button>
-                )}
               </div>
-            )}
-            {/* הצג רמז */}
-            {showHint && selected === null && questions[current]?.explanation && (
-              <div className="bg-yellow-50 border-4 border-yellow-400 rounded-2xl px-6 py-4 text-lg font-bold text-yellow-900 shadow-lg mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">💡</span>
-                  <span>רמז</span>
+          
+          {/* Progress Bar */}
+          <div className="w-full bg-white bg-opacity-30 rounded-full h-3">
+            <div
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 h-3 rounded-full transition-all duration-300 shadow-lg"
+              style={{ width: `${((current + 1) / questions.length) * 100}%` }}
+            />
                 </div>
-                <div className="text-md">{questions[current].explanation}</div>
               </div>
-            )}
-            <div className="mb-6">
-              <div className="text-xl font-bold text-center mb-4 animate-fade-in-slow">{questions[current].question}
-                {getMistakeStats()[questions[current].id] > 0 && (
-                  <span className="ml-2 px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700 font-bold align-middle">חיזוק אישי</span>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                {questions[current].options.map((option, idx) => (
+        
+        {/* Question */}
+        <div className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-xl p-8 mb-6 border-2 border-blue-200">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            {question.question}
+          </h2>
+          
+          {/* Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {question.options.map((option, index) => (
                   <button
-                    key={idx}
+                key={index}
                     onClick={() => handleSelect(option)}
-                    className={`px-6 py-4 rounded-full font-bold text-lg shadow transition-all duration-200
-                      ${selected === option && feedback ? (option === questions[current].answer ? 'bg-green-400 text-white scale-110 ring-4 ring-green-300 animate-correct' : 'bg-red-400 text-white scale-110 ring-4 ring-red-300 animate-wrong') : 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:scale-105'}`}
-                    disabled={!!selected}
+                disabled={!!feedback}
+                className={`p-6 rounded-xl text-xl font-bold transition-all duration-300 transform ${
+                  selected === option
+                    ? feedback === 'נכון! 🎉'
+                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg scale-105'
+                      : 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg scale-105'
+                    : feedback && option === question.answer
+                    ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg scale-105'
+                    : `bg-gradient-to-r ${index === 0 ? 'from-blue-400 to-blue-500' : index === 1 ? 'from-purple-400 to-purple-500' : index === 2 ? 'from-pink-400 to-pink-500' : 'from-orange-400 to-orange-500'} text-white hover:scale-105 hover:shadow-lg`
+                } ${feedback ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     {option}
                   </button>
                 ))}
               </div>
+          
+          {/* Feedback */}
               {feedback && (
-                <div className={`text-center mb-4 text-2xl font-bold ${feedback==='נכון!'?'text-green-600':'text-red-500'} animate-fade-in`}>
-                  {feedback}
-                  {selected !== null && feedback === 'לא נכון' && (questions[current].explanation || questions[current].explanationHe) && (
-                    <div className="mt-2 text-lg font-normal text-gray-700 bg-yellow-100 rounded-xl px-4 py-2 shadow animate-fade-in">
-                      {questions[current].explanation && (
-                        <div>הסבר: {questions[current].explanation}</div>
-                      )}
-                      {questions[current].explanationHe && (
-                        <div className="text-blue-700 font-bold mt-2">הסבר בעברית: {questions[current].explanationHe}</div>
-                      )}
+            <div className={`text-center mb-6 p-6 rounded-2xl shadow-lg ${
+              feedback.includes('נכון! 🎉') ? 'bg-gradient-to-r from-green-400 to-green-500 text-white' : 'bg-gradient-to-r from-red-400 to-red-500 text-white'
+            }`}>
+              <div className="text-2xl font-bold animate-bounce whitespace-pre-line">{feedback}</div>
                     </div>
                   )}
+          
+          {/* Next Button */}
+          {feedback && (
+            <div className="text-center">
                   <button
                     onClick={handleNext}
-                    className="mt-4 px-8 py-3 bg-blue-500 text-white rounded-full font-bold text-xl shadow hover:bg-blue-600 transition-all duration-200"
+                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xl font-bold shadow-lg hover:from-blue-600 hover:to-purple-700 transition-transform transform hover:scale-105"
                   >
-                    {current === questions.length - 1 ? 'סיום' : 'המשך'}
+                {current < questions.length - 1 ? 'שאלה הבאה ➡️' : 'סיים משחק 🏁'}
                   </button>
                 </div>
               )}
             </div>
-          </>
-        )}
-        {finished && (
-          <div className="text-center mt-6 animate-fade-in">
-            <div className="text-2xl font-bold text-blue-700 mb-4">כל הכבוד! סיימת את כל השאלות 🎉</div>
-            <div className="text-lg font-bold text-green-700 mb-2">ניקוד סופי: {score} | זמן: {timer} שניות</div>
-            <button onClick={restart} className="bg-gradient-to-r from-yellow-400 via-green-400 to-blue-500 text-white px-8 py-3 rounded-full text-xl font-bold shadow-lg hover:from-blue-500 hover:to-green-400 transition-all duration-200 mt-4">שחק שוב</button>
-          </div>
-        )}
       </div>
       
-      {/* Bottom Banner Ad */}
       <AdManager showBanner={true} bannerPosition="bottom" testMode={false} />
       
-      <style>{`
-        @keyframes fade-in { from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);} }
-        .animate-fade-in { animation: fade-in 1s cubic-bezier(.4,0,.2,1) both; }
-        @keyframes fade-in-slow { from{opacity:0;} to{opacity:1;} }
-        .animate-fade-in-slow { animation: fade-in-slow 1.5s; }
-        @keyframes correct { 0%,100%{background:#60d394;} 50%{background:#38b000;} }
-        .animate-correct { animation: correct 0.7s; }
-        @keyframes wrong { 0%,100%{background:#f87171;} 50%{background:#dc2626;} }
-        .animate-wrong { animation: wrong 0.7s; }
-      `}</style>
-    </main>
+      {/* Level Up Modal */}
+      {levelUpData && (
+        <LevelUpModal
+          show={showLevelUpModal}
+          oldLevel={levelUpData.oldLevel}
+          newLevel={levelUpData.newLevel}
+          onClose={() => {
+            setShowLevelUpModal(false);
+            setLevelUpData(null);
+          }}
+        />
+      )}
+
+      {/* Achievement Modal */}
+      {showAchievementModal && newlyCompletedAchievements.length > 0 && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowAchievementModal(false)}>
+          <div className="bg-gradient-to-br from-yellow-100 via-orange-50 to-yellow-100 rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 border-4 border-yellow-400 animate-bounce" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="text-6xl mb-4 animate-pulse">🏆</div>
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">כל הכבוד! הישג חדש!</h2>
+              
+              {newlyCompletedAchievements.map((achievement, index) => (
+                <div key={achievement.id} className="mb-4 p-4 bg-white rounded-xl shadow-lg border-2 border-yellow-300">
+                  <div className="text-4xl mb-2">{achievement.icon}</div>
+                  <div className="text-xl font-bold text-gray-800 mb-2">{achievement.name}</div>
+                  <div className="flex justify-center gap-4 text-lg">
+                    <div className="flex items-center text-yellow-600">
+                      <span className="mr-1">💎</span>
+                      <span className="font-bold">+{achievement.reward}</span>
+                    </div>
+                    {achievement.xpReward > 0 && (
+                      <div className="flex items-center text-blue-600">
+                        <span className="mr-1">⭐</span>
+                        <span className="font-bold">+{achievement.xpReward} XP</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              <button
+                onClick={() => {
+                  setShowAchievementModal(false);
+                  setNewlyCompletedAchievements([]);
+                }}
+                className="mt-6 px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-xl font-bold shadow-lg hover:from-blue-600 hover:to-purple-700 transition-transform transform hover:scale-105"
+              >
+                מעולה! 🎉
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
-} 
+}
+
+

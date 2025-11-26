@@ -377,14 +377,27 @@ async function addHouseItems() {
   console.log(`\n🎉 Done! Added ${added} items, skipped ${skipped} existing items.`);
 }
 
-addHouseItems()
-  .catch((e) => {
-    console.error('❌ Error:', e);
+async function main() {
+  try {
+    // Test connection first
+    console.log('🔌 Testing database connection...');
+    await prisma.$connect();
+    console.log('✅ Database connected successfully!');
+    
+    await addHouseItems();
+  } catch (error) {
+    console.error('❌ Error:', error);
+    if (error.message && error.message.includes('connection')) {
+      console.error('💡 Connection error - check your DATABASE_URL in .env file');
+      console.error('💡 Make sure MySQL server is running and accessible');
+    }
     process.exit(1);
-  })
-  .finally(async () => {
+  } finally {
     await prisma.$disconnect();
-  });
+  }
+}
+
+main();
 
 
 

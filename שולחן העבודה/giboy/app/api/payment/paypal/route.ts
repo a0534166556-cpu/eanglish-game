@@ -36,7 +36,8 @@ async function getPayPalAccessToken() {
 // Create PayPal order
 export async function POST(request: NextRequest) {
   try {
-    const { amount, currency, description, diamonds, coins } = await request.json();
+    const body = await request.json();
+    const { amount, currency, description, diamonds, coins, plan } = body;
 
     // Get access token
     const accessToken = await getPayPalAccessToken();
@@ -58,8 +59,8 @@ export async function POST(request: NextRequest) {
           description: description || `${diamonds || 0} יהלומים + ${coins || 0} מטבעות`,
         }],
         application_context: {
-          return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment/success`,
-          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/payment/cancel`,
+          return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription/payment/success?plan=${plan || 'basic'}`,
+          cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/subscription/payment?plan=${plan || 'basic'}`,
           brand_name: 'Giboy English Games',
           landing_page: 'NO_PREFERENCE',
           user_action: 'PAY_NOW',

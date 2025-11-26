@@ -415,9 +415,57 @@ const QUESTIONS: Question[] = [
   
   { id: 702, lang: "en", category: "physics", text: "What is the unit of force?", options: ["Joule", "Watt", "Newton", "Pascal"], answer: 2, explanation: "Force is measured in Newtons (N).", explanationHe: "כוח נמדד בניוטון (N)." },
   { id: 703, lang: "he", category: "physics", text: "מה יחידת המידה של כוח?", options: ["ג'ול", "וואט", "ניוטון", "פסקל"], answer: 2, explanation: "כוח נמדד בניוטון.", explanationHe: "כוח נמדד בניוטון." },
+  { id: 988, lang: "en", category: "physics", text: "What is the unit of energy?", options: ["Newton", "Watt", "Joule", "Pascal"], answer: 2, explanation: "Energy is measured in Joules (J).", explanationHe: "אנרגיה נמדדת בג'ול (J)." },
+  { id: 989, lang: "he", category: "physics", text: "מה יחידת המידה של אנרגיה?", options: ["ניוטון", "וואט", "ג'ול", "פסקל"], answer: 2, explanation: "אנרגיה נמדדת בג'ול.", explanationHe: "אנרגיה נמדדת בג'ול." },
+  { id: 990, lang: "en", category: "physics", text: "What is the unit of power?", options: ["Joule", "Watt", "Newton", "Pascal"], answer: 1, explanation: "Power is measured in Watts (W).", explanationHe: "הספק נמדד בוואט (W)." },
+  { id: 991, lang: "he", category: "physics", text: "מה יחידת המידה של הספק?", options: ["ג'ול", "וואט", "ניוטון", "פסקל"], answer: 1, explanation: "הספק נמדד בוואט.", explanationHe: "הספק נמדד בוואט." },
+  { id: 992, lang: "en", category: "physics", text: "What is gravity?", options: ["A force that pulls objects down", "A type of energy", "A form of light", "A chemical reaction"], answer: 0, explanation: "Gravity is a force that pulls objects toward each other.", explanationHe: "כוח המשיכה הוא כוח שמושך עצמים זה לזה." },
+  { id: 993, lang: "he", category: "physics", text: "מה זה כוח משיכה?", options: ["כוח שמושך עצמים למטה", "סוג של אנרגיה", "צורה של אור", "תגובה כימית"], answer: 0, explanation: "כוח המשיכה הוא כוח שמושך עצמים זה לזה.", explanationHe: "כוח המשיכה הוא כוח שמושך עצמים זה לזה." },
+  { id: 994, lang: "en", category: "physics", text: "What is the formula for speed?", options: ["distance × time", "distance ÷ time", "time ÷ distance", "distance + time"], answer: 1, explanation: "Speed = distance ÷ time.", explanationHe: "מהירות = מרחק ÷ זמן." },
+  { id: 995, lang: "he", category: "physics", text: "מה הנוסחה למהירות?", options: ["מרחק × זמן", "מרחק ÷ זמן", "זמן ÷ מרחק", "מרחק + זמן"], answer: 1, explanation: "מהירות = מרחק ÷ זמן.", explanationHe: "מהירות = מרחק ÷ זמן." },
+  { id: 996, lang: "en", category: "physics", text: "What is the acceleration due to gravity on Earth?", options: ["9.8 m/s²", "10 m/s²", "8.8 m/s²", "11 m/s²"], answer: 0, explanation: "The acceleration due to gravity on Earth is approximately 9.8 m/s².", explanationHe: "תאוצת הכובד על כדור הארץ היא בערך 9.8 מ'/שנ²." },
+  { id: 997, lang: "he", category: "physics", text: "מה תאוצת הכובד על כדור הארץ?", options: ["9.8 מ'/שנ²", "10 מ'/שנ²", "8.8 מ'/שנ²", "11 מ'/שנ²"], answer: 0, explanation: "תאוצת הכובד על כדור הארץ היא בערך 9.8 מ'/שנ².", explanationHe: "תאוצת הכובד על כדור הארץ היא בערך 9.8 מ'/שנ²." },
+  { id: 998, lang: "en", category: "physics", text: "What is the unit of electric current?", options: ["Volt", "Ampere", "Ohm", "Watt"], answer: 1, explanation: "Electric current is measured in Amperes (A).", explanationHe: "זרם חשמלי נמדד באמפר (A)." },
+  { id: 999, lang: "he", category: "physics", text: "מה יחידת המידה של זרם חשמלי?", options: ["וולט", "אמפר", "אוהם", "וואט"], answer: 1, explanation: "זרם חשמלי נמדד באמפר.", explanationHe: "זרם חשמלי נמדד באמפר." },
+  { id: 1000, lang: "en", category: "physics", text: "What is the unit of voltage?", options: ["Ampere", "Volt", "Ohm", "Watt"], answer: 1, explanation: "Voltage is measured in Volts (V).", explanationHe: "מתח חשמלי נמדד בוולט (V)." },
+  { id: 1001, lang: "he", category: "physics", text: "מה יחידת המידה של מתח חשמלי?", options: ["אמפר", "וולט", "אוהם", "וואט"], answer: 1, explanation: "מתח חשמלי נמדד בוולט.", explanationHe: "מתח חשמלי נמדד בוולט." },
+  { id: 1002, lang: "en", category: "physics", text: "What is the unit of resistance?", options: ["Volt", "Ampere", "Ohm", "Watt"], answer: 2, explanation: "Electrical resistance is measured in Ohms (Ω).", explanationHe: "התנגדות חשמלית נמדדת באוהם (Ω)." },
+  { id: 1003, lang: "he", category: "physics", text: "מה יחידת המידה של התנגדות חשמלית?", options: ["וולט", "אמפר", "אוהם", "וואט"], answer: 2, explanation: "התנגדות חשמלית נמדדת באוהם.", explanationHe: "התנגדות חשמלית נמדדת באוהם." },
+  { id: 1004, lang: "en", category: "physics", text: "What is the speed of sound in air?", options: ["300 m/s", "330 m/s", "350 m/s", "400 m/s"], answer: 1, explanation: "The speed of sound in air is approximately 330 m/s.", explanationHe: "מהירות הקול באוויר היא בערך 330 מ'/שנ." },
+  { id: 1005, lang: "he", category: "physics", text: "מה מהירות הקול באוויר?", options: ["300 מ'/שנ", "330 מ'/שנ", "350 מ'/שנ", "400 מ'/שנ"], answer: 1, explanation: "מהירות הקול באוויר היא בערך 330 מ'/שנ.", explanationHe: "מהירות הקול באוויר היא בערך 330 מ'/שנ." },
+  { id: 1006, lang: "en", category: "physics", text: "What is mass?", options: ["The weight of an object", "The amount of matter in an object", "The size of an object", "The color of an object"], answer: 1, explanation: "Mass is the amount of matter in an object.", explanationHe: "מסה היא כמות החומר בעצם." },
+  { id: 1007, lang: "he", category: "physics", text: "מה זה מסה?", options: ["המשקל של עצם", "כמות החומר בעצם", "הגודל של עצם", "הצבע של עצם"], answer: 1, explanation: "מסה היא כמות החומר בעצם.", explanationHe: "מסה היא כמות החומר בעצם." },
+  { id: 1008, lang: "en", category: "physics", text: "What is density?", options: ["mass × volume", "mass ÷ volume", "volume ÷ mass", "mass + volume"], answer: 1, explanation: "Density = mass ÷ volume.", explanationHe: "צפיפות = מסה ÷ נפח." },
+  { id: 1009, lang: "he", category: "physics", text: "מה הנוסחה לצפיפות?", options: ["מסה × נפח", "מסה ÷ נפח", "נפח ÷ מסה", "מסה + נפח"], answer: 1, explanation: "צפיפות = מסה ÷ נפח.", explanationHe: "צפיפות = מסה ÷ נפח." },
+  { id: 1010, lang: "en", category: "physics", text: "What is momentum?", options: ["mass × velocity", "mass ÷ velocity", "velocity ÷ mass", "mass + velocity"], answer: 0, explanation: "Momentum = mass × velocity.", explanationHe: "תנע = מסה × מהירות." },
+  { id: 1011, lang: "he", category: "physics", text: "מה הנוסחה לתנע?", options: ["מסה × מהירות", "מסה ÷ מהירות", "מהירות ÷ מסה", "מסה + מהירות"], answer: 0, explanation: "תנע = מסה × מהירות.", explanationHe: "תנע = מסה × מהירות." },
+  { id: 1012, lang: "en", category: "physics", text: "What is kinetic energy?", options: ["Energy of motion", "Stored energy", "Heat energy", "Light energy"], answer: 0, explanation: "Kinetic energy is the energy of motion.", explanationHe: "אנרגיה קינטית היא אנרגיית תנועה." },
+  { id: 1013, lang: "he", category: "physics", text: "מה זה אנרגיה קינטית?", options: ["אנרגיית תנועה", "אנרגיה אגורה", "אנרגיית חום", "אנרגיית אור"], answer: 0, explanation: "אנרגיה קינטית היא אנרגיית תנועה.", explanationHe: "אנרגיה קינטית היא אנרגיית תנועה." },
+  { id: 1014, lang: "en", category: "physics", text: "What is potential energy?", options: ["Energy of motion", "Stored energy", "Heat energy", "Light energy"], answer: 1, explanation: "Potential energy is stored energy.", explanationHe: "אנרגיה פוטנציאלית היא אנרגיה אגורה." },
+  { id: 1015, lang: "he", category: "physics", text: "מה זה אנרגיה פוטנציאלית?", options: ["אנרגיית תנועה", "אנרגיה אגורה", "אנרגיית חום", "אנרגיית אור"], answer: 1, explanation: "אנרגיה פוטנציאלית היא אנרגיה אגורה.", explanationHe: "אנרגיה פוטנציאלית היא אנרגיה אגורה." },
+  { id: 1016, lang: "en", category: "physics", text: "What is friction?", options: ["A force that opposes motion", "A type of energy", "A form of light", "A chemical reaction"], answer: 0, explanation: "Friction is a force that opposes motion.", explanationHe: "חיכוך הוא כוח שמתנגד לתנועה." },
+  { id: 1017, lang: "he", category: "physics", text: "מה זה חיכוך?", options: ["כוח שמתנגד לתנועה", "סוג של אנרגיה", "צורה של אור", "תגובה כימית"], answer: 0, explanation: "חיכוך הוא כוח שמתנגד לתנועה.", explanationHe: "חיכוך הוא כוח שמתנגד לתנועה." },
+  { id: 1018, lang: "en", category: "physics", text: "What is a wave?", options: ["A disturbance that transfers energy", "A type of particle", "A form of matter", "A chemical reaction"], answer: 0, explanation: "A wave is a disturbance that transfers energy.", explanationHe: "גל הוא הפרעה שמעבירה אנרגיה." },
+  { id: 1019, lang: "he", category: "physics", text: "מה זה גל?", options: ["הפרעה שמעבירה אנרגיה", "סוג של חלקיק", "צורה של חומר", "תגובה כימית"], answer: 0, explanation: "גל הוא הפרעה שמעבירה אנרגיה.", explanationHe: "גל הוא הפרעה שמעבירה אנרגיה." },
+  { id: 1020, lang: "en", category: "physics", text: "What is frequency?", options: ["The number of waves per second", "The height of a wave", "The speed of a wave", "The length of a wave"], answer: 0, explanation: "Frequency is the number of waves per second.", explanationHe: "תדירות היא מספר הגלים לשנייה." },
+  { id: 1021, lang: "he", category: "physics", text: "מה זה תדירות?", options: ["מספר הגלים לשנייה", "גובה הגל", "מהירות הגל", "אורך הגל"], answer: 0, explanation: "תדירות היא מספר הגלים לשנייה.", explanationHe: "תדירות היא מספר הגלים לשנייה." },
+  { id: 1022, lang: "en", category: "physics", text: "What is wavelength?", options: ["The number of waves per second", "The height of a wave", "The speed of a wave", "The distance between two wave peaks"], answer: 3, explanation: "Wavelength is the distance between two wave peaks.", explanationHe: "אורך גל הוא המרחק בין שני שיאי גל." },
+  { id: 1023, lang: "he", category: "physics", text: "מה זה אורך גל?", options: ["מספר הגלים לשנייה", "גובה הגל", "מהירות הגל", "המרחק בין שני שיאי גל"], answer: 3, explanation: "אורך גל הוא המרחק בין שני שיאי גל.", explanationHe: "אורך גל הוא המרחק בין שני שיאי גל." },
+  { id: 1024, lang: "en", category: "physics", text: "What is temperature?", options: ["A measure of heat", "A measure of cold", "A measure of how hot or cold something is", "A measure of pressure"], answer: 2, explanation: "Temperature is a measure of how hot or cold something is.", explanationHe: "טמפרטורה היא מדד לכמה משהו חם או קר." },
+  { id: 1025, lang: "he", category: "physics", text: "מה זה טמפרטורה?", options: ["מדד לחום", "מדד לקור", "מדד לכמה משהו חם או קר", "מדד ללחץ"], answer: 2, explanation: "טמפרטורה היא מדד לכמה משהו חם או קר.", explanationHe: "טמפרטורה היא מדד לכמה משהו חם או קר." },
+  { id: 1026, lang: "en", category: "physics", text: "What is pressure?", options: ["Force per unit area", "Force × area", "Area ÷ force", "Force + area"], answer: 0, explanation: "Pressure = force ÷ area.", explanationHe: "לחץ = כוח ÷ שטח." },
+  { id: 1027, lang: "he", category: "physics", text: "מה הנוסחה ללחץ?", options: ["כוח ÷ שטח", "כוח × שטח", "שטח ÷ כוח", "כוח + שטח"], answer: 0, explanation: "לחץ = כוח ÷ שטח.", explanationHe: "לחץ = כוח ÷ שטח." },
+  { id: 1028, lang: "en", category: "physics", text: "What is work in physics?", options: ["Force × distance", "Force ÷ distance", "Distance ÷ force", "Force + distance"], answer: 0, explanation: "Work = force × distance.", explanationHe: "עבודה = כוח × מרחק." },
+  { id: 1029, lang: "he", category: "physics", text: "מה הנוסחה לעבודה בפיזיקה?", options: ["כוח × מרחק", "כוח ÷ מרחק", "מרחק ÷ כוח", "כוח + מרחק"], answer: 0, explanation: "עבודה = כוח × מרחק.", explanationHe: "עבודה = כוח × מרחק." },
+  { id: 1030, lang: "en", category: "physics", text: "What is a magnet?", options: ["An object that attracts iron", "An object that repels iron", "An object that creates electricity", "An object that stores energy"], answer: 0, explanation: "A magnet is an object that attracts iron and other magnetic materials.", explanationHe: "מגנט הוא עצם שמושך ברזל וחומרים מגנטיים אחרים." },
+  { id: 1031, lang: "he", category: "physics", text: "מה זה מגנט?", options: ["עצם שמושך ברזל", "עצם שדוחה ברזל", "עצם שיוצר חשמל", "עצם שמאחסן אנרגיה"], answer: 0, explanation: "מגנט הוא עצם שמושך ברזל וחומרים מגנטיים אחרים.", explanationHe: "מגנט הוא עצם שמושך ברזל וחומרים מגנטיים אחרים." },
+  { id: 1032, lang: "en", category: "physics", text: "What is an atom?", options: ["The smallest unit of matter", "A type of energy", "A form of light", "A chemical reaction"], answer: 0, explanation: "An atom is the smallest unit of matter.", explanationHe: "אטום הוא יחידת החומר הקטנה ביותר." },
+  { id: 1033, lang: "he", category: "physics", text: "מה זה אטום?", options: ["יחידת החומר הקטנה ביותר", "סוג של אנרגיה", "צורה של אור", "תגובה כימית"], answer: 0, explanation: "אטום הוא יחידת החומר הקטנה ביותר.", explanationHe: "אטום הוא יחידת החומר הקטנה ביותר." },
+  { id: 1034, lang: "en", category: "physics", text: "What are the three states of matter?", options: ["Solid, liquid, gas", "Hot, cold, warm", "Big, small, medium", "Light, dark, gray"], answer: 0, explanation: "The three states of matter are solid, liquid, and gas.", explanationHe: "שלושת מצבי החומר הם מוצק, נוזל וגז." },
+  { id: 1035, lang: "he", category: "physics", text: "מה שלושת מצבי החומר?", options: ["מוצק, נוזל, גז", "חם, קר, חמים", "גדול, קטן, בינוני", "בהיר, כהה, אפור"], answer: 0, explanation: "שלושת מצבי החומר הם מוצק, נוזל וגז.", explanationHe: "שלושת מצבי החומר הם מוצק, נוזל וגז." },
   
-  { id: 704, lang: "en", category: "chemistry", text: "What is the pH of pure water?", options: ["6", "7", "8", "9"], answer: 1, explanation: "Pure water has a pH of 7, which is neutral.", explanationHe: "מים טהורים יש להם pH של 7, שהוא ניטרלי." },
-  { id: 705, lang: "he", category: "chemistry", text: "מה ה-pH של מים טהורים?", options: ["6", "7", "8", "9"], answer: 1, explanation: "מים טהורים יש להם pH של 7.", explanationHe: "מים טהורים יש להם pH של 7." },
+  { id: 752, lang: "en", category: "chemistry", text: "What is the pH of pure water?", options: ["6", "7", "8", "9"], answer: 1, explanation: "Pure water has a pH of 7, which is neutral.", explanationHe: "מים טהורים יש להם pH של 7, שהוא ניטרלי." },
+  { id: 753, lang: "he", category: "chemistry", text: "מה ה-pH של מים טהורים?", options: ["6", "7", "8", "9"], answer: 1, explanation: "מים טהורים יש להם pH של 7.", explanationHe: "מים טהורים יש להם pH של 7." },
   
   { id: 706, lang: "en", category: "biology", text: "What is the largest organ in the human body?", options: ["liver", "brain", "skin", "heart"], answer: 2, explanation: "The skin is the largest organ in the human body.", explanationHe: "העור הוא האיבר הגדול ביותר בגוף האדם." },
   { id: 707, lang: "he", category: "biology", text: "מה האיבר הגדול ביותר בגוף האדם?", options: ["כבד", "מוח", "עור", "לב"], answer: 2, explanation: "העור הוא האיבר הגדול ביותר בגוף האדם.", explanationHe: "העור הוא האיבר הגדול ביותר בגוף האדם." },
@@ -1375,18 +1423,9 @@ const QUESTIONS: Question[] = [
 ];
 
 const difficulties = [
-  { key: "easy", label: "קל", count: 15 },
-  { key: "medium", label: "בינוני", count: 15 },
-  { key: "hard", label: "קשה", count: 15 },
-  { key: "extreme", label: "קיצוני", count: 20, timer: 30 },
-  { key: "marathon", label: "מרתון", count: 50, timer: 300 },
+  { key: "normal", label: "משחק רגיל", count: 20, timer: 240 },
+  { key: "marathon", label: "מרתון", count: 50, timer: 240 },
 ];
-
-const levelMap: Record<string, string> = {
-  easy: 'easy',
-  medium: 'medium',
-  hard: 'hard',
-};
 
 const CATEGORIES = [
   { key: "all", label: "הכל", icon: "🌈" },
@@ -1452,11 +1491,9 @@ const CATEGORIES = [
 
 const getInitialTime = (difficulty: string): number => {
   switch (difficulty) {
-    case 'easy': return 60;
-    case 'medium': return 45;
-    case 'hard': return 30;
-    case 'veryhard': return 20;
-    default: return 60;
+    case 'normal': return 240;
+    case 'marathon': return 240;
+    default: return 240;
   }
 };
 
@@ -1919,7 +1956,7 @@ const TAGS = [
 
 export default function MixedQuizGame() {
   const [lang, setLang] = useState<'en' | 'he'>('en');
-  const [difficulty, setDifficulty] = useState<string>('easy');
+  const [difficulty, setDifficulty] = useState<string>('normal');
   const [category, setCategory] = useState<string>("all");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState<number>(0);
@@ -2117,7 +2154,7 @@ export default function MixedQuizGame() {
     if (feedback === 'correct') {
       const baseCoins = 10;
       const streakBonus = Math.floor(stats.correct / 3) * 5; // Bonus every 3 correct answers
-      const difficultyMultiplier = difficulty === 'hard' ? 2 : difficulty === 'medium' ? 1.5 : 1;
+      const difficultyMultiplier = difficulty === 'marathon' ? 2 : 1;
       const vipBonus = isVip ? 1.5 : 1;
       const earnedCoins = Math.floor((baseCoins + streakBonus) * difficultyMultiplier * vipBonus);
       
@@ -2228,7 +2265,8 @@ export default function MixedQuizGame() {
 
     const isCorrect = idx === shuffledAnswerIdx;
     if (isCorrect) {
-      const basePoints = 10;
+      // 3 נקודות בסיסיות לתשובה נכונה
+      const basePoints = 3;
       let finalPoints = basePoints;
 
       if (activeItems.includes('double_points')) {
@@ -2242,6 +2280,10 @@ export default function MixedQuizGame() {
 
       const isGolden = current === goldenIdx;
       if (isGolden) finalPoints *= 2;
+      
+      // הגבלת נקודות מקסימליות לשאלה - מקסימום 3 נקודות בסיסיות (בלי בונוסים)
+      // זה מבטיח שמשחק מרתון עם 50 שאלות ייתן מקסימום 150 נקודות (50 * 3)
+      finalPoints = Math.min(finalPoints, 3);
 
       setScore(s => s + finalPoints);
       if (isGolden) {
@@ -2635,32 +2677,19 @@ export default function MixedQuizGame() {
     if (finished && user && user.id) {
       const updateStats = async () => {
         try {
-          // שלב 1: קבל את הערכים הקיימים
-          const resGet = await fetch(`/api/user/${user.id}`);
-          const userData = resGet.ok ? await resGet.json() : null;
-          // שלב 2: חשב ערכים חדשים
-          const newPoints = (userData?.points || 0) + score;
-          const newGamesPlayed = (userData?.gamesPlayed || 0) + 1;
-          const newGamesWon = (userData?.gamesWon || 0) + (stats.correct > stats.mistakes ? 1 : 0);
-          // שלח PATCH עם הערכים החדשים
-          await fetch(`/api/user/${user.id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              points: newPoints,
-              gamesPlayed: newGamesPlayed,
-              gamesWon: newGamesWon
-            })
-          });
-          
-          // שלב 3: עדכן דרגה אוטומטית ב-MySQL
-          await fetch('/api/user/update-rank', {
+          // השתמש ב-update-stats API במקום PATCH ישיר - זה מבטיח שהניקוד נשמר נכון
+          await fetch('/api/games/update-stats', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id })
+            body: JSON.stringify({
+              userId: user.id,
+              gameName: 'mixed-quiz',
+              score: score,
+              won: stats.correct > stats.mistakes
+            })
           });
         } catch (e) {
-          // אפשר להציג שגיאה אם צריך
+          console.error('Error updating stats:', e);
         }
       };
       updateStats();

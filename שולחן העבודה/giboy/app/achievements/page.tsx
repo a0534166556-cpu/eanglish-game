@@ -11,6 +11,8 @@ interface Achievement {
   category: string;
   requirement: number;
   reward: number;
+  difficulty: string;
+  xpReward: number;
   progress: number;
   isCompleted: boolean;
   completedAt?: string;
@@ -36,7 +38,11 @@ export default function AchievementsPage() {
     { id: 'games', name: 'משחקים', icon: '🎮' },
     { id: 'streak', name: 'רצף', icon: '🔥' },
     { id: 'level', name: 'רמה', icon: '⭐' },
-    { id: 'special', name: 'מיוחד', icon: '💎' }
+    { id: 'special', name: 'מיוחד', icon: '💎' },
+    { id: 'easy', name: 'קל', icon: '🟢' },
+    { id: 'medium', name: 'בינוני', icon: '🟡' },
+    { id: 'hard', name: 'קשה', icon: '🟠' },
+    { id: 'extreme', name: 'אקסטרים', icon: '🔴' }
   ];
 
   const categoryColors = {
@@ -44,6 +50,13 @@ export default function AchievementsPage() {
     streak: 'bg-red-100 text-red-800',
     level: 'bg-yellow-100 text-yellow-800',
     special: 'bg-purple-100 text-purple-800'
+  };
+
+  const difficultyColors = {
+    easy: 'bg-green-100 text-green-800 border-green-300',
+    medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    hard: 'bg-orange-100 text-orange-800 border-orange-300',
+    extreme: 'bg-red-100 text-red-800 border-red-300'
   };
 
   useEffect(() => {
@@ -109,6 +122,14 @@ export default function AchievementsPage() {
     
     try {
       setIsLoading(true);
+      
+      // סנכרן הישגים לפני טעינתם - זה יוודא שההתקדמות מעודכנת
+      try {
+        await fetch(`/api/achievements?userId=${user.id}&sync=true`);
+      } catch (syncError) {
+        console.error('Error syncing achievements:', syncError);
+      }
+      
       const response = await fetch(`/api/achievements?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
@@ -127,6 +148,8 @@ export default function AchievementsPage() {
 
   const filteredAchievements = selectedCategory === 'all' 
     ? achievements 
+    : ['easy', 'medium', 'hard', 'extreme'].includes(selectedCategory)
+    ? achievements.filter(achievement => achievement.difficulty === selectedCategory)
     : achievements.filter(achievement => achievement.category === selectedCategory);
 
   const completedCount = achievements.filter(a => a.isCompleted).length;
@@ -238,16 +261,28 @@ export default function AchievementsPage() {
           {filteredAchievements.map((achievement) => (
             <div
               key={achievement.id}
-              className={`bg-white rounded-lg shadow-lg p-6 transition-all hover:shadow-xl ${
-                achievement.isCompleted ? 'ring-2 ring-green-500' : ''
+              className={`bg-white rounded-lg shadow-lg p-6 transition-all hover:shadow-xl border-2 ${
+                achievement.isCompleted 
+                  ? 'ring-2 ring-green-500' 
+                  : difficultyColors[achievement.difficulty as keyof typeof difficultyColors]?.split(' ').pop() || 'border-gray-200'
               }`}
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="text-4xl">{achievement.icon}</div>
-                <div className={`px-2 py-1 rounded text-xs ${
-                  categoryColors[achievement.category as keyof typeof categoryColors] || 'bg-gray-100 text-gray-800'
-                }`}>
-                  {achievement.category}
+                <div className="flex flex-col gap-1">
+                  <div className={`px-2 py-1 rounded text-xs ${
+                    categoryColors[achievement.category as keyof typeof categoryColors] || 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {achievement.category}
+                  </div>
+                  <div className={`px-2 py-1 rounded text-xs font-bold ${
+                    difficultyColors[achievement.difficulty as keyof typeof difficultyColors] || 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {achievement.difficulty === 'easy' && '🟢 קל'}
+                    {achievement.difficulty === 'medium' && '🟡 בינוני'}
+                    {achievement.difficulty === 'hard' && '🟠 קשה'}
+                    {achievement.difficulty === 'extreme' && '🔴 אקסטרים'}
+                  </div>
                 </div>
               </div>
 
@@ -268,11 +303,17 @@ export default function AchievementsPage() {
                 </div>
               </div>
 
-              {/* Reward */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center text-yellow-600">
-                  <span className="text-sm">💎</span>
-                  <span className="font-bold">{achievement.reward}</span>
+              {/* Rewards */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center text-yellow-600">
+                    <span className="text-sm mr-1">💎</span>
+                    <span className="font-bold">{achievement.reward}</span>
+                  </div>
+                  <div className="flex items-center text-blue-600">
+                    <span className="text-sm mr-1">⭐</span>
+                    <span className="font-bold">{achievement.xpReward} XP</span>
+                  </div>
                 </div>
                 {achievement.isCompleted && (
                   <div className="flex items-center text-green-600">
@@ -281,6 +322,63 @@ export default function AchievementsPage() {
                   </div>
                 )}
               </div>
+
+              {/* Claim Button - אם ההישג מושלם אבל לא נאסף */}
+              {achievement.progress >= achievement.requirement && !achievement.isCompleted && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/achievements', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: user?.id, achievementId: achievement.id })
+                      });
+                      
+                      if (response.ok) {
+                        const result = await response.json();
+                        console.log('Achievement claimed:', result);
+                        
+                        // עדכן את המשתמש עם הנתונים החדשים מה-API
+                        const userStr = localStorage.getItem('user');
+                        if (userStr && result.newDiamonds !== undefined && result.newPoints !== undefined) {
+                          const userData = JSON.parse(userStr);
+                          const updatedUser = {
+                            ...userData,
+                            diamonds: result.newDiamonds,
+                            points: result.newPoints
+                          };
+                          
+                          setUser(updatedUser);
+                          localStorage.setItem('user', JSON.stringify(updatedUser));
+                          console.log('User updated:', updatedUser);
+                        } else {
+                          // Fallback: טען את המשתמש מחדש מה-API
+                          const updatedResponse = await fetch(`/api/user/${user?.id}`);
+                          if (updatedResponse.ok) {
+                            const updatedData = await updatedResponse.json();
+                            const updatedUser = updatedData.user || updatedData;
+                            setUser(updatedUser);
+                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                            console.log('User reloaded from API:', updatedUser);
+                          }
+                        }
+                        
+                        // רענן את רשימת ההישגים
+                        loadAchievements();
+                      } else {
+                        const error = await response.json();
+                        console.error('Failed to claim achievement:', error);
+                        alert(`שגיאה בקבלת ההישג: ${error.error || 'שגיאה לא ידועה'}`);
+                      }
+                    } catch (error) {
+                      console.error('Error claiming achievement:', error);
+                    }
+                  }}
+                  className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg"
+                >
+                  🎁 קבל פרס
+                </button>
+              )}
 
               {/* Completion Date */}
               {achievement.completedAt && (

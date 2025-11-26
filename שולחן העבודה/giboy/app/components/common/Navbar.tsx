@@ -61,6 +61,20 @@ export default function Navbar() {
                     setCoins(updatedUser.coins || 500);
                     setAvatarId(updatedUser.avatarId || null);
                     setSelectedTag(updatedUser.selectedTag || null);
+                    
+                    // טען תמונת פרופיל מה-DB
+                    if (data.user.profileImage) {
+                      setProfileImg(data.user.profileImage);
+                      localStorage.setItem('profile-img', data.user.profileImage);
+                      console.log('Navbar admin profileImg from DB:', data.user.profileImage);
+                    } else {
+                      const img = localStorage.getItem('profile-img');
+                      if (img) {
+                        setProfileImg(img);
+                        console.log('Navbar admin profileImg from localStorage:', img);
+                      }
+                    }
+                    
                     // Update localStorage with fresh data
                     localStorage.setItem('user', JSON.stringify(updatedUser));
                     console.log('Navbar admin user updated:', updatedUser);
@@ -78,11 +92,44 @@ export default function Navbar() {
             setAvatarId(parsedUser.avatarId || null);
             setSelectedTag(parsedUser.selectedTag || null);
             console.log('Navbar user:', parsedUser);
-          }
+            
+            // טען תמונת פרופיל מה-DB
+            if (parsedUser.id) {
+              try {
+                const response = await fetch(`/api/user/${parsedUser.id}`);
+                if (response.ok) {
+                  const data = await response.json();
+                  const dbUser = data.user || data;
+                  if (dbUser.profileImage) {
+                    setProfileImg(dbUser.profileImage);
+                    localStorage.setItem('profile-img', dbUser.profileImage);
+                    console.log('Navbar profileImg from DB:', dbUser.profileImage);
+                  } else {
+                    // אם אין תמונת פרופיל ב-DB, נסה מ-localStorage
+                    const img = localStorage.getItem('profile-img');
+                    if (img) {
+                      setProfileImg(img);
+                      console.log('Navbar profileImg from localStorage:', img);
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error('Failed to fetch profile image from DB:', error);
+                // אם נכשל, נסה מ-localStorage
+                const img = localStorage.getItem('profile-img');
+                if (img) {
+                  setProfileImg(img);
+                  console.log('Navbar profileImg from localStorage (fallback):', img);
+                }
+              }
+            } else {
+              // אם אין id, נסה מ-localStorage
           const img = localStorage.getItem('profile-img');
           if (img) {
             setProfileImg(img);
-            console.log('Navbar profileImg:', img);
+                console.log('Navbar profileImg from localStorage (no id):', img);
+              }
+            }
           }
         }
       } catch (error) {
@@ -110,6 +157,22 @@ export default function Navbar() {
                 setUser(parsedUser);
                 setDiamonds(parsedUser.diamonds || 100);
                 setCoins(parsedUser.coins || 500);
+                setAvatarId(parsedUser.avatarId || null);
+                setSelectedTag(parsedUser.selectedTag || null);
+                
+                // עדכן תמונת פרופיל מה-DB
+                if (parsedUser.id) {
+                  fetch(`/api/user/${parsedUser.id}`)
+                    .then(response => response.ok ? response.json() : null)
+                    .then(data => {
+                      if (data?.user?.profileImage || data?.profileImage) {
+                        const profileImage = data.user?.profileImage || data.profileImage;
+                        setProfileImg(profileImage);
+                        localStorage.setItem('profile-img', profileImage);
+                      }
+                    })
+                    .catch(error => console.error('Failed to fetch profile image:', error));
+                }
               } catch (error) {
                 console.error('Failed to parse user data:', error);
               }
@@ -123,6 +186,22 @@ export default function Navbar() {
           setUser(updatedUser);
           setDiamonds(updatedUser.diamonds || 100);
           setCoins(updatedUser.coins || 500);
+          setAvatarId(updatedUser.avatarId || null);
+          setSelectedTag(updatedUser.selectedTag || null);
+          
+          // עדכן תמונת פרופיל מה-DB
+          if (updatedUser.id) {
+            fetch(`/api/user/${updatedUser.id}`)
+              .then(response => response.ok ? response.json() : null)
+              .then(data => {
+                if (data?.user?.profileImage || data?.profileImage) {
+                  const profileImage = data.user?.profileImage || data.profileImage;
+                  setProfileImg(profileImage);
+                  localStorage.setItem('profile-img', profileImage);
+                }
+              })
+              .catch(error => console.error('Failed to fetch profile image:', error));
+          }
         };
     
     window.addEventListener('storage', handleStorageChange);
@@ -174,6 +253,22 @@ export default function Navbar() {
             >
               בית
             </Link>
+            <Link
+              href="/about"
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/about' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              אודות
+            </Link>
+            <Link
+              href="/articles"
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/articles' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              מאמרים
+            </Link>
             {user && (
               <>
             <Link
@@ -199,6 +294,14 @@ export default function Navbar() {
               }`}
             >
               🎈 משחקי ילדים
+            </Link>
+            <Link
+              href="/classroom-teacher"
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/classroom-teacher' ? 'bg-purple-500 text-white' : 'text-gray-700 hover:bg-purple-50'
+              }`}
+            >
+              🎓 משחק כיתה
             </Link>
             <Link
               href="/shop"
@@ -257,6 +360,22 @@ export default function Navbar() {
               >
                 בית
               </Link>
+              <Link
+                href="/about"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/about' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                אודות
+              </Link>
+              <Link
+                href="/articles"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/articles' ? 'bg-blue-500 text-white' : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                מאמרים
+              </Link>
               {user && (
                 <>
                   <Link
@@ -282,6 +401,14 @@ export default function Navbar() {
                     }`}
                   >
                     🎈 משחקי ילדים
+                  </Link>
+                  <Link
+                    href="/classroom-teacher"
+                    className={`block px-3 py-2 rounded-md text-base font-medium ${
+                      pathname === '/classroom-teacher' ? 'bg-purple-500 text-white' : 'text-gray-700 hover:bg-purple-50'
+                    }`}
+                  >
+                    🎓 משחק כיתה
                   </Link>
                   <Link
                     href="/shop"
@@ -359,7 +486,7 @@ export default function Navbar() {
                 
                 {!isSubscribed && (
                   <Link
-                    href="/subscription"
+                    href="/subscription/purchase"
                     className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:from-yellow-500 hover:to-orange-600 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     ⭐ שדרג למנוי
@@ -394,7 +521,7 @@ export default function Navbar() {
             ) : (
               <>
                 <Link
-                  href="/subscription"
+                  href="/subscription/purchase"
                   className="px-4 py-2 rounded-lg text-sm font-medium bg-gradient-to-r from-yellow-400 to-orange-500 text-white hover:from-yellow-500 hover:to-orange-600 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   ⭐ מנוי

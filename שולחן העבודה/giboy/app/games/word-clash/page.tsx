@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdManager from "@/app/components/ads/AdManager";
+import { useSubscription } from '@/lib/useSubscription';
 
 export default function WordClashGame() {
   const [gameId, setGameId] = useState('');
@@ -12,9 +13,56 @@ export default function WordClashGame() {
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [hasPremiumPass, setHasPremiumPass] = useState(false);
   const router = useRouter();
+  const { isSubscribed } = useSubscription();
+
+  // בדיקת גישה למשחק
+  useEffect(() => {
+    const checkAccess = () => {
+      const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
+      setHasPremiumPass((premiumPasses['word-clash'] || 0) > 0);
+    };
+    
+    checkAccess();
+    window.addEventListener('storage', checkAccess);
+    window.addEventListener('premiumPassUpdated', checkAccess);
+    
+    return () => {
+      window.removeEventListener('storage', checkAccess);
+      window.removeEventListener('premiumPassUpdated', checkAccess);
+    };
+  }, []);
+
+  const hasAccess = isSubscribed || hasPremiumPass;
+
+  const usePremiumPass = () => {
+    const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
+    if (premiumPasses['word-clash'] > 0) {
+      premiumPasses['word-clash'] = premiumPasses['word-clash'] - 1;
+      localStorage.setItem('premium-passes', JSON.stringify(premiumPasses));
+      setHasPremiumPass(premiumPasses['word-clash'] > 0);
+      window.dispatchEvent(new CustomEvent('premiumPassUpdated'));
+      return true;
+    }
+    return false;
+  };
 
   const createGame = async () => {
+    // בדיקת גישה
+    if (!hasAccess) {
+      setError('נדרש מנוי או כרטיס כניסה מפרסומת כדי לשחק. רכוש כרטיס בחנות!');
+      return;
+    }
+
+    // אם יש כרטיס מפרסומת ולא מנוי, נשתמש בו
+    if (!isSubscribed && hasPremiumPass) {
+      if (!usePremiumPass()) {
+        setError('אין לך כרטיס כניסה זמין. רכוש כרטיס חדש בחנות!');
+        return;
+      }
+    }
+
     setIsCreating(true);
     setError('');
     
@@ -25,7 +73,8 @@ export default function WordClashGame() {
         body: JSON.stringify({
           action: 'create',
           playerId: 'player_' + Date.now(),
-          playerName: 'Player 1'
+          playerName: 'Player 1',
+          difficulty: 'easy'
         })
       });
 
@@ -51,6 +100,20 @@ export default function WordClashGame() {
       return;
     }
 
+    // בדיקת גישה
+    if (!hasAccess) {
+      setError('נדרש מנוי או כרטיס כניסה מפרסומת כדי לשחק. רכוש כרטיס בחנות!');
+      return;
+    }
+
+    // אם יש כרטיס מפרסומת ולא מנוי, נשתמש בו
+    if (!isSubscribed && hasPremiumPass) {
+      if (!usePremiumPass()) {
+        setError('אין לך כרטיס כניסה זמין. רכוש כרטיס חדש בחנות!');
+        return;
+      }
+    }
+
     setIsJoining(true);
     setError('');
     
@@ -62,7 +125,8 @@ export default function WordClashGame() {
           action: 'join',
           gameId: gameId.trim(),
           playerId: 'player_' + Date.now(),
-          playerName: 'Player 2'
+          playerName: 'Player 2',
+          difficulty: 'easy'
         })
       });
 
@@ -104,6 +168,43 @@ export default function WordClashGame() {
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
                 {error}
+              </div>
+            )}
+
+            {/* Premium Pass Info */}
+            {hasPremiumPass && !isSubscribed && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-bold">🎟️ יש לך כרטיס כניסה זמין!</span>
+                    <p className="text-sm mt-1">
+                      {(() => {
+                        const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
+                        const passes = premiumPasses['word-clash'] || 0;
+                        return `יש לך ${passes} כרטיס${passes > 1 ? 'ים' : ''} זמין${passes > 1 ? 'ים' : ''}. הכרטיס ינוצל אוטומטית כשתצור או תצטרף למשחק.`;
+                      })()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!hasAccess && (
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">
+                <p className="font-bold mb-2">⚠️ נדרש מנוי או כרטיס כניסה</p>
+                <p className="text-sm mb-2">
+                  כדי לשחק במשחק Word Clash, אתה צריך:
+                </p>
+                <ul className="text-sm list-disc list-inside space-y-1">
+                  <li>מנוי Premium או Basic פעיל</li>
+                  <li>או כרטיס כניסה מפרסומת (ניתן לרכוש בחנות)</li>
+                </ul>
+                <Link
+                  href="/shop"
+                  className="inline-block mt-3 text-sm font-bold text-yellow-800 hover:text-yellow-900 underline"
+                >
+                  → רכוש כרטיס כניסה בחנות
+                </Link>
               </div>
             )}
 

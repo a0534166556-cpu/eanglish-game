@@ -16,12 +16,12 @@ export async function POST(request: NextRequest) {
 
     // מחירי התוכניות
     const planPrices = {
-      basic: 9.90,
-      premium: 19.90,
-      yearly: 199.90
+      basic: 10.00,
+      premium: 29.90,
+      yearly: 299.90
     };
 
-    const amount = planPrices[plan as keyof typeof planPrices] || 9.90;
+    const amount = planPrices[plan as keyof typeof planPrices] || 10.00;
 
     // בדיקת פרטי תשלום
     if (paymentMethod === 'card' && paymentDetails) {
@@ -71,10 +71,18 @@ export async function POST(request: NextRequest) {
       ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    const paymentId = `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // קביעת paymentId - אם זה PayPal, נשתמש ב-orderId
+    const paymentId = paymentMethod === 'paypal' && paymentDetails?.orderId
+      ? paymentDetails.orderId
+      : `pay_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // פרטי חשבון הבנק
     const bankAccount = '047312 בנק פאגי סניף 173';
+
+    // קביעת transactionId - אם זה PayPal, נשתמש ב-captureId או orderId
+    const transactionId = paymentMethod === 'paypal' 
+      ? (paymentDetails?.captureId || paymentDetails?.orderId || null)
+      : (bankTransfer?.transactionId || null);
 
     // יצירת המנוי
     const subscription = await prisma.subscription.create({
@@ -89,7 +97,7 @@ export async function POST(request: NextRequest) {
         amount,
         currency: 'ILS',
         bankAccount,
-        transactionId: bankTransfer?.transactionId || null
+        transactionId: transactionId
       }
     });
 
@@ -109,6 +117,10 @@ export async function POST(request: NextRequest) {
           cardDetails: paymentMethod === 'card' ? {
             last4: paymentDetails?.number?.slice(-4),
             expiry: paymentDetails?.expiry
+          } : null,
+          paypalDetails: paymentMethod === 'paypal' ? {
+            orderId: paymentDetails?.orderId,
+            captureId: paymentDetails?.captureId
           } : null,
           bankTransfer: bankTransfer || null
         })

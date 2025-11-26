@@ -13,6 +13,48 @@ interface PictureType {
   explanationHe?: string;
 }
 
+// פונקציה ליצירת URL תמונה דינמי לפי מילות מפתח
+const generateImageUrlFromKeywords = (keywords: string[], lang: 'en' | 'he'): string => {
+  if (!keywords || keywords.length === 0) {
+    return 'https://source.unsplash.com/600x400/?nature';
+  }
+  
+  // אם זה עברית, נמיר לאנגלית
+  const searchTerms = lang === 'he' 
+    ? keywords.map(kw => {
+        // תרגום מקיף של מילות מפתח נפוצות
+        const translations: Record<string, string> = {
+          'ילדה': 'girl', 'ילד': 'boy', 'ילדים': 'children', 'ילדות': 'girls',
+          'שרה': 'singing', 'שירה': 'singing', 'שיר': 'song', 'שרים': 'singing',
+          'נהנת': 'enjoying', 'נהנה': 'enjoying', 'שמחה': 'happy', 'שמח': 'happy', 'מאושר': 'happy',
+          'ספר': 'book', 'קוראת': 'reading', 'קורא': 'reading', 'קריאה': 'reading',
+          'מיטה': 'bed', 'חוף': 'beach', 'ים': 'sea', 'שוק': 'market', 'מרקט': 'market',
+          'ירקות': 'vegetables', 'קניות': 'shopping', 'אנשים': 'people', 'איש': 'person',
+          'כלב': 'dog', 'חתול': 'cat', 'ציפור': 'bird', 'חיות': 'animals',
+          'מכונית': 'car', 'אוטובוס': 'bus', 'רכבת': 'train', 'מטוס': 'airplane',
+          'בית ספר': 'school', 'פארק': 'park', 'גן': 'garden', 'בית': 'house',
+          'משפחה': 'family', 'אמא': 'mother', 'אבא': 'father', 'אח': 'brother', 'אחות': 'sister',
+          'אוכל': 'food', 'מים': 'water', 'חלב': 'milk', 'לחם': 'bread',
+          'צבעים': 'colors', 'אדום': 'red', 'כחול': 'blue', 'ירוק': 'green',
+          'משחקים': 'playing', 'משחק': 'play', 'צעצוע': 'toy', 'כדור': 'ball',
+          'מוזיקה': 'music', 'ריקוד': 'dancing', 'רוקד': 'dancing', 'רוקדת': 'dancing',
+          'ספורט': 'sport', 'כדורגל': 'football', 'כדורסל': 'basketball', 'שחייה': 'swimming'
+        };
+        // נסה למצוא תרגום, אם לא נמצא - נשתמש במילה המקורית
+        return translations[kw.toLowerCase()] || kw;
+      })
+    : keywords.map(kw => kw.toLowerCase());
+  
+  // יצירת query string למילות המפתח (לוקח עד 3 מילות ראשונות)
+  const mainKeywords = searchTerms.slice(0, 3);
+  const query = mainKeywords.join('+');
+  
+  // שימוש ב-Unsplash Source API עם query דינמי
+  // הוספת timestamp כדי למנוע cache ולקבל תמונה שונה כל פעם
+  const timestamp = Date.now();
+  return `https://source.unsplash.com/600x400/?${query}&sig=${timestamp}`;
+};
+
 const PICTURES: PictureType[] = [
   {
     id: 1,
@@ -545,7 +587,13 @@ function pickPictures(
   const boosted = sorted.filter(p => stats[p.id] > 0).slice(0, 5);
   const rest = allPics.filter(p => !boosted.includes(p));
   const randomRest = rest.sort(() => Math.random() - 0.5).slice(0, count - boosted.length);
-  return [...boosted, ...randomRest].sort(() => Math.random() - 0.5);
+  const selected = [...boosted, ...randomRest].sort(() => Math.random() - 0.5);
+  
+  // עדכן את ה-URL של כל תמונה להיות דינמי לפי מילות המפתח
+  return selected.map(pic => ({
+    ...pic,
+    url: generateImageUrlFromKeywords(pic.keywords[lang] || [], lang)
+  }));
 }
 
 function levenshtein(a: string, b: string) {
@@ -830,18 +878,61 @@ function PictureDescription() {
         mediaRecorder.stop();
         stream.getTracks().forEach(track => track.stop());
       };
-      recognition.onerror = () => {
-        setFeedback('שגיאה בהקלטה');
-        setRecording(false);
-        mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event);
+        // אם זה לא שגיאה קריטית, נמשיך עם ההקלטה
+        if (event.error === 'no-speech') {
+          // אין דיבור - נמשיך להקשיב
+          return;
+        }
+        if (event.error === 'aborted' || event.error === 'network') {
+          setFeedback('שגיאה בהקלטה - נסה שוב');
+          setRecording(false);
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+          stream.getTracks().forEach(track => track.stop());
+        } else {
+          // שגיאות אחרות - נמשיך להקשיב
+          console.log('Non-critical error, continuing:', event.error);
+        }
       };
       recognition.onend = () => {
-        setRecording(false);
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
+        // אם ההקלטה עדיין פעילה, נמשיך להקשיב
+        if (recording && !userTranscript) {
+          // אם אין תוצאה אחרי 3 שניות, נעצור
+          setTimeout(() => {
+            if (recording && !userTranscript) {
+              setRecording(false);
+              if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+              }
+              stream.getTracks().forEach(track => track.stop());
+              setFeedback('לא זוהה דיבור - נסה שוב');
+            }
+          }, 3000);
+        } else {
+          setRecording(false);
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+          stream.getTracks().forEach(track => track.stop());
+        }
       };
       recognition.start();
+      
+      // timeout למקרה שההקלטה לא מסתיימת
+      setTimeout(() => {
+        if (recording && !userTranscript) {
+          recognition.stop();
+          setRecording(false);
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+          stream.getTracks().forEach(track => track.stop());
+          setFeedback('זמן ההקלטה הסתיים - נסה שוב');
+        }
+      }, 10000); // 10 שניות מקסימום
     }).catch(() => {
       setFeedback('אין הרשאת מיקרופון');
       setRecording(false);
@@ -2088,7 +2179,21 @@ function PictureDescription() {
                 </div>
                 <div className="mb-6 flex flex-col items-center gap-4 animate-slide-in">
                   <div className="relative">
-                    <img src={pictures[current].url} alt="pic" className="rounded-2xl shadow-xl max-h-72 w-auto border-4 border-blue-200 transition-all duration-700" onError={(e) => { e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuS4reWbveWKoOi9veWksei0pTwvdGV4dD48L3N2Zz4='; }} />
+                    <img 
+                      src={pictures[current].url} 
+                      alt={`תמונה: ${pictures[current].keywords[lang].join(', ')}`}
+                      className="rounded-2xl shadow-xl max-h-72 w-auto border-4 border-blue-200 transition-all duration-700" 
+                      onError={(e) => { 
+                        // אם התמונה נכשלה, ננסה ליצור URL חדש
+                        const newUrl = generateImageUrlFromKeywords(pictures[current].keywords[lang] || [], lang);
+                        if (e.currentTarget.src !== newUrl) {
+                          e.currentTarget.src = newUrl;
+                        } else {
+                          // אם גם זה נכשל, נציג תמונה placeholder
+                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NjY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuS4reWbveWKoOi9veWksei0pTwvdGV4dD48L3N2Zz4=';
+                        }
+                      }} 
+                    />
                     {getMistakeStats()[pictures[current].id] > 0 && (
                       <span className="absolute top-2 left-2 bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full font-bold text-xs shadow animate-pulse flex items-center gap-1"><span>💡</span> חיזוק אישי</span>
                     )}

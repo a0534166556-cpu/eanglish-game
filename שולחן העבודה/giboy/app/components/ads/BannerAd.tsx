@@ -15,9 +15,9 @@ export default function BannerAd({
 }: BannerAdProps) {
   // Different ad slots for different positions
   const adSlots = {
-    top: testMode ? '1234567890' : (process.env.NEXT_PUBLIC_ADSENSE_TOP_BANNER || '1234567890'),
-    bottom: testMode ? '0987654321' : (process.env.NEXT_PUBLIC_ADSENSE_BOTTOM_BANNER || '0987654321'),
-    sidebar: testMode ? '1122334455' : (process.env.NEXT_PUBLIC_ADSENSE_SIDEBAR || '1122334455')
+    top: process.env.NEXT_PUBLIC_ADSENSE_TOP_BANNER || '',
+    bottom: process.env.NEXT_PUBLIC_ADSENSE_BOTTOM_BANNER || '',
+    sidebar: process.env.NEXT_PUBLIC_ADSENSE_SIDEBAR || ''
   };
 
   const styles = {
@@ -49,6 +49,11 @@ export default function BannerAd({
       backgroundColor: '#f9f9f9'
     }
   };
+
+  // Don't render if no ad slot is configured
+  if (!adSlots[position]) {
+    return null;
+  }
 
   return (
     <div className={`banner-ad banner-ad-${position} ${className}`}>

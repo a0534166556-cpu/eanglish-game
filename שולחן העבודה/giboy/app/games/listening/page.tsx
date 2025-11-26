@@ -273,22 +273,73 @@ function Listening() {
     setUserTranscript('');
     setAudioBlob(null);
     setAudioUrl(null);
+    setFeedback(null);
+    setChecking(false);
+    
     // @ts-ignore
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      setFeedback('דפדפן לא תומך בזיהוי דיבור');
+      setFeedback('דפדפן לא תומך בזיהוי דיבור. אנא השתמש ב-Chrome או Edge');
       setRecording(false);
       return;
     }
-    let mediaRecorder: MediaRecorder;
+    
+    let mediaRecorder: MediaRecorder | null = null;
     let chunks: Blob[] = [];
-    let recognition;
-    let streamRef;
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    let recognition: any = null;
+    let streamRef: MediaStream | null = null;
+    let recordingTimeout: NodeJS.Timeout | null = null;
+    let isRecordingStopped = false;
+    
+    const stopRecording = () => {
+      if (isRecordingStopped) return;
+      isRecordingStopped = true;
+      
+      setRecording(false);
+      
+      try {
+        if (recognition) {
+          recognition.stop();
+        }
+      } catch (e) {
+        console.error('Error stopping recognition:', e);
+      }
+      
+      try {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+      } catch (e) {
+        console.error('Error stopping mediaRecorder:', e);
+      }
+      
+      try {
+        if (streamRef) {
+          streamRef.getTracks().forEach(track => track.stop());
+        }
+      } catch (e) {
+        console.error('Error stopping stream:', e);
+      }
+      
+      if (recordingTimeout) {
+        clearTimeout(recordingTimeout);
+      }
+    };
+    
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
       streamRef = stream;
+        
+        try {
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = e => chunks.push(e.data);
+          mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) {
+              chunks.push(e.data);
+            }
+          };
+          
       mediaRecorder.onstop = () => {
+            if (chunks.length > 0) {
         const blob = new Blob(chunks, { type: 'audio/webm' });
         setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
@@ -299,36 +350,109 @@ function Listening() {
           setSavedRecordings(updated);
           localStorage.setItem('listen-recordings', JSON.stringify(updated));
         } catch {}
-      };
-      mediaRecorder.start();
+            }
+          };
+          
+          mediaRecorder.start(100); // Start recording with 100ms chunks
+          console.log('MediaRecorder started');
+        } catch (e) {
+          console.error('Error creating MediaRecorder:', e);
+          setFeedback('שגיאה בהתחלת ההקלטה');
+          stopRecording();
+          return;
+        }
 
+        try {
       recognition = new SpeechRecognition();
+          recognition.continuous = false; // Stop after first result
+          recognition.interimResults = false;
       recognition.lang = lang === 'he' ? 'he-IL' : 'en-US';
-      recognition.interimResults = false;
       recognition.maxAlternatives = 1;
+          
+          recognition.onstart = () => {
+            console.log('Speech recognition started');
+            setFeedback('🎙️ מקליט... דבר עכשיו!');
+          };
+          
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognition.onresult = (event: any) => {
+            console.log('Speech recognition result:', event);
+            if (event.results && event.results.length > 0 && event.results[0].length > 0) {
         const transcript = event.results[0][0].transcript;
+              console.log('Transcript:', transcript);
         setUserTranscript(transcript);
-        setRecording(false);
+              stopRecording();
         setChecking(true);
         setTimeout(() => checkAnswer(transcript), 500);
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
+            } else {
+              setFeedback('לא זוהה דיבור - נסה שוב');
+              stopRecording();
+            }
+          };
+          
+          recognition.onerror = (event: any) => {
+            const errorType = event.error || 'unknown';
+            console.error('Speech recognition error:', errorType, event);
+            
+            // טיפול בשגיאות ספציפיות
+            let errorMessage = 'שגיאה בהקלטה';
+            if (errorType === 'no-speech') {
+              errorMessage = 'לא זוהה דיבור - נסה לדבר בקול רם יותר';
+            } else if (errorType === 'audio-capture') {
+              errorMessage = 'בעיה במיקרופון - בדוק את ההרשאות';
+            } else if (errorType === 'not-allowed') {
+              errorMessage = 'אין הרשאה למיקרופון - אנא אפשר גישה';
+            } else if (errorType === 'network') {
+              errorMessage = 'בעיית רשת - נסה שוב';
+            } else if (errorType === 'aborted') {
+              // זה לא שגיאה אמיתית, רק ביטול
+              return;
+            } else {
+              errorMessage = `שגיאה בהקלטה: ${errorType}`;
+            }
+            
+            setFeedback(errorMessage);
+            stopRecording();
       };
-      recognition.onerror = (event: { error?: string }) => {
-        setFeedback('שגיאה בהקלטה: ' + (event.error || ''));
-        setRecording(false);
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-      };
+          
       recognition.onend = () => {
-        setRecording(false);
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
-      };
-      recognition.start();
-    }).catch(() => {
-      setFeedback('אין הרשאת מיקרופון');
+            console.log('Speech recognition ended');
+            // אם ההקלטה עדיין פעילה ולא קיבלנו תוצאה, נעצור אותה
+            if (!isRecordingStopped && !userTranscript) {
+              if (!feedback || feedback === '🎙️ מקליט... דבר עכשיו!') {
+                setFeedback('ההקלטה הסתיימה - נסה שוב');
+              }
+              stopRecording();
+            }
+          };
+          
+          // Timeout של 10 שניות
+          recordingTimeout = setTimeout(() => {
+            if (!isRecordingStopped) {
+              setFeedback('זמן ההקלטה הסתיים - נסה שוב');
+              stopRecording();
+            }
+          }, 10000);
+          
+          recognition.start();
+          console.log('Speech recognition start called');
+        } catch (e) {
+          console.error('Error creating SpeechRecognition:', e);
+          setFeedback('שגיאה בהתחלת זיהוי דיבור');
+          stopRecording();
+        }
+      })
+      .catch((error) => {
+        console.error('getUserMedia error:', error);
+        let errorMessage = 'אין הרשאת מיקרופון';
+        if (error.name === 'NotAllowedError') {
+          errorMessage = 'הגישה למיקרופון נדחתה - אנא אפשר גישה בהגדרות הדפדפן';
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'לא נמצא מיקרופון - בדוק שהמיקרופון מחובר';
+        } else if (error.name === 'NotReadableError') {
+          errorMessage = 'המיקרופון תפוס - בדוק אם תוכנה אחרת משתמשת בו';
+        }
+        setFeedback(errorMessage);
       setRecording(false);
     });
   };
