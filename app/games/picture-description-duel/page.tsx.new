@@ -1,0 +1,329 @@
+"use client";
+import { useState, useRef, useEffect } from "react";
+import confetti from "canvas-confetti";
+
+const QUESTIONS = [
+  { id: 1, lang: "he", category: "animals", text: "איזה חיה היא הכי גדולה?", options: ["חתול", "כלב", "פיל", "ארנב"], answer: 2, explanation: "פיל הוא החיה הכי גדולה מבין האפשרויות." },
+  { id: 2, lang: "he", category: "food", text: "איזה מאכל עשוי מביצים?", options: ["לחם", "חביתה", "סלט", "מרק"], answer: 1, explanation: "חביתה מוכנה מביצים." },
+  { id: 3, lang: "he", category: "school", text: "מה משמש לכתיבה על הלוח?", options: ["עיפרון", "טוש", "גיר", "עט"], answer: 2, explanation: "משתמשים בגיר לכתיבה על הלוח." },
+  { id: 4, lang: "he", category: "transport", text: "איזה כלי תחבורה נוסע על פסים?", options: ["מכונית", "אופניים", "רכבת", "אוטובוס"], answer: 2, explanation: "רכבת נוסעת על פסים." },
+  { id: 5, lang: "he", category: "nature", text: "איזה צבע יש לעץ בריא?", options: ["אדום", "צהוב", "ירוק", "כחול"], answer: 2, explanation: "עלים של עץ בריא הם בצבע ירוק." },
+  { id: 6, lang: "he", category: "colors", text: "איזה צבע מקבלים מערבוב של אדום וכחול?", options: ["ירוק", "צהוב", "סגול", "כתום"], answer: 2, explanation: "ערבוב של אדום וכחול יוצר סגול." },
+  { id: 7, lang: "he", category: "family", text: "מי הוא האח של אמא?", options: ["אבא", "סבא", "דוד", "בן דוד"], answer: 2, explanation: "האח של אמא הוא הדוד." },
+  { id: 8, lang: "he", category: "sports", text: "איזה ספורט משחקים עם כדור עגול?", options: ["כדורגל", "כדורסל", "טניס", "שחייה"], answer: 0, explanation: "כדורגל משחקים עם כדור עגול." },
+  { id: 9, lang: "he", category: "weather", text: "מתי יורד גשם?", options: ["בקיץ", "בחורף", "באביב", "בסתיו"], answer: 1, explanation: "גשם יורד בעיקר בחורף." },
+  { id: 10, lang: "he", category: "time", text: "כמה שעות יש ביממה?", options: ["12", "18", "24", "36"], answer: 2, explanation: "ביממה יש 24 שעות." }
+] as const;
+
+const difficulties = [
+  { key: "easy", label: "קל", count: 5 },
+  { key: "medium", label: "בינוני", count: 10 },
+  { key: "hard", label: "קשה", count: 15 },
+];
+
+const CATEGORIES = [
+  { key: "all", label: "הכל", icon: "🌈" },
+  { key: "animals", label: "בעלי חיים", icon: "🐾" },
+  { key: "food", label: "אוכל", icon: "🍎" },
+  { key: "school", label: "בית ספר", icon: "🏫" },
+  { key: "transport", label: "תחבורה", icon: "🚗" },
+  { key: "nature", label: "טבע", icon: "🌿" },
+  { key: "colors", label: "צבעים", icon: "🎨" },
+  { key: "family", label: "משפחה", icon: "👨‍👩‍👧‍👦" },
+  { key: "sports", label: "ספורט", icon: "🏅" },
+  { key: "weather", label: "מזג אוויר", icon: "⛅" },
+  { key: "time", label: "זמן", icon: "⏰" }
+];
+
+const getInitialTime = (difficulty: string): number => {
+  switch (difficulty) {
+    case 'easy': return 60;
+    case 'medium': return 45;
+    case 'hard': return 30;
+    default: return 60;
+  }
+};
+
+function getStats(name: string) {
+  if (!name) return { games: 0, wins: 0, totalScore: 0 };
+  try {
+    return JSON.parse(localStorage.getItem('quiz-stats-' + name) || '{"games":0,"wins":0,"totalScore":0}');
+  } catch {
+    return { games: 0, wins: 0, totalScore: 0 };
+  }
+}
+
+function setStats(name: string, stats: any) {
+  if (!name) return;
+  localStorage.setItem('quiz-stats-' + name, JSON.stringify(stats));
+}
+
+function pickQuestions(all: typeof QUESTIONS, lang: 'en' | 'he', count: number, category: string) {
+  let pool = all.filter(q => q.lang === lang);
+  if (category && category !== "all") pool = pool.filter(q => q.category === category);
+  return pool.sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+export default function PictureDescriptionDuel() {
+  const [lang, setLang] = useState<'en' | 'he'>('he');
+  const [difficulty, setDifficulty] = useState('easy');
+  const [category, setCategory] = useState<string>("all");
+  const [questions, setQuestions] = useState<typeof QUESTIONS>([]);
+  const [current, setCurrent] = useState(0);
+  const [score, setScore] = useState(0);
+  const [selected, setSelected] = useState<number|null>(null);
+  const [feedback, setFeedback] = useState<string|null>(null);
+  const [showExplanation, setShowExplanation] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [stats, setStatsState] = useState({ total: 0, correct: 0, mistakes: 0 });
+  const [personalBest, setPersonalBest] = useState<{score: number, accuracy: number} | null>(null);
+  const [timer, setTimer] = useState(0);
+  const confettiRef = useRef<HTMLDivElement>(null);
+  const successAudio = useRef<HTMLAudioElement>(null);
+  const failAudio = useRef<HTMLAudioElement>(null);
+  const [categoryStats, setCategoryStats] = useState({});
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [detailedResults, setDetailedResults] = useState([]);
+  const [questionTimes, setQuestionTimes] = useState([]);
+  const [countdown, setCountdown] = useState(getInitialTime(difficulty));
+  const [timeUp, setTimeUp] = useState(false);
+  const [playerName, setPlayerName] = useState("");
+  const [inputName, setInputName] = useState("");
+
+  useEffect(() => {
+    const diff = difficulties.find(d => d.key === difficulty)!;
+    setQuestions(pickQuestions(QUESTIONS, lang, diff.count, category));
+    setCurrent(0);
+    setScore(0);
+    setSelected(null);
+    setFeedback(null);
+    setShowExplanation(false);
+    setFinished(false);
+    setStatsState({ total: 0, correct: 0, mistakes: 0 });
+    setTimer(0);
+    try {
+      const pb = JSON.parse(localStorage.getItem('quiz-best') || 'null');
+      if (pb) setPersonalBest(pb);
+    } catch {}
+    const stats = JSON.parse(localStorage.getItem('category-stats') || '{}');
+    setCategoryStats(stats);
+    const lb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+    setLeaderboard(lb);
+    setCountdown(getInitialTime(difficulty));
+    setTimeUp(false);
+  }, [difficulty, lang, category]);
+
+  useEffect(() => {
+    if (feedback === 'correct' && confettiRef.current) {
+      confettiRef.current.classList.add('show');
+      setTimeout(() => confettiRef.current?.classList.remove('show'), 1200);
+    }
+  }, [feedback]);
+
+  useEffect(() => {
+    if (finished) return;
+    const interval = setInterval(() => setTimer(t => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [finished]);
+
+  useEffect(() => {
+    if (finished || timeUp) return;
+    if (countdown <= 0) {
+      setTimeUp(true);
+      setFinished(true);
+      return;
+    }
+    const interval = setInterval(() => setCountdown(t => t - 1), 1000);
+    return () => clearInterval(interval);
+  }, [finished, timeUp, countdown]);
+
+  function handleSelect(idx: number) {
+    if (selected !== null) return;
+    setSelected(idx);
+    setShowExplanation(true);
+    setStatsState(s => ({ ...s, total: s.total + 1 }));
+    const now = Date.now();
+    setQuestionTimes(qt => [...qt, now]);
+    const q = questions[current];
+    setDetailedResults(dr => [...dr, { ...q, selected: idx, correct: idx === q.answer, time: now }]);
+    setCategoryStats(cs => {
+      const cat = q.category || 'other';
+      const prev = cs[cat] || { total: 0, correct: 0 };
+      const updated = { total: prev.total + 1, correct: prev.correct + (idx === q.answer ? 1 : 0) };
+      const newStats = { ...cs, [cat]: updated };
+      localStorage.setItem('category-stats', JSON.stringify(newStats));
+      return newStats;
+    });
+
+    if (idx === q.answer) {
+      setScore(s => s + 10);
+      setFeedback('correct');
+      setStatsState(s => ({ ...s, correct: s.correct + 1 }));
+      if (successAudio.current) {
+        successAudio.current.currentTime = 0;
+        successAudio.current.play();
+      }
+      setTimeout(() => {
+        setFeedback(null);
+        setSelected(null);
+        setShowExplanation(false);
+        if (current === questions.length - 1) setFinished(true);
+        else setCurrent(c => c + 1);
+      }, 1400);
+    } else {
+      setFeedback('wrong');
+      setStatsState(s => ({ ...s, mistakes: s.mistakes + 1 }));
+      if (failAudio.current) {
+        failAudio.current.currentTime = 0;
+        failAudio.current.play();
+      }
+      setTimeout(() => setFeedback(null), 1200);
+    }
+  }
+
+  function startGame() {
+    setPlayerName(inputName || 'שחקן');
+    setQuestions(pickQuestions(QUESTIONS, lang, difficulties.find(d => d.key === difficulty)!.count, category));
+    setCurrent(0);
+    setScore(0);
+    setSelected(null);
+    setFeedback(null);
+    setShowExplanation(false);
+    setFinished(false);
+    setStatsState({ total: 0, correct: 0, mistakes: 0 });
+    setTimer(0);
+    setCountdown(getInitialTime(difficulty));
+    setTimeUp(false);
+  }
+
+  useEffect(() => {
+    if (!finished) return;
+    const accuracy = stats.total > 0 ? Math.round((stats.correct/stats.total)*100) : 0;
+    if (!personalBest || score > personalBest.score || (score === personalBest.score && accuracy > personalBest.accuracy)) {
+      const pb = { score, accuracy };
+      setPersonalBest(pb);
+      localStorage.setItem('quiz-best', JSON.stringify(pb));
+    }
+    const entry = { name: playerName, score };
+    const lb = JSON.parse(localStorage.getItem('leaderboard') || '[]');
+    lb.push(entry);
+    lb.sort((a,b) => b.score - a.score);
+    localStorage.setItem('leaderboard', JSON.stringify(lb));
+    setLeaderboard(lb);
+    const playerStats = getStats(playerName);
+    playerStats.games++;
+    playerStats.totalScore += score;
+    if (score > 0) playerStats.wins++;
+    setStats(playerName, playerStats);
+    setStatsState(playerStats);
+  }, [finished]);
+
+  return (
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-900 via-blue-700 to-purple-900">
+      <audio ref={successAudio} src="/voice/success.mp3" preload="auto" />
+      <audio ref={failAudio} src="/voice/fail.mp3" preload="auto" />
+      <div ref={confettiRef} className="confetti" />
+      <div className="max-w-2xl w-full mx-auto bg-white bg-opacity-95 rounded-3xl shadow-2xl p-8 transition-all duration-700">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 text-center mb-6">חידון מעורב</h1>
+        {!playerName && (
+          <div className="flex flex-col gap-4 items-center">
+            <div className="flex gap-2 mb-2">
+              <button onClick={()=>setLang('he')} className={`px-4 py-2 rounded-full font-bold ${lang==='he'?'bg-pink-600 text-white':'bg-white text-pink-700'}`}>עברית</button>
+              <button onClick={()=>setLang('en')} className={`px-4 py-2 rounded-full font-bold ${lang==='en'?'bg-green-600 text-white':'bg-white text-green-700'}`}>English</button>
+            </div>
+            <div className="flex flex-col gap-2">
+              <input value={inputName} onChange={e=>setInputName(e.target.value)} placeholder="שם שחקן" className="border rounded px-4 py-2" />
+              <select value={difficulty} onChange={e=>setDifficulty(e.target.value)} className="border rounded px-4 py-2">
+                {difficulties.map(d => <option key={d.key} value={d.key}>{d.label}</option>)}
+              </select>
+              <select value={category} onChange={e=>setCategory(e.target.value)} className="border rounded px-4 py-2">
+                {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+              </select>
+              <button onClick={startGame} className="bg-blue-500 text-white px-6 py-2 rounded font-bold mt-2">התחל משחק</button>
+            </div>
+          </div>
+        )}
+        {playerName && !finished && questions.length > 0 && (
+          <div className="flex flex-col gap-4 items-center mt-4">
+            <div className="w-full h-4 bg-blue-100 rounded-full mb-6 overflow-hidden relative">
+              <div className="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-700" style={{ width: `${((current+1)/questions.length)*100}%` }} />
+              <div className="absolute inset-0 flex items-center justify-center text-blue-700 font-bold text-sm">{current+1}/{questions.length}</div>
+            </div>
+            <div className="flex justify-between w-full mb-4">
+              <div className="bg-blue-100 px-4 py-2 rounded-xl font-bold">ניקוד: {score}</div>
+              <div className="bg-red-100 px-4 py-2 rounded-xl font-bold">זמן: {countdown}</div>
+            </div>
+            <div className="bg-gradient-to-r from-blue-200 to-purple-200 rounded-xl shadow p-4 mb-4 text-xl font-bold text-blue-900 text-center animate-fade-in">
+              {questions[current].text}
+            </div>
+            <div className="flex flex-col gap-3 mb-4">
+              {questions[current].options.map((opt, idx) => (
+                <button key={idx} onClick={() => handleSelect(idx)} disabled={selected !== null}
+                  className={`w-full px-6 py-3 rounded-2xl font-bold text-lg shadow transition-all duration-200 border-2 flex items-center gap-2
+                    ${selected === idx
+                      ? idx === questions[current].answer
+                        ? 'bg-green-200 border-green-500 text-green-900 scale-105'
+                        : 'bg-red-200 border-red-500 text-red-900 shake'
+                      : 'bg-white border-blue-200 text-blue-900 hover:bg-blue-50 hover:scale-105'}`}
+                >{opt}</button>
+              ))}
+            </div>
+            {feedback === 'correct' && (
+              <div className="flex flex-col items-center justify-center animate-fade-in">
+                <div className="bg-white border-2 border-green-400 rounded-2xl px-8 py-6 text-2xl font-bold text-green-700 shadow-lg flex items-center gap-2 mb-2">
+                  <span>🎉</span> נכון! <span>🎉</span>
+                </div>
+              </div>
+            )}
+            {feedback === 'wrong' && (
+              <div className="flex flex-col items-center justify-center animate-fade-in">
+                <div className="bg-white border-2 border-red-400 rounded-2xl px-8 py-6 text-2xl font-bold text-red-700 shadow-lg flex items-center gap-2 mb-2">
+                  <span>❌</span> לא נכון <span>❌</span>
+                </div>
+              </div>
+            )}
+            {showExplanation && (
+              <div className="bg-green-100 border-l-4 border-green-400 rounded-xl px-6 py-3 text-md font-bold text-green-900 shadow mb-2 animate-fade-in">
+                {questions[current].explanation}
+              </div>
+            )}
+          </div>
+        )}
+        {finished && (
+          <div className="text-center mt-6 animate-fade-in">
+            <div className="text-2xl font-bold text-blue-700 mb-4 flex items-center justify-center gap-2">
+              <span className="text-green-500 text-3xl">🏆</span> כל הכבוד! סיימת את החידון 🎉
+            </div>
+            <div className="text-lg font-bold text-green-700 mb-2 flex items-center justify-center gap-2">
+              <span className="text-blue-500 text-2xl">★</span> ניקוד סופי: {score} | {stats.total > 0 ? Math.round((stats.correct/stats.total)*100) : 0}% הצלחה
+            </div>
+            <div className="text-md font-bold text-purple-700 mb-2 flex items-center justify-center gap-2">
+              {stats.correct} תשובות נכונות, {stats.mistakes} טעויות, {stats.total} שאלות
+            </div>
+            <button onClick={()=>{setPlayerName("");setInputName("");}} className="bg-gradient-to-r from-yellow-400 via-green-400 to-blue-500 text-white px-8 py-3 rounded-full text-xl font-bold shadow-lg mt-4 flex items-center gap-2">
+              <span className="text-2xl">🔄</span> שחק שוב
+            </button>
+            <div className="bg-white bg-opacity-80 rounded-xl p-4 mt-4">
+              <div className="font-bold text-purple-700 mb-2">דירוג שחקנים (מקומי):</div>
+              <ol className="list-decimal ml-6">
+                {leaderboard.slice(0,5).map((entry,i) => (
+                  <li key={i}>{entry.name || 'שחקן'}: {entry.score} נק׳</li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        )}
+      </div>
+      <style>{`
+      @keyframes fade-in { from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);} }
+      .animate-fade-in { animation: fade-in 1s cubic-bezier(.4,0,.2,1) both; }
+      @keyframes bounce { 0%,100%{transform:scale(1);} 50%{transform:scale(1.15);} }
+      .animate-bounce { animation: bounce 0.7s; }
+      @keyframes shake { 0%{transform:translateX(0);} 20%{transform:translateX(-8px);} 40%{transform:translateX(8px);} 60%{transform:translateX(-8px);} 80%{transform:translateX(8px);} 100%{transform:translateX(0);} }
+      .animate-shake { animation: shake 0.4s; }
+      .confetti { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; opacity: 0; transition: opacity 0.3s; }
+      .confetti.show { opacity: 1; }
+      `}</style>
+    </main>
+  );
+} 

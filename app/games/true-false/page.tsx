@@ -1,0 +1,1450 @@
+"use client";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from 'next/navigation';
+import useAuthUser from '@/lib/useAuthUser';
+import AdManager from "@/app/components/ads/AdManager";
+import { getTranslationWithFallback } from '@/lib/translations';
+
+interface TrueFalseQuestion {
+  id: number;
+  lang: string;
+  text: string;
+  answer: boolean;
+  explanation?: string;
+}
+
+const QUESTIONS_BY_DIFFICULTY = {
+  // רמה 1: מתחילים - עובדות בסיסיות
+  beginner: [
+    { id: 1, lang: "en", text: "The sky is blue.", answer: true, explanation: "השמיים כחולים בגלל פיזור אור השמש" },
+    { id: 2, lang: "en", text: "Cats can fly.", answer: false, explanation: "חתולים לא יכולים לעוף - אין להם כנפיים" },
+    { id: 3, lang: "en", text: "Fish live in water.", answer: true, explanation: "דגים הם בעלי חיים ימיים וחיים במים" },
+    { id: 4, lang: "en", text: "The sun is cold.", answer: false, explanation: "השמש חמה מאוד, לא קרה" },
+    { id: 5, lang: "en", text: "Birds have wings.", answer: true, explanation: "לציפורים יש כנפיים כדי לעזור להן לעוף" },
+    { id: 6, lang: "en", text: "Dogs say meow.", answer: false, explanation: "כלבים נובחים; חתולים אומרים מיאו" },
+    { id: 7, lang: "en", text: "Milk is white.", answer: true, explanation: "חלב הוא בדרך כלל לבן בצבע" },
+    { id: 8, lang: "en", text: "Books are for eating.", answer: false, explanation: "ספרים הם לקריאה, לא לאכילה" },
+    { id: 9, lang: "en", text: "Bananas are yellow.", answer: true, explanation: "בננות צהובות כשהן בשלות" },
+    { id: 10, lang: "en", text: "Cars swim in the sea.", answer: false, explanation: "מכוניות לא יכולות לשחות; הן נוסעות על כבישים" },
+    { id: 11, lang: "en", text: "Winter is hot.", answer: false, explanation: "החורף בדרך כלל קר" },
+    { id: 12, lang: "en", text: "The moon shines at night.", answer: true, explanation: "הירח נראה וזורח בלילה" },
+    { id: 13, lang: "en", text: "Apples are a fruit.", answer: true, explanation: "תפוחים הם סוג של פרי" },
+    { id: 14, lang: "en", text: "Dogs can talk.", answer: false, explanation: "כלבים לא יכולים לדבר כמו בני אדם" },
+    { id: 15, lang: "en", text: "Water is wet.", answer: true, explanation: "מים נחשבים רטובים כי הם נוזל" },
+    { id: 16, lang: "en", text: "Fire is cold.", answer: false, explanation: "אש חמה, לא קרה" },
+    { id: 17, lang: "en", text: "The earth is round.", answer: true, explanation: "הארץ עגולה בצורתה" },
+    { id: 18, lang: "en", text: "Fish can walk on land.", answer: false, explanation: "דגים לא יכולים ללכת על היבשה; הם שוחים במים" },
+    { id: 19, lang: "en", text: "Grass is green.", answer: true, explanation: "דשא ירוק בצבע" },
+    { id: 20, lang: "en", text: "Eggs grow on trees.", answer: false, explanation: "ביצים לא גדלות על עצים; הן באות מבעלי חיים" },
+    { id: 21, lang: "en", text: "Dogs are animals.", answer: true, explanation: "כלבים הם בעלי חיים" },
+    { id: 22, lang: "en", text: "The sun rises in the west.", answer: false, explanation: "השמש זורחת במזרח, לא במערב" },
+    { id: 23, lang: "en", text: "Roses are flowers.", answer: true, explanation: "ורדים הם פרחים" },
+    { id: 24, lang: "en", text: "Ice is hot.", answer: false, explanation: "קרח קר, לא חם" },
+    { id: 25, lang: "en", text: "Clouds are in the sky.", answer: true, explanation: "עננים נמצאים בשמיים" },
+    { id: 26, lang: "en", text: "Shoes are for eating.", answer: false, explanation: "נעליים הן ללבישה, לא לאכילה" },
+    { id: 27, lang: "en", text: "Trees have leaves.", answer: true, explanation: "לעצים יש עלים" },
+    { id: 28, lang: "en", text: "Cars can talk.", answer: false, explanation: "מכוניות לא יכולות לדבר" },
+    { id: 29, lang: "en", text: "The moon is bright at night.", answer: true, explanation: "הירח בהיר בלילה" },
+    { id: 30, lang: "en", text: "Stones can fly.", answer: false, explanation: "אבנים לא יכולות לעוף" },
+    { id: 31, lang: "en", text: "Rain falls from clouds.", answer: true, explanation: "גשם יורד מעננים" },
+    { id: 32, lang: "en", text: "Books can swim.", answer: false, explanation: "ספרים לא יכולים לשחות" },
+    { id: 33, lang: "en", text: "Flowers smell nice.", answer: true, explanation: "פרחים מריחים נעים" },
+    { id: 34, lang: "en", text: "Chairs can run.", answer: false, explanation: "כיסאות לא יכולים לרוץ" },
+    { id: 35, lang: "en", text: "The ocean is salty.", answer: true, explanation: "האוקיינוס מלוח" },
+    { id: 36, lang: "en", text: "Pens can dance.", answer: false, explanation: "עטים לא יכולים לרקוד" },
+    { id: 37, lang: "en", text: "Bees make honey.", answer: true, explanation: "דבורים מייצרות דבש" },
+    { id: 38, lang: "en", text: "Tables can sing.", answer: false, explanation: "שולחנות לא יכולים לשיר" },
+    { id: 39, lang: "en", text: "Stars shine at night.", answer: true, explanation: "כוכבים זורחים בלילה" },
+    { id: 40, lang: "en", text: "Walls can walk.", answer: false, explanation: "קירות לא יכולים ללכת" },
+  ],
+
+  // רמה 2: בינוני - עובדות יומיומיות
+  intermediate: [
+    { id: 21, lang: "en", text: "Cats can swim.", answer: true, explanation: "חתולים יכולים לשחות, אם כי בדרך כלל הם לא אוהבים מים" },
+    { id: 22, lang: "en", text: "The moon is made of cheese.", answer: false, explanation: "הירח עשוי מסלע ואבק, לא מגבינה" },
+    { id: 23, lang: "en", text: "Birds can fly.", answer: true, explanation: "רוב הציפורים יכולות לעוף, אם כי יש כאלה שלא" },
+    { id: 24, lang: "en", text: "Fish live on land.", answer: false, explanation: "דגים חיים במים, לא על היבשה" },
+    { id: 25, lang: "en", text: "The sun is a star.", answer: true, explanation: "השמש היא אכן כוכב, הקרוב ביותר לכדור הארץ" },
+    { id: 26, lang: "en", text: "Dogs can talk like humans.", answer: false, explanation: "כלבים לא יכולים לדבר כמו בני אדם, אם כי הם יכולים להשמיע קולות" },
+    { id: 27, lang: "en", text: "Apples are red.", answer: true, explanation: "תפוחים רבים אדומים, אם כי יכולים להיות גם בצבעים אחרים" },
+    { id: 28, lang: "en", text: "Cars can fly.", answer: false, explanation: "מכוניות לא יכולות לעוף; הן נוסעות על כבישים" },
+    { id: 29, lang: "en", text: "Water boils at 100 degrees Celsius.", answer: true, explanation: "מים רותחים ב-100 מעלות צלזיוס בגובה פני הים" },
+    { id: 30, lang: "en", text: "Books can eat.", answer: false, explanation: "ספרים לא יכולים לאכול; הם חפצים דוממים" },
+    { id: 31, lang: "en", text: "Trees can walk.", answer: false, explanation: "עצים לא יכולים ללכת; הם מושרשים באדמה" },
+    { id: 32, lang: "en", text: "Birds have feathers.", answer: true, explanation: "לציפורים יש נוצות שעוזרות להן לעוף ולהתחמם" },
+    { id: 33, lang: "en", text: "Fish can breathe air.", answer: false, explanation: "דגים נושמים דרך זימים במים, לא אוויר" },
+    { id: 34, lang: "en", text: "Cats can bark.", answer: false, explanation: "חתולים מיילים; כלבים נובחים" },
+    { id: 35, lang: "en", text: "Flowers are beautiful.", answer: true, explanation: "פרחים נחשבים בדרך כלל ליפים" },
+    { id: 36, lang: "en", text: "Cars can swim.", answer: false, explanation: "מכוניות לא יכולות לשחות; הן היו שוקעות במים" },
+    { id: 37, lang: "en", text: "The moon orbits around the Earth.", answer: true, explanation: "הירח מקיף את כדור הארץ" },
+    { id: 38, lang: "en", text: "Books can fly.", answer: false, explanation: "ספרים לא יכולים לעוף; הם חפצים דוממים" },
+    { id: 39, lang: "en", text: "Snow is white.", answer: true, explanation: "שלג לבן בצבע" },
+    { id: 40, lang: "en", text: "Rocks can grow.", answer: false, explanation: "סלעים לא גדלים כמו צמחים או בעלי חיים" },
+    { id: 41, lang: "en", text: "Honey is sweet.", answer: true, explanation: "דבש מתוק" },
+    { id: 42, lang: "en", text: "Lemons are sweet.", answer: false, explanation: "לימונים חמוצים, לא מתוקים" },
+    { id: 43, lang: "en", text: "Elephants are large.", answer: true, explanation: "פילים גדולים" },
+    { id: 44, lang: "en", text: "Ants are bigger than elephants.", answer: false, explanation: "נמלים קטנות בהרבה מפילים" },
+    { id: 45, lang: "en", text: "The Earth revolves around the Sun.", answer: true, explanation: "כדור הארץ מסתובב סביב השמש" },
+    { id: 46, lang: "en", text: "The Sun revolves around the Earth.", answer: false, explanation: "השמש לא מסתובבת סביב הארץ" },
+    { id: 47, lang: "en", text: "Humans need oxygen to breathe.", answer: true, explanation: "בני אדם צריכים חמצן לנשימה" },
+    { id: 48, lang: "en", text: "Plants produce oxygen.", answer: true, explanation: "צמחים מייצרים חמצן" },
+    { id: 49, lang: "en", text: "Diamonds are soft.", answer: false, explanation: "יהלומים קשים מאוד" },
+    { id: 50, lang: "en", text: "Gold is a metal.", answer: true, explanation: "זהב הוא מתכת" },
+    { id: 51, lang: "en", text: "Glass is transparent.", answer: true, explanation: "זכוכית שקופה" },
+    { id: 52, lang: "en", text: "Wood comes from animals.", answer: false, explanation: "עץ בא מצמחים, לא מבעלי חיים" },
+    { id: 53, lang: "en", text: "Wool comes from sheep.", answer: true, explanation: "צמר בא מכבשים" },
+    { id: 54, lang: "en", text: "Milk comes from trees.", answer: false, explanation: "חלב בא מבעלי חיים, לא מעצים" },
+    { id: 55, lang: "en", text: "Bread is made from flour.", answer: true, explanation: "לחם עשוי מקמח" },
+    { id: 56, lang: "en", text: "Paper is made from metal.", answer: false, explanation: "נייר עשוי מעץ, לא ממתכת" },
+    { id: 57, lang: "en", text: "Salt makes food salty.", answer: true, explanation: "מלח הופך אוכל למלוח" },
+    { id: 58, lang: "en", text: "Sugar makes food salty.", answer: false, explanation: "סוכר הופך אוכל למתוק, לא למלוח" },
+    { id: 59, lang: "en", text: "Fire needs oxygen to burn.", answer: true, explanation: "אש צריכה חמצן כדי לבעור" },
+    { id: 60, lang: "en", text: "Water can burn.", answer: false, explanation: "מים לא יכולים לבעור" },
+  ],
+
+  // רמה 3: מתקדם - עובדות מדעיות
+  advanced: [
+    { id: 41, lang: "en", text: "Dolphins are mammals.", answer: true, explanation: "דולפינים הם יונקים שחיים במים" },
+    { id: 42, lang: "en", text: "Sharks are fish.", answer: true, explanation: "כרישים הם סוג של דג, לא יונקים" },
+    { id: 43, lang: "en", text: "Bats are birds.", answer: false, explanation: "עטלפים הם יונקים, לא ציפורים" },
+    { id: 44, lang: "en", text: "Penguins can fly.", answer: false, explanation: "פינגווינים לא יכולים לעוף; הם שוחים במקום זאת" },
+    { id: 45, lang: "en", text: "Whales are fish.", answer: false, explanation: "לווייתנים הם יונקים, לא דגים" },
+    { id: 46, lang: "en", text: "Snakes have legs.", answer: false, explanation: "לנחשים אין רגליים; הם זוחלים" },
+    { id: 47, lang: "en", text: "Frogs can jump.", answer: true, explanation: "צפרדעים ידועות ביכולת הקפיצה שלהן" },
+    { id: 48, lang: "en", text: "Spiders are insects.", answer: false, explanation: "עכבישים הם עכבישאים, לא חרקים" },
+    { id: 49, lang: "en", text: "Butterflies can fly.", answer: true, explanation: "פרפרים יכולים לעוף עם כנפיהם הצבעוניות" },
+    { id: 50, lang: "en", text: "Ants can lift heavy objects.", answer: true, explanation: "נמלים יכולות להרים חפצים כבדים הרבה יותר מהן" },
+    { id: 51, lang: "en", text: "Bees make honey.", answer: true, explanation: "דבורים אוספות צוף ומייצרות דבש" },
+    { id: 52, lang: "en", text: "Crocodiles are reptiles.", answer: true, explanation: "תנינים הם זוחלים גדולים שחיים במים" },
+    { id: 53, lang: "en", text: "Turtles can fly.", answer: false, explanation: "צבים לא יכולים לעוף; הם הולכים או שוחים" },
+    { id: 54, lang: "en", text: "Lions are herbivores.", answer: false, explanation: "אריות הם טורפים; הם אוכלים בשר" },
+    { id: 55, lang: "en", text: "Elephants are the largest land animals.", answer: true, explanation: "פילים הם בעלי החיים היבשתיים הגדולים ביותר על כדור הארץ" },
+    { id: 56, lang: "en", text: "Giraffes have long necks.", answer: true, explanation: "ג'ירפות ידועות בצוואר הארוך שלהן" },
+    { id: 57, lang: "en", text: "Monkeys can climb trees.", answer: true, explanation: "קופים הם מטפסים מצוינים וחיים בעצים" },
+    { id: 58, lang: "en", text: "Rabbits can fly.", answer: false, explanation: "ארנבים לא יכולים לעוף; הם קופצים על הקרקע" },
+    { id: 59, lang: "en", text: "Bears hibernate in winter.", answer: true, explanation: "דובים רבים נמצאים בתרדמת חורף בחודשי החורף" },
+    { id: 60, lang: "en", text: "Fish can live without water.", answer: false, explanation: "דגים צריכים מים כדי לשרוד; הם לא יכולים לחיות בלעדיהם" },
+    { id: 61, lang: "en", text: "Owls are nocturnal animals.", answer: true, explanation: "ינשופים הם בעלי חיים ליליים" },
+    { id: 62, lang: "en", text: "Polar bears live in Antarctica.", answer: false, explanation: "דובי קוטב חיים בארקטיקה, לא באנטארקטיקה" },
+    { id: 63, lang: "en", text: "Camels store water in their humps.", answer: false, explanation: "גמלים מאחסנים שומן, לא מים, בדבשתם" },
+    { id: 64, lang: "en", text: "Koalas eat eucalyptus leaves.", answer: true, explanation: "קואלות אוכלות עלי אקליפטוס" },
+    { id: 65, lang: "en", text: "Chameleons change color for camouflage.", answer: true, explanation: "זיקיטים משנים צבע להסוואה" },
+    { id: 66, lang: "en", text: "Ostriches can fly.", answer: false, explanation: "יענים לא יכולים לעוף למרות שהם ציפורים" },
+    { id: 67, lang: "en", text: "Kangaroos are marsupials.", answer: true, explanation: "קנגורואים הם חיות כיס" },
+    { id: 68, lang: "en", text: "Snakes are warm-blooded.", answer: false, explanation: "נחשים הם בעלי דם קר" },
+    { id: 69, lang: "en", text: "Hummingbirds can hover in the air.", answer: true, explanation: "יונקי דבש יכולים לרחף באוויר" },
+    { id: 70, lang: "en", text: "Sharks are mammals.", answer: false, explanation: "כרישים הם דגים, לא יונקים" },
+    { id: 71, lang: "en", text: "Octopuses are intelligent creatures.", answer: true, explanation: "תמנונים הם יצורים חכמים" },
+    { id: 72, lang: "en", text: "Jellyfish have brains.", answer: false, explanation: "למדוזות אין מוח" },
+    { id: 73, lang: "en", text: "Starfish can regenerate lost arms.", answer: true, explanation: "כוכבי ים יכולים לגדל זרועות חדשות" },
+    { id: 74, lang: "en", text: "Seahorses are fish.", answer: true, explanation: "סוסוני ים הם דגים" },
+    { id: 75, lang: "en", text: "Lobsters are blue when alive.", answer: true, explanation: "לובסטרים כחולים כשהם חיים" },
+    { id: 76, lang: "en", text: "Coral is a plant.", answer: false, explanation: "אלמוגים הם בעלי חיים, לא צמחים" },
+    { id: 77, lang: "en", text: "Sponges are animals.", answer: true, explanation: "ספוגים הם בעלי חיים" },
+    { id: 78, lang: "en", text: "Pearls are made by oysters.", answer: true, explanation: "פנינים נוצרות על ידי צדפות" },
+    { id: 79, lang: "en", text: "Seaweed is an animal.", answer: false, explanation: "אצות הן צמחים, לא בעלי חיים" },
+    { id: 80, lang: "en", text: "Dolphins use echolocation.", answer: true, explanation: "דולפינים משתמשים באקולוקציה" },
+  ],
+
+  // רמה 4: קיצוני - עובדות מדעיות מתקדמות
+  extreme: [
+    { id: 61, lang: "en", text: "The human brain contains approximately 86 billion neurons.", answer: true, explanation: "המוח האנושי מכיל כ-86 מיליארד נוירונים" },
+    { id: 62, lang: "en", text: "Light travels faster than sound.", answer: true, explanation: "אור נע הרבה יותר מהר מקול" },
+    { id: 63, lang: "en", text: "The Great Wall of China is visible from space.", answer: false, explanation: "החומה הסינית לא נראית מהחלל בעין בלתי מזוינת" },
+    { id: 64, lang: "en", text: "The human body is made up of about 60% water.", answer: true, explanation: "גוף האדם מורכב מכ-60% מים" },
+    { id: 65, lang: "en", text: "Sharks can get cancer.", answer: true, explanation: "כרישים יכולים לחלות בסרטן, בניגוד לאמונה הרווחת" },
+    { id: 66, lang: "en", text: "The Earth is the only planet with water.", answer: false, explanation: "גם כוכבי לכת וירחים אחרים מכילים מים" },
+    { id: 67, lang: "en", text: "The human heart has four chambers.", answer: true, explanation: "ללב האנושי יש ארבעה חדרים: שני פרוזדורים ושני חדרים" },
+    { id: 68, lang: "en", text: "Goldfish have a memory span of only 3 seconds.", answer: false, explanation: "דגי זהב יכולים לזכור דברים להרבה יותר מ-3 שניות" },
+    { id: 69, lang: "en", text: "The speed of light is approximately 300,000 km/s.", answer: true, explanation: "אור נע במהירות של כ-300,000 קילומטר לשנייה" },
+    { id: 70, lang: "en", text: "Humans use only 10% of their brain.", answer: false, explanation: "בני אדם משתמשים בכל חלקי המוח שלהם, לא רק ב-10%" },
+    { id: 71, lang: "en", text: "The human body has 206 bones.", answer: true, explanation: "לגוף אדם בוגר יש 206 עצמות" },
+    { id: 72, lang: "en", text: "Bats are blind.", answer: false, explanation: "עטלפים יכולים לראות, אם כי הם גם משתמשים באקולוקציה" },
+    { id: 73, lang: "en", text: "The human eye can distinguish about 10 million colors.", answer: true, explanation: "העין האנושית יכולה להבחין בכ-10 מיליון צבעים שונים" },
+    { id: 74, lang: "en", text: "Sharks must keep swimming to breathe.", answer: true, explanation: "רוב הכרישים חייבים להמשיך לשחות כדי להעביר מים על הזימים שלהם" },
+    { id: 75, lang: "en", text: "The human brain weighs about 3 pounds.", answer: true, explanation: "המוח האנושי הממוצע שוקל כ-3 פאונד" },
+    { id: 76, lang: "en", text: "All spiders spin webs.", answer: false, explanation: "לא כל העכבישים טווים קורים; חלקם צדים בלי קורים" },
+    { id: 77, lang: "en", text: "The human body produces about 25,000 quarts of saliva in a lifetime.", answer: true, explanation: "גוף האדם מייצר כ-25,000 ליטרים של רוק במהלך החיים" },
+    { id: 78, lang: "en", text: "Octopuses have three hearts.", answer: true, explanation: "לתמנונים יש שלושה לבבות: שניים שואבים דם לזימים, אחד לגוף" },
+    { id: 79, lang: "en", text: "DNA stands for Deoxyribonucleic Acid.", answer: true, explanation: "DNA מייצג חומצה דאוקסיריבונוקלאית" },
+    { id: 80, lang: "en", text: "The human nose can detect over 1 trillion scents.", answer: true, explanation: "האף האנושי יכול לזהות יותר מטריליון ריחות שונים" },
+    { id: 81, lang: "en", text: "Quantum entanglement allows instant communication.", answer: false, explanation: "שזירה קוונטית לא מאפשרת תקשורת מיידית" },
+    { id: 82, lang: "en", text: "The speed of light is constant in vacuum.", answer: true, explanation: "מהירות האור קבועה בוואקום" },
+    { id: 83, lang: "en", text: "Antibiotics work against viruses.", answer: false, explanation: "אנטיביוטיקה פועלת נגד חיידקים, לא וירוסים" },
+    { id: 84, lang: "en", text: "DNA is a double helix structure.", answer: true, explanation: "DNA הוא מבנה של סליל כפול" },
+    { id: 85, lang: "en", text: "Electrons have a positive charge.", answer: false, explanation: "לאלקטרונים יש מטען שלילי" },
+    { id: 86, lang: "en", text: "Photosynthesis produces oxygen.", answer: true, explanation: "פוטוסינתזה מייצרת חמצן" },
+    { id: 87, lang: "en", text: "The mitochondria is the powerhouse of the cell.", answer: true, explanation: "המיטוכונדריה היא תחנת הכוח של התא" },
+    { id: 88, lang: "en", text: "Sound can travel through vacuum.", answer: false, explanation: "קול לא יכול לעבור בוואקום" },
+    { id: 89, lang: "en", text: "Gravity is a force.", answer: true, explanation: "כוח המשיכה הוא כוח" },
+    { id: 90, lang: "en", text: "The periodic table has 118 elements.", answer: true, explanation: "הטבלה המחזורית מכילה 118 יסודות" },
+    { id: 91, lang: "en", text: "Atoms are the smallest particles.", answer: false, explanation: "אטומים מורכבים מחלקיקים קטנים יותר" },
+    { id: 92, lang: "en", text: "Vaccines stimulate the immune system.", answer: true, explanation: "חיסונים מעוררים את מערכת החיסון" },
+    { id: 93, lang: "en", text: "Diamonds are made of carbon.", answer: true, explanation: "יהלומים עשויים מפחמן" },
+    { id: 94, lang: "en", text: "The human genome has 46 chromosomes.", answer: true, explanation: "לגנום האנושי יש 46 כרומוזומים" },
+    { id: 95, lang: "en", text: "Neurons can regenerate quickly.", answer: false, explanation: "נוירונים לא מתחדשים במהירות" },
+    { id: 96, lang: "en", text: "Black holes have infinite density.", answer: true, explanation: "לחורים שחורים יש צפיפות אינסופית במרכזם" },
+    { id: 97, lang: "en", text: "The universe is expanding.", answer: true, explanation: "היקום מתרחב" },
+    { id: 98, lang: "en", text: "Absolute zero is -273.15°C.", answer: true, explanation: "אפס מוחלט הוא -273.15 מעלות צלזיוס" },
+    { id: 99, lang: "en", text: "Protons have a negative charge.", answer: false, explanation: "לפרוטונים יש מטען חיובי" },
+    { id: 100, lang: "en", text: "E=mc² is Einstein's famous equation.", answer: true, explanation: "E=mc² היא המשוואה המפורסמת של איינשטיין" },
+  ]
+};
+
+// שאלות ישנות - לשמירה על תאימות לאחור
+const QUESTIONS: TrueFalseQuestion[] = [
+  // English
+  { id: 1, lang: "en", text: "The sky is blue.", answer: true, explanation: "The sky appears blue due to the scattering of sunlight." },
+  { id: 2, lang: "en", text: "Cats can fly.", answer: false, explanation: "Cats cannot fly; they do not have wings." },
+  { id: 3, lang: "en", text: "Fish live in water.", answer: true, explanation: "Fish are aquatic animals and live in water." },
+  { id: 4, lang: "en", text: "The sun is cold.", answer: false, explanation: "The sun is very hot, not cold." },
+  { id: 5, lang: "en", text: "Birds have wings.", answer: true, explanation: "Birds have wings to help them fly." },
+  { id: 6, lang: "en", text: "Dogs say meow.", answer: false, explanation: "Dogs bark; cats say meow." },
+  { id: 7, lang: "en", text: "Milk is white.", answer: true, explanation: "Milk is usually white in color." },
+  { id: 8, lang: "en", text: "Books are for eating.", answer: false, explanation: "Books are for reading, not eating." },
+  { id: 9, lang: "en", text: "Bananas are yellow.", answer: true, explanation: "Bananas are yellow when ripe." },
+  { id: 10, lang: "en", text: "Cars swim in the sea.", answer: false, explanation: "Cars cannot swim; they drive on roads." },
+  { id: 11, lang: "en", text: "Winter is hot.", answer: false, explanation: "Winter is usually cold." },
+  { id: 12, lang: "en", text: "The moon shines at night.", answer: true, explanation: "The moon is visible and shines at night." },
+  { id: 13, lang: "en", text: "Apples are a fruit.", answer: true, explanation: "Apples are a type of fruit." },
+  { id: 14, lang: "en", text: "Dogs can talk.", answer: false, explanation: "Dogs cannot talk like humans." },
+  { id: 15, lang: "en", text: "Water is wet.", answer: true, explanation: "Water is considered wet because it is a liquid." },
+  { id: 16, lang: "en", text: "Fire is cold.", answer: false, explanation: "Fire is hot, not cold." },
+  { id: 17, lang: "en", text: "The earth is round.", answer: true, explanation: "The earth is round in shape." },
+  { id: 18, lang: "en", text: "Fish can walk on land.", answer: false, explanation: "Fish cannot walk on land; they swim in water." },
+  { id: 19, lang: "en", text: "Grass is green.", answer: true, explanation: "Grass is green in color." },
+  { id: 20, lang: "en", text: "Eggs grow on trees.", answer: false, explanation: "Eggs do not grow on trees; they come from animals." },
+  
+  // Easy level - Additional questions (21-40)
+  { id: 21, lang: "en", text: "Cats can swim.", answer: true, explanation: "Cats can swim, though they generally don't like water." },
+  { id: 22, lang: "en", text: "The moon is made of cheese.", answer: false, explanation: "The moon is made of rock and dust, not cheese." },
+  { id: 23, lang: "en", text: "Birds can fly.", answer: true, explanation: "Most birds can fly, though some cannot." },
+  { id: 24, lang: "en", text: "Fish live on land.", answer: false, explanation: "Fish live in water, not on land." },
+  { id: 25, lang: "en", text: "The sun is a star.", answer: true, explanation: "The sun is indeed a star, the closest one to Earth." },
+  { id: 26, lang: "en", text: "Dogs can talk.", answer: false, explanation: "Dogs cannot talk like humans, though they can make sounds." },
+  { id: 27, lang: "en", text: "Apples are red.", answer: true, explanation: "Many apples are red, though they can be other colors too." },
+  { id: 28, lang: "en", text: "Cars can fly.", answer: false, explanation: "Cars cannot fly; they drive on roads." },
+  { id: 29, lang: "en", text: "Water is wet.", answer: true, explanation: "Water is considered wet because it is a liquid." },
+  { id: 30, lang: "en", text: "Books can eat.", answer: false, explanation: "Books cannot eat; they are inanimate objects." },
+  { id: 31, lang: "en", text: "The sky is blue.", answer: true, explanation: "The sky appears blue due to the scattering of sunlight." },
+  { id: 32, lang: "en", text: "Trees can walk.", answer: false, explanation: "Trees cannot walk; they are rooted in the ground." },
+  { id: 33, lang: "en", text: "Birds have feathers.", answer: true, explanation: "Birds have feathers which help them fly and stay warm." },
+  { id: 34, lang: "en", text: "Fish can breathe air.", answer: false, explanation: "Fish breathe through gills in water, not air." },
+  { id: 35, lang: "en", text: "The earth is round.", answer: true, explanation: "The earth is round in shape, like a ball." },
+  { id: 36, lang: "en", text: "Cats can bark.", answer: false, explanation: "Cats meow; dogs bark." },
+  { id: 37, lang: "en", text: "Flowers are beautiful.", answer: true, explanation: "Flowers are generally considered beautiful." },
+  { id: 38, lang: "en", text: "Cars can swim.", answer: false, explanation: "Cars cannot swim; they would sink in water." },
+  { id: 39, lang: "en", text: "The moon shines at night.", answer: true, explanation: "The moon is visible and shines at night." },
+  { id: 40, lang: "en", text: "Books can fly.", answer: false, explanation: "Books cannot fly; they are inanimate objects." },
+  
+  // Medium level - Additional questions (41-60)
+  { id: 41, lang: "en", text: "Dolphins are mammals.", answer: true, explanation: "Dolphins are mammals that live in water." },
+  { id: 42, lang: "en", text: "Sharks are fish.", answer: true, explanation: "Sharks are a type of fish, not mammals." },
+  { id: 43, lang: "en", text: "Bats are birds.", answer: false, explanation: "Bats are mammals, not birds." },
+  { id: 44, lang: "en", text: "Penguins can fly.", answer: false, explanation: "Penguins cannot fly; they swim instead." },
+  { id: 45, lang: "en", text: "Whales are fish.", answer: false, explanation: "Whales are mammals, not fish." },
+  { id: 46, lang: "en", text: "Snakes have legs.", answer: false, explanation: "Snakes do not have legs; they slither." },
+  { id: 47, lang: "en", text: "Frogs can jump.", answer: true, explanation: "Frogs are known for their ability to jump." },
+  { id: 48, lang: "en", text: "Spiders are insects.", answer: false, explanation: "Spiders are arachnids, not insects." },
+  { id: 49, lang: "en", text: "Butterflies can fly.", answer: true, explanation: "Butterflies can fly with their colorful wings." },
+  { id: 50, lang: "en", text: "Ants can lift heavy objects.", answer: true, explanation: "Ants can lift objects much heavier than themselves." },
+  { id: 51, lang: "en", text: "Bees make honey.", answer: true, explanation: "Bees collect nectar and make honey." },
+  { id: 52, lang: "en", text: "Crocodiles are reptiles.", answer: true, explanation: "Crocodiles are large reptiles that live in water." },
+  { id: 53, lang: "en", text: "Turtles can fly.", answer: false, explanation: "Turtles cannot fly; they walk or swim." },
+  { id: 54, lang: "en", text: "Lions are herbivores.", answer: false, explanation: "Lions are carnivores; they eat meat." },
+  { id: 55, lang: "en", text: "Elephants are the largest land animals.", answer: true, explanation: "Elephants are the largest land animals on Earth." },
+  { id: 56, lang: "en", text: "Giraffes have long necks.", answer: true, explanation: "Giraffes are known for their very long necks." },
+  { id: 57, lang: "en", text: "Monkeys can climb trees.", answer: true, explanation: "Monkeys are excellent climbers and live in trees." },
+  { id: 58, lang: "en", text: "Rabbits can fly.", answer: false, explanation: "Rabbits cannot fly; they hop on the ground." },
+  { id: 59, lang: "en", text: "Bears hibernate in winter.", answer: true, explanation: "Many bears hibernate during the winter months." },
+  { id: 60, lang: "en", text: "Fish can live without water.", answer: false, explanation: "Fish need water to survive; they cannot live without it." },
+  
+  // Hard level - Additional questions (61-80)
+  { id: 61, lang: "en", text: "The human brain contains approximately 86 billion neurons.", answer: true, explanation: "The human brain has about 86 billion neurons." },
+  { id: 62, lang: "en", text: "Light travels faster than sound.", answer: true, explanation: "Light travels much faster than sound." },
+  { id: 63, lang: "en", text: "The Great Wall of China is visible from space.", answer: false, explanation: "The Great Wall is not visible from space with the naked eye." },
+  { id: 64, lang: "en", text: "The human body is made up of about 60% water.", answer: true, explanation: "The human body is approximately 60% water." },
+  { id: 65, lang: "en", text: "Sharks can get cancer.", answer: true, explanation: "Sharks can get cancer, contrary to popular belief." },
+  { id: 66, lang: "en", text: "The Earth is the only planet with water.", answer: false, explanation: "Other planets and moons also have water." },
+  { id: 67, lang: "en", text: "The human heart has four chambers.", answer: true, explanation: "The human heart has four chambers: two atria and two ventricles." },
+  { id: 68, lang: "en", text: "Goldfish have a memory span of only 3 seconds.", answer: false, explanation: "Goldfish can remember things for much longer than 3 seconds." },
+  { id: 69, lang: "en", text: "The speed of light is approximately 300,000 km/s.", answer: true, explanation: "Light travels at about 300,000 kilometers per second." },
+  { id: 70, lang: "en", text: "Humans use only 10% of their brain.", answer: false, explanation: "Humans use all parts of their brain, not just 10%." },
+  { id: 71, lang: "en", text: "The human body has 206 bones.", answer: true, explanation: "An adult human body has 206 bones." },
+  { id: 72, lang: "en", text: "Bats are blind.", answer: false, explanation: "Bats can see, though they also use echolocation." },
+  { id: 73, lang: "en", text: "The human eye can distinguish about 10 million colors.", answer: true, explanation: "The human eye can distinguish approximately 10 million different colors." },
+  { id: 74, lang: "en", text: "Sharks must keep swimming to breathe.", answer: true, explanation: "Most sharks must keep swimming to pass water over their gills." },
+  { id: 75, lang: "en", text: "The human brain weighs about 3 pounds.", answer: true, explanation: "The average human brain weighs about 3 pounds." },
+  { id: 76, lang: "en", text: "All spiders spin webs.", answer: false, explanation: "Not all spiders spin webs; some hunt without webs." },
+  { id: 77, lang: "en", text: "The human body produces about 25,000 quarts of saliva in a lifetime.", answer: true, explanation: "The human body produces approximately 25,000 quarts of saliva over a lifetime." },
+  { id: 78, lang: "en", text: "Octopuses have three hearts.", answer: true, explanation: "Octopuses have three hearts: two pump blood to the gills, one to the body." },
+  { id: 79, lang: "en", text: "The human body has more bacteria cells than human cells.", answer: true, explanation: "The human body has more bacterial cells than human cells." },
+  { id: 80, lang: "en", text: "All birds can fly.", answer: false, explanation: "Not all birds can fly; penguins, ostriches, and kiwis cannot fly." },
+  
+  // Easy level - More questions (81-120)
+  { id: 81, lang: "en", text: "Cats can see in the dark.", answer: true, explanation: "Cats have excellent night vision and can see in low light conditions." },
+  { id: 82, lang: "en", text: "The moon is bigger than the sun.", answer: false, explanation: "The sun is much larger than the moon; the moon only appears larger because it's closer." },
+  { id: 83, lang: "en", text: "Dogs can smell better than humans.", answer: true, explanation: "Dogs have a much stronger sense of smell than humans." },
+  { id: 84, lang: "en", text: "Fish can breathe underwater.", answer: true, explanation: "Fish have gills that allow them to extract oxygen from water." },
+  { id: 85, lang: "en", text: "The earth is flat.", answer: false, explanation: "The earth is round, not flat." },
+  { id: 86, lang: "en", text: "Birds have feathers.", answer: true, explanation: "All birds have feathers, which help them fly and stay warm." },
+  { id: 87, lang: "en", text: "Cars can fly.", answer: false, explanation: "Cars cannot fly; they drive on roads." },
+  { id: 88, lang: "en", text: "The sun is hot.", answer: true, explanation: "The sun is extremely hot, with surface temperatures of about 5,500°C." },
+  { id: 89, lang: "en", text: "Books can talk.", answer: false, explanation: "Books cannot talk; they are inanimate objects." },
+  { id: 90, lang: "en", text: "Trees can grow very tall.", answer: true, explanation: "Some trees can grow to be over 100 meters tall." },
+  { id: 91, lang: "en", text: "The ocean is made of milk.", answer: false, explanation: "The ocean is made of saltwater, not milk." },
+  { id: 92, lang: "en", text: "Flowers are beautiful.", answer: true, explanation: "Flowers are generally considered beautiful by most people." },
+  { id: 93, lang: "en", text: "Cars can swim.", answer: false, explanation: "Cars cannot swim; they would sink in water." },
+  { id: 94, lang: "en", text: "The moon shines at night.", answer: true, explanation: "The moon is visible and reflects sunlight at night." },
+  { id: 95, lang: "en", text: "Books can eat.", answer: false, explanation: "Books cannot eat; they are inanimate objects." },
+  { id: 96, lang: "en", text: "The sky is blue during the day.", answer: true, explanation: "The sky appears blue during the day due to the scattering of sunlight." },
+  { id: 97, lang: "en", text: "Cats can bark.", answer: false, explanation: "Cats meow; dogs bark." },
+  { id: 98, lang: "en", text: "The grass is green.", answer: true, explanation: "Grass is typically green in color." },
+  { id: 99, lang: "en", text: "Cars can walk.", answer: false, explanation: "Cars cannot walk; they have wheels and drive." },
+  { id: 100, lang: "en", text: "The stars twinkle at night.", answer: true, explanation: "Stars appear to twinkle due to atmospheric turbulence." },
+  { id: 101, lang: "en", text: "Books can fly.", answer: false, explanation: "Books cannot fly; they are inanimate objects." },
+  { id: 102, lang: "en", text: "The wind can blow.", answer: true, explanation: "Wind is moving air that can blow objects around." },
+  { id: 103, lang: "en", text: "Cats can swim like fish.", answer: false, explanation: "Cats can swim but not as well as fish." },
+  { id: 104, lang: "en", text: "The rain falls from clouds.", answer: true, explanation: "Rain forms in clouds and falls to the ground." },
+  { id: 105, lang: "en", text: "Books can grow.", answer: false, explanation: "Books cannot grow; they are inanimate objects." },
+  { id: 106, lang: "en", text: "The snow is white.", answer: true, explanation: "Snow is typically white in color." },
+  { id: 107, lang: "en", text: "Cats can talk like humans.", answer: false, explanation: "Cats cannot talk like humans; they communicate through sounds and body language." },
+  { id: 108, lang: "en", text: "The ice is cold.", answer: true, explanation: "Ice is frozen water and is cold to the touch." },
+  { id: 109, lang: "en", text: "Books can run.", answer: false, explanation: "Books cannot run; they are inanimate objects." },
+  { id: 110, lang: "en", text: "The fire is hot.", answer: true, explanation: "Fire produces heat and is hot to the touch." },
+  { id: 111, lang: "en", text: "Cats can fly like birds.", answer: false, explanation: "Cats cannot fly; they don't have wings." },
+  { id: 112, lang: "en", text: "The water is wet.", answer: true, explanation: "Water is a liquid and feels wet to the touch." },
+  { id: 113, lang: "en", text: "Books can jump.", answer: false, explanation: "Books cannot jump; they are inanimate objects." },
+  { id: 114, lang: "en", text: "The sun rises in the east.", answer: true, explanation: "The sun appears to rise in the east due to Earth's rotation." },
+  { id: 115, lang: "en", text: "Cats can breathe underwater.", answer: false, explanation: "Cats cannot breathe underwater; they need air to breathe." },
+  { id: 116, lang: "en", text: "The moon orbits the earth.", answer: true, explanation: "The moon orbits around the earth approximately every 27 days." },
+  { id: 117, lang: "en", text: "Books can see.", answer: false, explanation: "Books cannot see; they are inanimate objects." },
+  { id: 118, lang: "en", text: "The earth orbits the sun.", answer: true, explanation: "The earth orbits around the sun once every 365 days." },
+  { id: 119, lang: "en", text: "Cats can live forever.", answer: false, explanation: "Cats cannot live forever; they have a natural lifespan." },
+  { id: 120, lang: "en", text: "The stars are very far away.", answer: true, explanation: "Stars are extremely far away, many light-years from Earth." },
+  
+  // Medium level - More questions (121-140)
+  { id: 121, lang: "en", text: "Dolphins are intelligent animals.", answer: true, explanation: "Dolphins are known for their high intelligence and problem-solving abilities." },
+  { id: 122, lang: "en", text: "Sharks are mammals.", answer: false, explanation: "Sharks are fish, not mammals." },
+  { id: 123, lang: "en", text: "Bats are the only flying mammals.", answer: true, explanation: "Bats are the only mammals capable of true flight." },
+  { id: 124, lang: "en", text: "Penguins can fly.", answer: false, explanation: "Penguins cannot fly; they swim instead." },
+  { id: 125, lang: "en", text: "Whales are the largest animals on Earth.", answer: true, explanation: "Blue whales are the largest animals that have ever lived on Earth." },
+  { id: 126, lang: "en", text: "Snakes have legs.", answer: false, explanation: "Snakes do not have legs; they move by slithering." },
+  { id: 127, lang: "en", text: "Frogs can live both in water and on land.", answer: true, explanation: "Frogs are amphibians that can live in both aquatic and terrestrial environments." },
+  { id: 128, lang: "en", text: "Spiders have six legs.", answer: false, explanation: "Spiders have eight legs, not six." },
+  { id: 129, lang: "en", text: "Butterflies undergo metamorphosis.", answer: true, explanation: "Butterflies go through complete metamorphosis from caterpillar to adult." },
+  { id: 130, lang: "en", text: "Ants can lift objects heavier than themselves.", answer: true, explanation: "Ants can lift objects up to 50 times their own body weight." },
+  { id: 131, lang: "en", text: "Bees make honey from flowers.", answer: true, explanation: "Bees collect nectar from flowers and convert it into honey." },
+  { id: 132, lang: "en", text: "Crocodiles are warm-blooded.", answer: false, explanation: "Crocodiles are cold-blooded reptiles." },
+  { id: 133, lang: "en", text: "Turtles can live for over 100 years.", answer: true, explanation: "Some turtle species can live for over 100 years." },
+  { id: 134, lang: "en", text: "Lions are herbivores.", answer: false, explanation: "Lions are carnivores; they eat meat." },
+  { id: 135, lang: "en", text: "Elephants have excellent memories.", answer: true, explanation: "Elephants are known for their exceptional memory and intelligence." },
+  { id: 136, lang: "en", text: "Giraffes have the same number of neck vertebrae as humans.", answer: true, explanation: "Giraffes have 7 neck vertebrae, the same as humans." },
+  { id: 137, lang: "en", text: "Monkeys are primates.", answer: true, explanation: "Monkeys are indeed primates, along with apes and humans." },
+  { id: 138, lang: "en", text: "Rabbits can fly.", answer: false, explanation: "Rabbits cannot fly; they hop on the ground." },
+  { id: 139, lang: "en", text: "Bears hibernate during winter.", answer: true, explanation: "Many bear species hibernate during the winter months." },
+  { id: 140, lang: "en", text: "Fish can live without water.", answer: false, explanation: "Fish need water to survive; they cannot live without it." },
+  
+  // Hard level - More questions (141-160)
+  { id: 141, lang: "en", text: "The human brain contains approximately 86 billion neurons.", answer: true, explanation: "The human brain has about 86 billion neurons." },
+  { id: 142, lang: "en", text: "Light travels faster than sound.", answer: true, explanation: "Light travels much faster than sound in air." },
+  { id: 143, lang: "en", text: "The Great Wall of China is visible from space.", answer: false, explanation: "The Great Wall is not visible from space with the naked eye." },
+  { id: 144, lang: "en", text: "The human body is made up of about 60% water.", answer: true, explanation: "The human body is approximately 60% water by weight." },
+  { id: 145, lang: "en", text: "Sharks can get cancer.", answer: true, explanation: "Sharks can get cancer, contrary to popular belief." },
+  { id: 146, lang: "en", text: "The Earth is the only planet with water.", answer: false, explanation: "Other planets and moons also have water in various forms." },
+  { id: 147, lang: "en", text: "The human heart has four chambers.", answer: true, explanation: "The human heart has four chambers: two atria and two ventricles." },
+  { id: 148, lang: "en", text: "Goldfish have a memory span of only 3 seconds.", answer: false, explanation: "Goldfish can remember things for much longer than 3 seconds." },
+  { id: 149, lang: "en", text: "The speed of light is approximately 300,000 km/s.", answer: true, explanation: "Light travels at about 300,000 kilometers per second in a vacuum." },
+  { id: 150, lang: "en", text: "Humans use only 10% of their brain.", answer: false, explanation: "Humans use all parts of their brain, not just 10%." },
+  { id: 151, lang: "en", text: "The human body has 206 bones.", answer: true, explanation: "An adult human body has 206 bones." },
+  { id: 152, lang: "en", text: "Bats are blind.", answer: false, explanation: "Bats can see, though they also use echolocation." },
+  { id: 153, lang: "en", text: "The human eye can distinguish about 10 million colors.", answer: true, explanation: "The human eye can distinguish approximately 10 million different colors." },
+  { id: 154, lang: "en", text: "Sharks must keep swimming to breathe.", answer: true, explanation: "Most sharks must keep swimming to pass water over their gills." },
+  { id: 155, lang: "en", text: "The human brain weighs about 3 pounds.", answer: true, explanation: "The average human brain weighs about 3 pounds (1.4 kg)." },
+  { id: 156, lang: "en", text: "All spiders spin webs.", answer: false, explanation: "Not all spiders spin webs; some hunt without webs." },
+  { id: 157, lang: "en", text: "The human body produces about 25,000 quarts of saliva in a lifetime.", answer: true, explanation: "The human body produces approximately 25,000 quarts of saliva over a lifetime." },
+  { id: 158, lang: "en", text: "Octopuses have three hearts.", answer: true, explanation: "Octopuses have three hearts: two pump blood to the gills, one to the body." },
+  { id: 159, lang: "en", text: "The human body has more bacteria cells than human cells.", answer: true, explanation: "The human body has more bacterial cells than human cells." },
+  { id: 160, lang: "en", text: "All birds can fly.", answer: false, explanation: "Not all birds can fly; penguins, ostriches, and kiwis cannot fly." },
+  
+  // Hebrew
+  { id: 101, lang: "he", text: "השמים כחולים.", answer: true, explanation: "השמים נראים כחולים בגלל פיזור אור השמש." },
+  { id: 102, lang: "he", text: "חתולים יכולים לעוף.", answer: false, explanation: "חתולים לא יכולים לעוף; אין להם כנפיים." },
+  { id: 103, lang: "he", text: "דגים חיים במים.", answer: true, explanation: "דגים הם חיות מים וחיים במים." },
+  { id: 104, lang: "he", text: "השמש קרה.", answer: false, explanation: "השמש חמה מאוד, לא קרה." },
+  { id: 105, lang: "he", text: "לציפורים יש כנפיים.", answer: true, explanation: "לציפורים יש כנפיים כדי לעוף." },
+  { id: 106, lang: "he", text: "כלבים אומרים מיאו.", answer: false, explanation: "כלבים נובחים; חתולים אומרים מיאו." },
+  { id: 107, lang: "he", text: "החלב לבן.", answer: true, explanation: "החלב בדרך כלל לבן." },
+  { id: 108, lang: "he", text: "ספרים מיועדים לאכילה.", answer: false, explanation: "ספרים מיועדים לקריאה, לא לאכילה." },
+  { id: 109, lang: "he", text: "בננות צהובות.", answer: true, explanation: "בננות צהובות כשהן בשלות." },
+  { id: 110, lang: "he", text: "מכוניות שוחות בים.", answer: false, explanation: "מכוניות לא שוחות; הן נוסעות על כבישים." },
+  { id: 111, lang: "he", text: "החורף חם.", answer: false, explanation: "החורף בדרך כלל קר." },
+  { id: 112, lang: "he", text: "הירח זורח בלילה.", answer: true, explanation: "הירח נראה וזורח בלילה." },
+  { id: 113, lang: "he", text: "תפוחים הם פרי.", answer: true, explanation: "תפוחים הם סוג של פרי." },
+  { id: 114, lang: "he", text: "כלבים יכולים לדבר.", answer: false, explanation: "כלבים לא יכולים לדבר כמו בני אדם." },
+  { id: 115, lang: "he", text: "המים רטובים.", answer: true, explanation: "המים נחשבים רטובים כי הם נוזל." },
+  { id: 116, lang: "he", text: "האש קרה.", answer: false, explanation: "האש חמה, לא קרה." },
+  { id: 117, lang: "he", text: "העולם עגול.", answer: true, explanation: "העולם עגול בצורתו." },
+  { id: 118, lang: "he", text: "דגים הולכים על היבשה.", answer: false, explanation: "דגים לא הולכים על היבשה; הם שוחים במים." },
+  { id: 119, lang: "he", text: "הדשא ירוק.", answer: true, explanation: "הדשא ירוק בצבעו." },
+  { id: 120, lang: "he", text: "ביצים גדלות על עצים.", answer: false, explanation: "ביצים לא גדלות על עצים; הן מגיעות מבעלי חיים." },
+];
+
+const difficulties = [
+  { key: "easy", label: "קל", count: 10 },
+  { key: "medium", label: "בינוני", count: 15 },
+  { key: "hard", label: "קשה", count: 20 },
+];
+
+const levelMap: Record<string, string> = {
+  beginner: 'easy',
+  intermediate: 'medium',
+  advanced: 'hard',
+  extreme: 'hard',
+  easy: 'easy',
+  medium: 'medium',
+  hard: 'hard',
+};
+
+// 1. אלגוריתם תגבור חכם
+function getMistakeStats(): Record<number, number> {
+  try {
+    return JSON.parse(localStorage.getItem('tf-mistakes') || '{}');
+  } catch {
+    return {};
+  }
+}
+function addMistake(id: number) {
+  const stats = getMistakeStats();
+  stats[id] = (stats[id] || 0) + 1;
+  localStorage.setItem('tf-mistakes', JSON.stringify(stats));
+}
+function pickQuestions(all: TrueFalseQuestion[], lang: string, count: number): TrueFalseQuestion[] {
+  const pool = all.filter((q) => q.lang === lang);
+  const stats = getMistakeStats();
+  
+  // מערבב את כל השאלות כדי לקבל שאלות שונות בכל פעם
+  const shuffledPool = [...pool].sort(() => Math.random() - 0.5);
+  
+  // לוקח רק כמה שאלות עם שגיאות (אם יש)
+  const mistakeQuestions = shuffledPool.filter((q) => stats[q.id] > 0);
+  const boostedCount = Math.min(3, mistakeQuestions.length); // רק 3 שאלות עם שגיאות
+  const boosted = mistakeQuestions.slice(0, boostedCount);
+
+  // לוקח שאלות אקראיות מהשאר
+  const remainingQuestions = shuffledPool.filter((q) => !boosted.includes(q));
+  const randomRest = remainingQuestions.slice(0, count - boosted.length);
+  
+  // מערבב הכל יחד
+  return [...boosted, ...randomRest].sort(() => Math.random() - 0.5);
+}
+
+export default function TrueFalseWrapper() {
+  return (
+    <Suspense fallback={<div>טוען...</div>}>
+      <TrueFalse />
+    </Suspense>
+  );
+}
+
+function TrueFalse() {
+  const { user } = useAuthUser();
+  const searchParams = useSearchParams();
+  const levelParam = searchParams?.get('level') || 'easy';
+  const mappedLevel = levelMap[levelParam] || 'easy';
+  const [difficulty] = useState(mappedLevel);
+  const [lang, setLang] = useState<'en' | 'he'>('en');
+  
+  // בחירת שאלות לפי רמת קושי
+  const getQuestionsByDifficulty = (level: string) => {
+    const difficultyMap: Record<string, keyof typeof QUESTIONS_BY_DIFFICULTY> = {
+      'easy': 'beginner',
+      'medium': 'intermediate',
+      'hard': 'advanced',
+      'extreme': 'extreme'
+    };
+    return QUESTIONS_BY_DIFFICULTY[difficultyMap[level] || 'beginner'];
+  };
+  
+  const [questions, setQuestions] = useState<TrueFalseQuestion[]>([]);
+  const [current, setCurrent] = useState(0);
+  const [selected, setSelected] = useState<boolean | null>(null);
+  const [score, setScore] = useState(0);
+  const [timer, setTimer] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [started, setStarted] = useState(false);
+  const [inventory, setInventory] = useState<Record<string, number>>({});
+  const [showHint, setShowHint] = useState(false);
+  const [learnedWordsList, setLearnedWordsList] = useState<Array<{word: string, translation: string}>>([]);
+  const [useLearnedWords, setUseLearnedWords] = useState(false);
+  const [learnedWordsData, setLearnedWordsData] = useState<Array<{word: string, translation: string}>>([]);
+  const [loadingLearnedWords, setLoadingLearnedWords] = useState(false);
+  const [selectedWordsCount, setSelectedWordsCount] = useState<number | null>(null);
+  const [selectedWords, setSelectedWords] = useState<Array<{word: string, translation: string}>>([]);
+  const [showWordSelector, setShowWordSelector] = useState(false);
+  const successAudio = useRef<HTMLAudioElement | null>(null);
+  const failAudio = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (!started) return;
+    const interval = setInterval(() => setTimer((t) => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [started]);
+
+  // טען מילים שנלמדו מה-API
+  const loadLearnedWords = async () => {
+    if (!user) {
+      console.log('Cannot load learned words - no user logged in');
+      return;
+    }
+    
+    try {
+      setLoadingLearnedWords(true);
+      const response = await fetch(`/api/learned-words?userId=${user.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to load learned words');
+      }
+      
+      const data = await response.json();
+      const words = data.learnedWords || [];
+      
+      setLearnedWordsData(words);
+      console.log('Loaded learned words:', words.length);
+    } catch (error) {
+      console.error('Error loading learned words:', error);
+      setLearnedWordsData([]);
+    } finally {
+      setLoadingLearnedWords(false);
+    }
+  };
+
+  // המר מילים שנלמדו לשאלות
+  // פונקציה לקביעת סוג המילה (כמו ב-fill-blanks)
+  const getWordCategory = (word: string): string => {
+    const wordLower = word.toLowerCase();
+    const translation = getTranslationWithFallback(wordLower, undefined, '');
+    
+    // בעלי חיים
+    const animalTranslations = ['כלב', 'חתול', 'ציפור', 'דג', 'דוב', 'אריה', 'לווייתן', 'קוף', 'צבי', 'ינשוף', 'ארנב', 'ברווז', 'נשר', 'נחש', 'צפרדע', 'פיל', 'נמר', 'זברה', 'ג׳ירפה', 'פנדה', 'קואלה', 'פינגווין', 'דולפין', 'צב', 'שועל', 'זאב', 'גמל', 'קנגרו', 'תנין'];
+    if (animalTranslations.some(t => translation.includes(t))) return 'animal';
+    const animals = ['dog', 'cat', 'bird', 'fish', 'bear', 'lion', 'whale', 'monkey', 'deer', 'owl', 'rabbit', 'duck', 'eagle', 'snake', 'frog', 'elephant', 'tiger', 'zebra', 'giraffe', 'panda', 'koala', 'penguin', 'dolphin', 'turtle', 'fox', 'wolf', 'camel', 'kangaroo', 'crocodile'];
+    if (animals.includes(wordLower)) return 'animal';
+    
+    // אוכל
+    const foodTranslations = ['תפוח', 'בננה', 'מים', 'חלב', 'תה', 'לחם', 'אורז', 'עוגה', 'מרק', 'ביצה', 'פסטה', 'פיצה', 'צ׳יפס', 'גלידה', 'שוקולד', 'עוגייה', 'ממתק', 'תות', 'ענבים'];
+    if (foodTranslations.some(t => translation.includes(t))) return 'food';
+    const food = ['apple', 'banana', 'water', 'milk', 'tea', 'bread', 'rice', 'cake', 'soup', 'egg', 'pasta', 'curry', 'lemonade', 'honey', 'toast', 'pizza', 'chips', 'chocolate', 'cookie', 'candy', 'strawberry', 'grapes'];
+    if (food.includes(wordLower)) return 'food';
+    
+    // חפצים
+    const objectTranslations = ['ספר', 'עט', 'כוס', 'כדור', 'כובע', 'נעליים', 'כיסא', 'מיטה', 'אופניים', 'מצלמה', 'טלוויזיה', 'אוזניות', 'שעון', 'מפתח', 'טלסקופ', 'שמיכה'];
+    if (objectTranslations.some(t => translation.includes(t))) return 'object';
+    const objects = ['book', 'pen', 'cup', 'ball', 'hat', 'shoes', 'chair', 'bed', 'bike', 'camera', 'television', 'headphones', 'clock', 'key', 'telescope', 'blanket'];
+    if (objects.includes(wordLower)) return 'object';
+    
+    // טבע
+    const natureTranslations = ['שמש', 'ירח', 'שמיים', 'עץ', 'פרח', 'דשא', 'ענן', 'שלג', 'גשם', 'ים', 'גבעה', 'הר', 'אוקיינוס', 'יער', 'הר געש', 'נהר', 'קשת', 'מערה'];
+    if (natureTranslations.some(t => translation.includes(t))) return 'nature';
+    const nature = ['sun', 'moon', 'sky', 'tree', 'flower', 'grass', 'cloud', 'snow', 'rain', 'sea', 'hill', 'mountain', 'ocean', 'forest', 'volcano', 'river', 'rainbow', 'cave'];
+    if (nature.includes(wordLower)) return 'nature';
+    
+    // אנשים
+    const peopleTranslations = ['אמא', 'אבא', 'אחות', 'אח', 'משפחה', 'בת', 'בן', 'אב', 'אם', 'סבתא', 'נער', 'חבר', 'מורה', 'פרופסור', 'תינוק', 'ילד'];
+    if (peopleTranslations.some(t => translation.includes(t))) return 'person';
+    const people = ['mom', 'dad', 'sister', 'brother', 'family', 'daughter', 'son', 'father', 'mother', 'friend', 'teacher', 'professor', 'baby', 'child'];
+    if (people.includes(wordLower)) return 'person';
+    
+    // מקומות
+    const placeTranslations = ['בית', 'בית ספר', 'חדר שינה', 'מטבח', 'סלון', 'שירותים', 'מוסך', 'גן', 'מרתף', 'משרד', 'ספרייה', 'קפיטריה', 'מגרש משחקים'];
+    if (placeTranslations.some(t => translation.includes(t))) return 'place';
+    const places = ['home', 'school', 'house', 'bedroom', 'kitchen', 'living room', 'bathroom', 'garage', 'garden', 'basement', 'office', 'library', 'cafeteria', 'playground'];
+    if (places.includes(wordLower)) return 'place';
+    
+    // תחבורה
+    const transportTranslations = ['מכונית', 'אוטובוס', 'מטוס', 'רכבת', 'סירה', 'אופנוע', 'מונית', 'אופניים', 'ספינה', 'רכבת תחתית', 'משאית'];
+    if (transportTranslations.some(t => translation.includes(t))) return 'transport';
+    const transport = ['car', 'bus', 'airplane', 'train', 'boat', 'motorcycle', 'taxi', 'bicycle', 'ship', 'subway', 'truck'];
+    if (transport.includes(wordLower)) return 'transport';
+    
+    return 'general';
+  };
+
+  const createQuestionsFromLearnedWords = (words: Array<{word: string, translation: string}>, count: number): TrueFalseQuestion[] => {
+    const questions: TrueFalseQuestion[] = [];
+    const usedWords = new Set<string>();
+    
+    // טמפלטים מותאמים לקטגוריות - שאלות הגיוניות ומעניינות
+    const getTemplatesForCategory = (category: string, isTrue: boolean): Array<(w: string, t: string) => string> => {
+      if (isTrue) {
+        switch (category) {
+          case 'animal':
+            return [
+              (w: string, t: string) => `A ${w} is an animal.`,
+              (w: string, t: string) => `${w.charAt(0).toUpperCase() + w.slice(1)}s can move.`,
+              (w: string, t: string) => `A ${w} is a living creature.`,
+              (w: string, t: string) => `You can see a ${w} in nature.`,
+            ];
+          case 'food':
+            return [
+              (w: string, t: string) => `You can eat ${w}.`,
+              (w: string, t: string) => `${w.charAt(0).toUpperCase() + w.slice(1)} is food.`,
+              (w: string, t: string) => `People consume ${w}.`,
+              (w: string, t: string) => `${w.charAt(0).toUpperCase() + w.slice(1)} is edible.`,
+            ];
+          case 'object':
+            return [
+              (w: string, t: string) => `A ${w} is an object.`,
+              (w: string, t: string) => `You can use a ${w}.`,
+              (w: string, t: string) => `A ${w} is a thing.`,
+              (w: string, t: string) => `People use ${w}s.`,
+            ];
+          case 'nature':
+            return [
+              (w: string, t: string) => `The ${w} is part of nature.`,
+              (w: string, t: string) => `You can see the ${w} outside.`,
+              (w: string, t: string) => `The ${w} exists in the world.`,
+              (w: string, t: string) => `The ${w} is natural.`,
+            ];
+          case 'person':
+            return [
+              (w: string, t: string) => `A ${w} is a person.`,
+              (w: string, t: string) => `${w.charAt(0).toUpperCase() + w.slice(1)}s are people.`,
+              (w: string, t: string) => `A ${w} is human.`,
+            ];
+          case 'place':
+            return [
+              (w: string, t: string) => `A ${w} is a place.`,
+              (w: string, t: string) => `You can go to a ${w}.`,
+              (w: string, t: string) => `A ${w} is a location.`,
+            ];
+          case 'transport':
+            return [
+              (w: string, t: string) => `A ${w} is a vehicle.`,
+              (w: string, t: string) => `You can travel in a ${w}.`,
+              (w: string, t: string) => `A ${w} helps you move.`,
+            ];
+          default:
+            return [
+              (w: string, t: string) => `"${w}" is a real English word.`,
+              (w: string, t: string) => `The word "${w}" exists in English.`,
+            ];
+        }
+      } else {
+        switch (category) {
+          case 'animal':
+            return [
+              (w: string, t: string) => `A ${w} is not an animal.`,
+              (w: string, t: string) => `${w.charAt(0).toUpperCase() + w.slice(1)}s cannot move.`,
+              (w: string, t: string) => `A ${w} is a plant.`,
+            ];
+          case 'food':
+            return [
+              (w: string, t: string) => `You cannot eat ${w}.`,
+              (w: string, t: string) => `${w.charAt(0).toUpperCase() + w.slice(1)} is not food.`,
+              (w: string, t: string) => `${w.charAt(0).toUpperCase() + w.slice(1)} is poisonous.`,
+            ];
+          case 'object':
+            return [
+              (w: string, t: string) => `A ${w} is not an object.`,
+              (w: string, t: string) => `You cannot use a ${w}.`,
+              (w: string, t: string) => `A ${w} is imaginary.`,
+            ];
+          case 'nature':
+            return [
+              (w: string, t: string) => `The ${w} is not part of nature.`,
+              (w: string, t: string) => `The ${w} does not exist.`,
+              (w: string, t: string) => `The ${w} is artificial.`,
+            ];
+          case 'person':
+            return [
+              (w: string, t: string) => `A ${w} is not a person.`,
+              (w: string, t: string) => `${w.charAt(0).toUpperCase() + w.slice(1)}s are not human.`,
+            ];
+          case 'place':
+            return [
+              (w: string, t: string) => `A ${w} is not a place.`,
+              (w: string, t: string) => `You cannot go to a ${w}.`,
+            ];
+          case 'transport':
+            return [
+              (w: string, t: string) => `A ${w} is not a vehicle.`,
+              (w: string, t: string) => `You cannot travel in a ${w}.`,
+            ];
+          default:
+            return [
+              (w: string, t: string) => `"${w}" is not a real English word.`,
+              (w: string, t: string) => `The word "${w}" does not exist in English.`,
+            ];
+        }
+      }
+    };
+    
+    words.forEach((wordData, index) => {
+      if (questions.length >= count) return;
+      if (usedWords.has(wordData.word.toLowerCase())) return;
+      
+      const word = wordData.word.trim();
+      const translation = wordData.translation || word;
+      
+      // ודא שהמילה תקפה (מילה בודדת)
+      if (word.split(/\s+/).length > 1) {
+        console.log(`Skipping invalid word (phrase): "${word}"`);
+        return;
+      }
+      
+      // נסה למצוא שאלה קיימת שכוללת את המילה
+      const existingQuestion = Object.values(QUESTIONS_BY_DIFFICULTY).flat().find(q => 
+        q.text.toLowerCase().includes(word.toLowerCase())
+      );
+      
+      if (existingQuestion) {
+        questions.push(existingQuestion);
+        usedWords.add(word.toLowerCase());
+      } else {
+        // צור שאלה חדשה מהמילה - לסירוגין נכון/לא נכון
+        const isTrue = index % 2 === 0;
+        const category = getWordCategory(word);
+        const templates = getTemplatesForCategory(category, isTrue);
+        const templateIndex = Math.floor(Math.random() * templates.length);
+        const template = templates[templateIndex];
+        const questionText = template(word, translation);
+        
+        // צור הסבר הגיוני
+        let explanation = '';
+        if (isTrue) {
+          explanation = `נכון! ${translation !== word ? `המילה "${word}" פירושה "${translation}"` : `המילה "${word}" היא מילה באנגלית`} - ${category === 'animal' ? 'זה בעל חיים' : category === 'food' ? 'זה אוכל' : category === 'object' ? 'זה חפץ' : category === 'nature' ? 'זה חלק מהטבע' : category === 'person' ? 'זה אדם' : category === 'place' ? 'זה מקום' : category === 'transport' ? 'זה כלי תחבורה' : 'זה מילה באנגלית'}.`;
+        } else {
+          explanation = `לא נכון! ${translation !== word ? `המילה "${word}" פירושה "${translation}"` : `המילה "${word}" היא מילה באנגלית`} - ${category === 'animal' ? 'זה בעל חיים' : category === 'food' ? 'זה אוכל' : category === 'object' ? 'זה חפץ' : category === 'nature' ? 'זה חלק מהטבע' : category === 'person' ? 'זה אדם' : category === 'place' ? 'זה מקום' : category === 'transport' ? 'זה כלי תחבורה' : 'זה מילה באנגלית'}, ולכן המשפט לא נכון.`;
+        }
+        
+        questions.push({
+          id: 10000 + index,
+          lang: 'en',
+          text: questionText,
+          answer: isTrue,
+          explanation: explanation
+        });
+        usedWords.add(word.toLowerCase());
+      }
+    });
+    
+    return questions.slice(0, count);
+  };
+
+  useEffect(() => {
+    const diff = difficulties.find((d) => d.key === difficulty)!;
+    
+    if (useLearnedWords && learnedWordsData.length > 0) {
+      // השתמש במילים שנלמדו - קודם כל בדוק אם יש מילים שנבחרו ספציפית
+      let wordsToUse: Array<{word: string, translation: string}>;
+      if (selectedWords.length > 0) {
+        // אם יש מילים שנבחרו ספציפית, השתמש בהן
+        wordsToUse = selectedWords;
+      } else if (selectedWordsCount !== null) {
+        // אם יש כמות נבחרת, בחר אקראית מהמילים
+        wordsToUse = [...learnedWordsData].sort(() => Math.random() - 0.5).slice(0, selectedWordsCount);
+      } else {
+        // אחרת, השתמש בכל המילים
+        wordsToUse = learnedWordsData;
+      }
+      
+      const learnedQuestions = createQuestionsFromLearnedWords(wordsToUse, diff.count);
+      if (learnedQuestions.length > 0) {
+        setQuestions(learnedQuestions);
+      } else {
+        // אם אין מספיק שאלות, השתמש בשאלות רגילות
+        const levelQuestions = getQuestionsByDifficulty(difficulty);
+        setQuestions(pickQuestions(levelQuestions, lang, diff.count));
+      }
+    } else {
+    // Get questions by difficulty level from QUESTIONS_BY_DIFFICULTY
+    const levelQuestions = getQuestionsByDifficulty(difficulty);
+    setQuestions(pickQuestions(levelQuestions, lang, diff.count));
+    }
+    
+    setCurrent(0);
+    setScore(0);
+    setTimer(0);
+    setFinished(false);
+    setFeedback(null);
+    setStarted(false);
+    setSelected(null);
+    setShowHint(false);
+  }, [difficulty, lang, useLearnedWords, learnedWordsData, selectedWordsCount, selectedWords]);
+
+  // טען מילים שנלמדו כשהמשתמש בוחר במצב learned words
+  useEffect(() => {
+    if (useLearnedWords && user && learnedWordsData.length === 0 && !loadingLearnedWords) {
+      loadLearnedWords();
+    }
+  }, [useLearnedWords, user]);
+
+  useEffect(() => {
+    // Load inventory from shop
+    try {
+      const inv = JSON.parse(localStorage.getItem('quiz-inventory') || '{}');
+      setInventory(inv);
+    } catch {}
+  }, []);
+
+  const saveLearnedWord = async (word: string, translation: string, isCorrect: boolean) => {
+    if (!user) {
+      console.log('Cannot save word - no user logged in');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/learned-words/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          word: word,
+          translation: translation,
+          gameName: 'TrueOrFalse',
+          difficulty: difficulty,
+          isCorrect: isCorrect
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Failed to save word "${word}":`, response.status, errorData);
+        throw new Error(`Failed to save word: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Failed to save learned word "${word}":`, error);
+      throw error;
+    }
+  };
+
+  const handleSelect = (ans: boolean) => {
+    setSelected(ans);
+    const isCorrect = ans === questions[current].answer;
+    setFeedback(isCorrect ? 'נכון!' : 'לא נכון');
+    
+    // שמור מילה נלמדת - רק אם המשחק לא עם מילים שנלמדו
+    if (!useLearnedWords) {
+    const currentQuestion = questions[current];
+    if (currentQuestion) {
+      // חלץ מילים מהשאלה
+      const words = currentQuestion.text.toLowerCase()
+        .replace(/[^\w\s]/g, ' ')
+        .split(/\s+/)
+        .filter(word => word.length > 2);
+      
+      words.forEach(word => {
+        saveLearnedWord(word, currentQuestion.explanation || word, isCorrect);
+      });
+      }
+    }
+    
+    if (isCorrect) {
+      setScore((s) => s + 3); // 3 נקודות לתשובה נכונה
+      if (successAudio.current) {
+        successAudio.current.currentTime = 0;
+        successAudio.current.play();
+      }
+    } else {
+      setScore((s) => Math.max(0, s - 2)); // עונש של 2 נקודות על טעות
+      addMistake(questions[current].id);
+      if (failAudio.current) {
+        failAudio.current.currentTime = 0;
+        failAudio.current.play();
+      }
+    }
+  };
+
+  // פונקציה לחילוץ מילים אנגליות מטקסט
+  const extractEnglishWords = (text: string): string[] => {
+    if (!text) return [];
+    const englishWords = text.match(/[A-Za-z]+/g) || [];
+    return englishWords
+      .map(word => word.toLowerCase())
+      .filter(word => 
+        word.length > 2 && 
+        !['the', 'and', 'is', 'are', 'was', 'were', 'has', 'have', 'had', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'from', 'can', 'does', 'do'].includes(word)
+      );
+  };
+
+  // אסוף את כל המילים מכל השאלות במשחק
+  const collectAllWordsFromGame = () => {
+    const wordsMap = new Map<string, string>();
+    
+    if (!questions || questions.length === 0) {
+      return [];
+    }
+    
+    questions.forEach((question) => {
+      // חילוץ מילים מהמשפט
+      if (question.text) {
+        const textWords = extractEnglishWords(question.text);
+        textWords.forEach(word => {
+          if (!wordsMap.has(word)) {
+            const translation = question.explanation || word;
+            wordsMap.set(word, translation);
+          }
+        });
+      }
+    });
+    
+    return Array.from(wordsMap.entries()).map(([word, translation]) => ({
+      word,
+      translation: translation || word
+    }));
+  };
+
+  const handleNext = async () => {
+    setFeedback(null);
+    setSelected(null);
+    if (current === questions.length - 1) {
+      // זה השאלה האחרונה - אסוף את כל המילים לפני סיום המשחק
+      console.log('Game finished! Collecting words...');
+      const allWords = collectAllWordsFromGame();
+      console.log('All collected words:', allWords);
+      
+      // עדכן את ה-state עם המילים
+      setLearnedWordsList(allWords);
+      
+      // שמור את כל המילים (רק אם המשתמש מחובר ולא משחק עם מילים שנלמדו)
+      // בדוק אילו מילים כבר קיימות במסד הנתונים לפני השמירה
+      if (user && allWords.length > 0 && !useLearnedWords) {
+        console.log('User is logged in, checking existing words before saving...');
+        try {
+          // טען את כל המילים הקיימות של המשתמש
+          const existingWordsResponse = await fetch(`/api/learned-words?userId=${user.id}`);
+          if (!existingWordsResponse.ok) {
+            throw new Error('Failed to fetch existing words');
+          }
+          const existingWordsData = await existingWordsResponse.json();
+          const existingWords = existingWordsData.learnedWords || [];
+          
+          // צור Set של מילים קיימות (בכל המשחקים) לבדיקה מהירה
+          const existingWordsSet = new Set(
+            existingWords.map((w: any) => w.word.toLowerCase())
+          );
+          
+          // סנן רק את המילים החדשות (שאינן קיימות בכל המשחקים)
+          const newWords = allWords.filter(wordData => {
+            return !existingWordsSet.has(wordData.word.toLowerCase());
+          });
+          
+          console.log(`Found ${existingWords.length} existing words, ${newWords.length} new words to save`);
+          
+          // הצג את כל המילים שלמד במשחק (לא רק החדשות)
+          // אבל שמור רק את המילים החדשות
+          setLearnedWordsList(allWords);
+          
+          // שמור רק את המילים החדשות
+          if (newWords.length > 0) {
+            console.log('Saving', newWords.length, 'new words to database...');
+            const savePromises = newWords.map(wordData => 
+          saveLearnedWord(wordData.word, wordData.translation, true)
+        );
+          const results = await Promise.allSettled(savePromises);
+          const successful = results.filter(r => r.status === 'fulfilled').length;
+          const failed = results.filter(r => r.status === 'rejected').length;
+          console.log(`Words save completed: ${successful} successful, ${failed} failed`);
+          } else {
+            console.log('No new words to save - all words already exist');
+          }
+        } catch (error) {
+          console.error('Error checking/saving words:', error);
+          // במקרה של שגיאה, נסה לשמור את כל המילים (fallback)
+          const savePromises = allWords.map(wordData => 
+            saveLearnedWord(wordData.word, wordData.translation, true)
+          );
+          Promise.allSettled(savePromises).catch(err => 
+            console.error('Error in fallback save:', err)
+          );
+        }
+      }
+      
+      setFinished(true);
+      if (user) {
+        try {
+          await fetch('/api/games/update-stats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              gameName: 'TrueOrFalse',
+              score: score,
+              won: score > 0,
+              time: timer,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to update game stats:', error);
+        }
+      }
+    } else {
+      setCurrent((c) => c + 1);
+    }
+  };
+
+  const startGame = () => {
+    setStarted(true);
+    setTimer(0);
+    setScore(0);
+    setCurrent(0);
+    setFinished(false);
+    setFeedback(null);
+    setSelected(null);
+  };
+
+  const restart = () => {
+    setStarted(false);
+    setCurrent(0);
+    setScore(0);
+    setTimer(0);
+    setFinished(false);
+    setFeedback(null);
+    setSelected(null);
+    setShowHint(false);
+    setLearnedWordsList([]);
+  };
+
+  const useShopItem = (itemId: string) => {
+    if (!inventory[itemId] || inventory[itemId] <= 0) return;
+    setInventory(inv => {
+      const newInv = { ...inv, [itemId]: inv[itemId] - 1 };
+      localStorage.setItem('quiz-inventory', JSON.stringify(newInv));
+      return newInv;
+    });
+    
+    switch (itemId) {
+      case 'hint':
+        setShowHint(true);
+        break;
+      case 'skip':
+        if (current < questions.length - 1) {
+          setCurrent(c => c + 1);
+          setSelected(null);
+          setFeedback(null);
+          setShowHint(false);
+        } else {
+          setFinished(true);
+        }
+        break;
+      case 'extra_time':
+        // Add 10 seconds to timer
+        setTimer(t => t - 10);
+        break;
+      case 'score_boost':
+        // Add bonus points
+        setScore(s => s + 50);
+        break;
+    }
+  };
+
+  const isRTL = lang === 'he';
+  const progress = questions.length > 0 ? ((current + 1) / questions.length) * 100 : 0;
+
+  return (
+    <main className={`min-h-screen bg-gradient-to-br from-blue-200 via-yellow-200 to-green-200 flex flex-col items-center justify-center p-4 ${isRTL ? 'rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
+      <audio ref={successAudio} src="/voise/הצלחה.dat" preload="auto" />
+      <audio ref={failAudio} src="/voise/כשלון.dat" preload="auto" />
+      <div className="max-w-2xl w-full mx-auto bg-white bg-opacity-90 rounded-2xl shadow-2xl p-8">
+        {/* Progress Bar */}
+        {started && questions.length > 0 && (
+          <div className="w-full h-3 bg-blue-100 rounded-full mb-6 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+        )}
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-blue-700 text-center drop-shadow-lg flex items-center gap-4">
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-green-400 to-blue-400 text-white text-3xl shadow-lg mr-2">❓</span>
+            נכון או לא נכון
+            <span className={`inline-flex items-center gap-2 px-6 py-2 rounded-full font-bold text-xl shadow bg-gradient-to-r from-green-400 to-green-600 text-white ml-4`}>
+              <span className="text-2xl">✔️</span> {difficulties.find(d=>d.key===difficulty)?.label}
+            </span>
+          </h1>
+        </div>
+        {!started && (
+          <div className="flex flex-col gap-4 items-center mb-8">
+            {/* בחירת מצב משחק - רגיל או מילים שנלמדו */}
+            <div className="w-full mb-4 bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+              <h3 className="text-lg font-bold text-blue-800 mb-3 text-center">בחר מקור שאלות:</h3>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    setUseLearnedWords(false);
+                  }}
+                  className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                    !useLearnedWords
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white scale-105'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  🎮 שאלות רגילות
+                </button>
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      alert('אנא התחבר כדי לשחק עם המילים שלמדת');
+                      return;
+                    }
+                    setUseLearnedWords(true);
+                    if (learnedWordsData.length === 0) {
+                      loadLearnedWords();
+                    }
+                  }}
+                  disabled={!user || loadingLearnedWords}
+                  className={`px-6 py-3 rounded-xl font-bold text-lg shadow-lg transition-all ${
+                    useLearnedWords
+                      ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white scale-105'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {loadingLearnedWords ? (
+                    '⏳ טוען מילים...'
+                  ) : (
+                    <>
+                      📚 שאלות מהמילים שנלמדו
+                      {learnedWordsData.length > 0 && (
+                        <span className="block text-sm mt-1">({learnedWordsData.length} מילים זמינות)</span>
+                      )}
+                    </>
+                  )}
+                </button>
+                {!user && (
+                  <p className="text-sm text-gray-600 text-center mt-2">
+                    💡 התחבר כדי לשחק עם המילים שלמדת
+                  </p>
+                )}
+              </div>
+              {useLearnedWords && learnedWordsData.length === 0 && !loadingLearnedWords && user && (
+                <p className="text-red-500 text-center mt-4 font-bold">
+                  אין מספיק מילים שנלמדו כדי לשחק. אנא שחק במשחקים אחרים כדי ללמוד מילים.
+                </p>
+              )}
+              
+              {/* בחירת כמות מילים (רק אם יש מילים שנלמדו) */}
+              {useLearnedWords && learnedWordsData.length > 0 && !loadingLearnedWords && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                  <label className="block text-sm font-bold text-blue-800 mb-2 text-center">
+                    בחר מילים למשחק:
+                  </label>
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-3 justify-center">
+                      <input
+                        type="radio"
+                        id="all-words-tf"
+                        name="word-selection-tf"
+                        checked={selectedWordsCount === null && selectedWords.length === 0 && !showWordSelector}
+                        onChange={() => {
+                          setSelectedWordsCount(null);
+                          setSelectedWords([]);
+                          setShowWordSelector(false);
+                        }}
+                        className="w-5 h-5"
+                      />
+                      <label htmlFor="all-words-tf" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                        כל המילים ({learnedWordsData.length})
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-3 justify-center">
+                      <input
+                        type="radio"
+                        id="custom-count-tf"
+                        name="word-selection-tf"
+                        checked={selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector}
+                        onChange={() => {
+                          setSelectedWordsCount(Math.min(40, learnedWordsData.length));
+                          setSelectedWords([]);
+                          setShowWordSelector(false);
+                        }}
+                        className="w-5 h-5"
+                      />
+                      <label htmlFor="custom-count-tf" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                        כמות אקראית:
+                      </label>
+                      {selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector && (
+                        <input
+                          type="number"
+                          min="1"
+                          max={learnedWordsData.length}
+                          value={selectedWordsCount}
+                          onChange={(e) => {
+                            const count = parseInt(e.target.value) || 1;
+                            const maxCount = Math.min(count, learnedWordsData.length);
+                            setSelectedWordsCount(maxCount);
+                            setSelectedWords([]);
+                          }}
+                          className="w-20 px-2 py-1 border-2 border-blue-300 rounded-lg text-center font-bold"
+                        />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 justify-center">
+                      <input
+                        type="radio"
+                        id="select-words-tf"
+                        name="word-selection-tf"
+                        checked={showWordSelector || selectedWords.length > 0}
+                        onChange={() => {
+                          setSelectedWordsCount(null);
+                          setShowWordSelector(true);
+                          if (selectedWords.length === 0) {
+                            setSelectedWords([]);
+                          }
+                        }}
+                        className="w-5 h-5"
+                      />
+                      <label htmlFor="select-words-tf" className="text-sm font-semibold text-gray-700 cursor-pointer">
+                        בחר מילים ספציפיות
+                      </label>
+                    </div>
+                    {selectedWordsCount !== null && selectedWords.length === 0 && !showWordSelector && (
+                      <p className="text-xs text-gray-600 text-center mt-2">
+                        המילים נבחרות אקראית מתוך {learnedWordsData.length} מילים זמינות
+                      </p>
+                    )}
+                    {selectedWords.length > 0 && (
+                      <p className="text-xs text-green-600 text-center mt-2 font-bold">
+                        נבחרו {selectedWords.length} מילים
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* רשימת בחירת מילים */}
+                  {(showWordSelector || selectedWords.length > 0) && (
+                    <div className="mt-4 max-h-60 overflow-y-auto border-2 border-blue-300 rounded-lg p-3 bg-white">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {learnedWordsData.map((wordData, index) => {
+                          const isSelected = selectedWords.some(w => w.word.toLowerCase() === wordData.word.toLowerCase());
+                          return (
+                            <label
+                              key={index}
+                              className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-blue-100 ${
+                                isSelected ? 'bg-blue-200' : ''
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedWords([...selectedWords, wordData]);
+                                    setSelectedWordsCount(null);
+                                    setShowWordSelector(true);
+                                  } else {
+                                    setSelectedWords(selectedWords.filter(w => w.word.toLowerCase() !== wordData.word.toLowerCase()));
+                                  }
+                                }}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-sm font-semibold text-gray-800">{wordData.word}</span>
+                              <span className="text-xs text-gray-600">({getTranslationWithFallback(wordData.word, undefined, wordData.translation)})</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                      {selectedWords.length > 0 && (
+                        <div className="mt-3 flex gap-2 justify-center">
+                          <button
+                            onClick={() => {
+                              setSelectedWords([]);
+                              setShowWordSelector(false);
+                            }}
+                            className="px-4 py-1 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600"
+                          >
+                            נקה בחירה
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedWords([...learnedWordsData]);
+                              setShowWordSelector(true);
+                            }}
+                            className="px-4 py-1 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600"
+                          >
+                            בחר הכל
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* בחירת שפה (רק אם לא משחק עם מילים שנלמדו) */}
+            {!useLearnedWords && (
+            <div className="flex gap-4 mb-4">
+              <button onClick={() => setLang('en')} className={`px-6 py-2 rounded-full font-bold shadow text-lg ${lang==='en'?'bg-green-600 text-white scale-105':'bg-white text-green-700 hover:bg-green-100'}`}>English</button>
+              <button onClick={() => setLang('he')} className={`px-6 py-2 rounded-full font-bold shadow text-lg ${lang==='he'?'bg-pink-600 text-white scale-105':'bg-white text-pink-700 hover:bg-pink-100'}`}>עברית</button>
+            </div>
+            )}
+            <button 
+              onClick={() => {
+                if (useLearnedWords && learnedWordsData.length === 0) {
+                  alert('אין מספיק מילים שנלמדו כדי לשחק. אנא שחק במשחקים אחרים כדי ללמוד מילים.');
+                  return;
+                }
+                startGame();
+              }}
+              disabled={useLearnedWords && learnedWordsData.length === 0}
+              className="bg-gradient-to-r from-yellow-400 via-green-400 to-blue-500 text-white px-12 py-4 rounded-full text-2xl font-bold shadow-lg hover:from-blue-500 hover:to-green-400 transition-all duration-200 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              התחל
+            </button>
+          </div>
+        )}
+        {started && !finished && questions.length > 0 && (
+          <>
+            <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
+              <div className="bg-white bg-opacity-80 rounded-xl px-6 py-2 text-lg font-bold text-blue-700 shadow flex items-center gap-2"><span className="text-green-500 text-2xl">★</span> ניקוד: {score}</div>
+              <div className="bg-white bg-opacity-80 rounded-xl px-6 py-2 text-lg font-bold text-green-700 shadow flex items-center gap-2"><span className="text-blue-500 text-2xl">#️⃣</span> שאלה: {current+1}/{questions.length}</div>
+              <div className="bg-white bg-opacity-80 rounded-xl px-6 py-2 text-lg font-bold text-pink-700 shadow flex items-center gap-2"><span className="text-pink-500 text-2xl">⏰</span> זמן: {timer} שניות</div>
+            </div>
+            {/* כפתורי עזר */}
+            {selected === null && (
+              <div className="flex flex-wrap gap-2 justify-center mb-4">
+                {/* כפתור רמז */}
+                {inventory['hint'] > 0 && !showHint && (
+                  <button
+                    onClick={() => useShopItem('hint')}
+                    className="px-4 py-2 rounded-full bg-yellow-300 text-yellow-900 font-bold shadow hover:bg-yellow-400 flex items-center gap-2 text-sm"
+                  >
+                    <span className="text-xl">💡</span> רמז ({inventory['hint']})
+                  </button>
+                )}
+                {/* כפתור דילוג */}
+                {inventory['skip'] > 0 && (
+                  <button
+                    onClick={() => useShopItem('skip')}
+                    className="px-4 py-2 rounded-full bg-blue-300 text-blue-900 font-bold shadow hover:bg-blue-400 flex items-center gap-2 text-sm"
+                  >
+                    <span className="text-xl">⏭️</span> דלג ({inventory['skip']})
+                  </button>
+                )}
+                {/* כפתור תוספת זמן */}
+                {inventory['extra_time'] > 0 && (
+                  <button
+                    onClick={() => useShopItem('extra_time')}
+                    className="px-4 py-2 rounded-full bg-green-300 text-green-900 font-bold shadow hover:bg-green-400 flex items-center gap-2 text-sm"
+                  >
+                    <span className="text-xl">⏰</span> זמן ({inventory['extra_time']})
+                  </button>
+                )}
+                {/* כפתור בונוס ניקוד */}
+                {inventory['score_boost'] > 0 && (
+                  <button
+                    onClick={() => useShopItem('score_boost')}
+                    className="px-4 py-2 rounded-full bg-purple-300 text-purple-900 font-bold shadow hover:bg-purple-400 flex items-center gap-2 text-sm"
+                  >
+                    <span className="text-xl">🚀</span> בונוס ({inventory['score_boost']})
+                  </button>
+                )}
+              </div>
+            )}
+            {/* הצג רמז */}
+            {showHint && selected === null && questions[current]?.explanation && (
+              <div className="bg-yellow-50 border-4 border-yellow-400 rounded-2xl px-6 py-4 text-lg font-bold text-yellow-900 shadow-lg mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">💡</span>
+                  <span>רמז</span>
+                </div>
+                <div className="text-md">{questions[current].explanation}</div>
+              </div>
+            )}
+            <div className="mb-6">
+              <div className="text-xl font-bold text-center mb-4 animate-fade-in-slow flex items-center justify-center gap-2">
+                {questions[current].text}
+                {getMistakeStats()[questions[current].id] > 0 && (
+                  <span className="ml-2 px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700 font-bold align-middle animate-pulse">💡 חיזוק אישי</span>
+                )}
+              </div>
+              <div className="flex gap-8 justify-center mb-4">
+                <button
+                  onClick={() => handleSelect(true)}
+                  className={`px-10 py-4 rounded-full font-bold text-2xl shadow transition-all duration-200
+                    ${selected === true && feedback ? (questions[current].answer ? 'bg-green-400 text-white scale-110 ring-4 ring-green-300 animate-correct' : 'bg-red-400 text-white scale-110 ring-4 ring-red-300 animate-wrong') : 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:scale-105'}`}
+                  disabled={!!selected}
+                >
+                  <span className="text-2xl mr-2">✔️</span>{lang === 'he' ? 'נכון' : 'True'}
+                </button>
+                <button
+                  onClick={() => handleSelect(false)}
+                  className={`px-10 py-4 rounded-full font-bold text-2xl shadow transition-all duration-200
+                    ${selected === false && feedback ? (!questions[current].answer ? 'bg-green-400 text-white scale-110 ring-4 ring-green-300 animate-correct' : 'bg-red-400 text-white scale-110 ring-4 ring-red-300 animate-wrong') : 'bg-blue-100 text-blue-700 hover:bg-blue-200 hover:scale-105'}`}
+                  disabled={!!selected}
+                >
+                  <span className="text-2xl mr-2">❌</span>{lang === 'he' ? 'לא נכון' : 'False'}
+                </button>
+              </div>
+              {feedback && (
+                <div className={`text-center mb-4 text-2xl font-bold ${feedback==='נכון!'?'text-green-600':'text-red-500'} animate-fade-in`}>
+                  {feedback}
+                  {selected !== null && questions[current].explanation && (
+                    <div className="mt-2 text-lg font-normal text-gray-700 bg-yellow-100 rounded-xl px-4 py-2 shadow animate-fade-in">
+                      הסבר: {questions[current].explanation}
+                    </div>
+                  )}
+                  <button
+                    onClick={handleNext}
+                    className="mt-4 px-8 py-3 bg-blue-500 text-white rounded-full font-bold text-xl shadow hover:bg-blue-600 transition-all duration-200"
+                  >
+                    {current === questions.length - 1 ? 'סיום' : 'המשך'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+        {finished && (
+          <div className="text-center mt-6 animate-fade-in">
+            <div className="text-2xl font-bold text-blue-700 mb-4 flex items-center justify-center gap-2"><span className="text-green-500 text-3xl">🏆</span> כל הכבוד! סיימת את כל השאלות 🎉</div>
+            <div className="text-lg font-bold text-green-700 mb-2 flex items-center justify-center gap-2"><span className="text-blue-500 text-2xl">★</span> ניקוד סופי: {score} | <span className="text-pink-500 text-2xl">⏰</span> זמן: {timer} שניות</div>
+            
+            {/* רשימת המילים שנלמדו */}
+            {learnedWordsList && learnedWordsList.length > 0 && (
+              <div className="mb-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-2 border-yellow-300">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">📚 המילים שלמדת במשחק הזה:</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+                  {learnedWordsList.map((wordData, index) => (
+                    <div key={index} className="bg-white rounded-lg p-3 shadow-md border border-blue-200">
+                      <div className="font-bold text-blue-700 text-lg">{wordData.word}</div>
+                      <div className="text-sm text-gray-600">{wordData.translation}</div>
+                    </div>
+                  ))}
+                </div>
+                {user && (
+                  <div className="mt-4 text-sm text-gray-600">
+                    ✅ המילים נשמרו בדף המילים שנלמדו
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="flex flex-wrap gap-4 justify-center">
+              <button onClick={restart} className="bg-gradient-to-r from-yellow-400 via-green-400 to-blue-500 text-white px-8 py-3 rounded-full text-xl font-bold shadow-lg hover:from-blue-500 hover:to-green-400 transition-all duration-200 flex items-center gap-2"><span className="text-2xl">🔄</span> שחק שוב</button>
+              {user && learnedWordsList && learnedWordsList.length > 0 && (
+                <a
+                  href="/learned-words"
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-400 to-purple-500 text-white rounded-full text-xl font-bold shadow-lg hover:from-indigo-500 hover:to-purple-600 transition-transform transform hover:scale-105"
+                >
+                  📚 צפה בכל המילים
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      <style>{`
+        @keyframes fade-in { from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0);} }
+        .animate-fade-in { animation: fade-in 1s cubic-bezier(.4,0,.2,1) both; }
+        @keyframes fade-in-slow { from{opacity:0;} to{opacity:1;} }
+        .animate-fade-in-slow { animation: fade-in-slow 1.5s; }
+        @keyframes correct { 0%,100%{background:#60d394;} 50%{background:#38b000;} }
+        .animate-correct { animation: correct 0.7s; }
+        @keyframes wrong { 0%,100%{background:#f87171;} 50%{background:#dc2626;} }
+        .animate-wrong { animation: wrong 0.7s; }
+      `}</style>
+    </main>
+  );
+} 
