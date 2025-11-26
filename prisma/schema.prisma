@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id           String            @id @default(cuid())
+  email        String            @unique
+  password     String
+  name         String
+  profileImage String?           @db.LongText
+  avatarId     String?
+  ownedAvatars String?           @db.Text
+  selectedTag  String?
+  ownedTags    String?           @db.Text
+  rank         String            @default("beginner")
+  rankProgress Int               @default(0)
+  createdAt    DateTime          @default(now())
+  gamesPlayed  Int               @default(0)
+  gamesWon     Int               @default(0)
+  level        Int               @default(1)
+  points       Int               @default(0)
+  diamonds     Int               @default(100)
+  coins        Int               @default(500)
+  updatedAt    DateTime
+  isAdmin      Boolean           @default(false)
+  gameStat     GameStat[]
+  houseItems   HouseItem[]
+  houses       House[]
+  learnedWords LearnedWord[]
+  subscription Subscription?
+  achievements UserAchievement[]
+}
+
+model GameStat {
+  id           String   @id @default(cuid())
+  userId       String
+  gameName     String
+  gamesPlayed  Int      @default(0)
+  gamesWon     Int      @default(0)
+  averageScore Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameName])
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  userId    String?
+  page      String
+  referrer  String?
+  userAgent String?
+  ipAddress String?
+  sessionId String
+  createdAt DateTime @default(now())
+}
+
+model UserSession {
+  id        String    @id @default(cuid())
+  userId    String?
+  sessionId String    @unique
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+  duration  Int?
+  pageViews Int       @default(0)
+  device    String?
+  browser   String?
+  os        String?
+  country   String?
+  city      String?
+}
+
+model Conversion {
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String
+  value     Float?
+  metadata  String?
+  sessionId String
+  createdAt DateTime @default(now())
+}
+
+model UserBehavior {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  element   String?
+  page      String
+  value     String?
+  sessionId String
+  createdAt DateTime @default(now())
+}
+
+model WordClashGame {
+  id              String   @id @default(cuid())
+  gameId          String   @unique
+  status          String
+  currentRound    Int      @default(0)
+  maxRounds       Int      @default(5)
+  currentWord     String
+  players         String
+  playerStates    String
+  lastMove        String?
+  winner          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  chatMessages    String?
+  revealedLetters String?
+}
+
+model Achievement {
+  id               String            @id @default(cuid())
+  name             String
+  description      String
+  icon             String
+  category         String
+  requirement      Int
+  reward           Int
+  isActive         Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  difficulty       String?           @default("easy")
+  xpReward         Int?              @default(0)
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  progress      Int         @default(0)
+  isCompleted   Boolean     @default(false)
+  completedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  user          user        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([achievementId], map: "UserAchievement_achievementId_fkey")
+}
+
+model ShopItem {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  category    String
+  price       Int
+  icon        String
+  rarity      String
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  houseItems  HouseItem[]
+}
+
+model House {
+  id        String      @id @default(cuid())
+  userId    String
+  name      String      @default("בית שלי")
+  isDefault Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  user      user        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  houseItems HouseItem[]
+
+  @@index([userId], map: "House_userId_fkey")
+}
+
+model HouseItem {
+  id         String   @id @default(cuid())
+  userId     String
+  houseId    String?
+  shopItemId String
+  positionX  Float    @default(0)
+  positionY  Float    @default(0)
+  rotation   Float    @default(0)
+  scale      Float    @default(1)
+  isPlaced   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  shopItem   ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Cascade)
+  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  house      House?   @relation(fields: [houseId], references: [id], onDelete: Cascade)
+
+  @@index([shopItemId], map: "HouseItem_shopItemId_fkey")
+  @@index([userId], map: "HouseItem_userId_fkey")
+  @@index([houseId], map: "HouseItem_houseId_fkey")
+}
+
+model GameReward {
+  id        String   @id @default(cuid())
+  gameName  String
+  action    String
+  diamonds  Int      @default(0)
+  coins     Int      @default(0)
+  points    Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  plan          String
+  status        String
+  startDate     DateTime @default(now())
+  endDate       DateTime
+  paymentId     String   @unique
+  paymentMethod String
+  amount        Float
+  currency      String   @default("ILS")
+  bankAccount   String?
+  transactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  payment       Payment?
+  user          user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id             String       @id @default(cuid())
+  subscriptionId String       @unique
+  amount         Float
+  currency       String       @default("ILS")
+  paymentMethod  String
+  status         String
+  bankAccount    String?
+  transactionId  String?
+  paymentDetails String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+}
+
+model Ad {
+  id          String   @id @default(cuid())
+  title       String
+  type        String
+  position    String
+  imageUrl    String?
+  videoUrl    String?
+  linkUrl     String
+  isActive    Boolean  @default(true)
+  startDate   DateTime
+  endDate     DateTime
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  ctr         Float    @default(0)
+  earnings    Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ClassroomSession {
+  id          String            @id @default(cuid())
+  title       String
+  description String?
+  teacherId   String
+  teacherName String?
+  isActive    Boolean           @default(true)
+  duration    Int               @default(120)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  level       String
+  unit        String
+  results     ClassroomResult[]
+}
+
+model ClassroomResult {
+  id                String           @id @default(cuid())
+  sessionId         String
+  studentName       String
+  score             Int
+  baseScore         Int
+  timeBonus         Int
+  totalTime         Int
+  timeInMinutes     Int
+  questionsAnswered Int
+  correctAnswers    Int
+  gameProgress      Int
+  rank              Int?
+  submittedAt       DateTime         @default(now())
+  lastActivity      DateTime         @default(now())
+  session           ClassroomSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, studentName])
+}
+
+model LearnedWord {
+  id           String   @id @default(cuid())
+  userId       String
+  word         String
+  translation  String
+  gameName     String
+  difficulty   String
+  timesSeen    Int      @default(1)
+  timesCorrect Int      @default(0)
+  accuracy     Float    @default(0)
+  learnedAt    DateTime @default(now())
+  lastSeen     DateTime @default(now())
+  isMastered   Boolean  @default(false)
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, word, gameName])
+  @@index([userId])
+  @@index([gameName])
+  @@index([learnedAt])
+}
+
+model BugReport {
+  id          String    @id @default(cuid())
+  email       String?
+  description String    @db.Text
+  screenshots String?   @db.Text
+  deviceInfo  String?   @db.Text
+  status      String    @default("pending")
+  priority    String    @default("medium")
+  adminNotes  String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  resolvedAt  DateTime?
+
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
