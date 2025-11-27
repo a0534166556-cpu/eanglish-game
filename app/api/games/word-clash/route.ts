@@ -339,6 +339,329 @@ const WORD_CHALLENGES = {
         'This book has 300 pages.'
       ],
       correctSentenceIndex: 0
+    },
+    {
+      word: 'SUN',
+      definitions: [
+        'The star that gives us light and heat',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'The sun is very bright today.',
+        'I love to sit in the sun.',
+        'The sun rises in the east.',
+        'The sun gives us light.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'TREE',
+      definitions: [
+        'A tall plant with branches and leaves',
+        'A type of food',
+        'A vehicle',
+        'A color'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'The tree is very tall.',
+        'I sit under the tree.',
+        'The tree has green leaves.',
+        'We plant a tree in spring.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'WATER',
+      definitions: [
+        'A clear liquid we drink',
+        'A type of food',
+        'A vehicle',
+        'A color'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I drink water every day.',
+        'The water is cold.',
+        'We need water to live.',
+        'She pours water into the glass.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'CAR',
+      definitions: [
+        'A vehicle with four wheels',
+        'A type of food',
+        'A game',
+        'A color'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I drive a red car.',
+        'The car is very fast.',
+        'She bought a new car.',
+        'We go to school by car.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'BIRD',
+      definitions: [
+        'An animal that can fly',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'The bird is flying high.',
+        'I see a bird in the tree.',
+        'The bird sings a song.',
+        'She loves to watch birds.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'FISH',
+      definitions: [
+        'An animal that lives in water',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'The fish swims in the water.',
+        'I catch a big fish.',
+        'The fish is very colorful.',
+        'She likes to eat fish.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'MOON',
+      definitions: [
+        'The object that shines at night',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'The moon is very bright.',
+        'I see the moon at night.',
+        'The moon is round.',
+        'She looks at the moon.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'STAR',
+      definitions: [
+        'A bright object in the sky at night',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I see a star in the sky.',
+        'The star is very bright.',
+        'She wishes upon a star.',
+        'We count the stars at night.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'FLOWER',
+      definitions: [
+        'A colorful plant that smells nice',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'The flower is very beautiful.',
+        'I pick a red flower.',
+        'The flower smells good.',
+        'She gives me a flower.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'CHAIR',
+      definitions: [
+        'A piece of furniture to sit on',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I sit on a chair.',
+        'The chair is very comfortable.',
+        'She moves the chair.',
+        'We need more chairs.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'TABLE',
+      definitions: [
+        'A piece of furniture with a flat top',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I put the book on the table.',
+        'The table is made of wood.',
+        'She sets the table for dinner.',
+        'We eat at the table.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'PEN',
+      definitions: [
+        'A tool for writing',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I write with a pen.',
+        'The pen is blue.',
+        'She loses her pen.',
+        'We need a new pen.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'SCHOOL',
+      definitions: [
+        'A place where children learn',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I go to school every day.',
+        'The school is very big.',
+        'She teaches at the school.',
+        'We learn at school.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'TEACHER',
+      definitions: [
+        'A person who teaches students',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'The teacher is very kind.',
+        'I like my teacher.',
+        'She is a good teacher.',
+        'The teacher explains the lesson.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'FRIEND',
+      definitions: [
+        'A person you like and trust',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'My friend is very nice.',
+        'I play with my friend.',
+        'She is my best friend.',
+        'We are good friends.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'MUSIC',
+      definitions: [
+        'Sounds that are pleasant to hear',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I love to listen to music.',
+        'The music is very beautiful.',
+        'She plays music on the piano.',
+        'We dance to the music.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'FOOD',
+      definitions: [
+        'Something we eat to live',
+        'A type of animal',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I eat healthy food.',
+        'The food is delicious.',
+        'She cooks good food.',
+        'We buy food at the store.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'MILK',
+      definitions: [
+        'A white drink from cows',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I drink milk every morning.',
+        'The milk is cold.',
+        'She buys milk at the store.',
+        'We need more milk.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'BREAD',
+      definitions: [
+        'A food made from flour',
+        'A type of drink',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I eat bread for breakfast.',
+        'The bread is fresh.',
+        'She bakes bread at home.',
+        'We buy bread every day.'
+      ],
+      correctSentenceIndex: 0
     }
   ],
   medium: [
@@ -375,6 +698,159 @@ const WORD_CHALLENGES = {
         'This computer has 16GB of RAM.'
       ],
       correctSentenceIndex: 0
+    },
+    {
+      word: 'TELEPHONE',
+      definitions: [
+        'A device for talking to people far away',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I call my friend on the telephone.',
+        'The telephone is ringing.',
+        'She answers the telephone.',
+        'We use the telephone to talk.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'HOSPITAL',
+      definitions: [
+        'A place where doctors help sick people',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I go to the hospital when I am sick.',
+        'The hospital is very clean.',
+        'She works at the hospital.',
+        'We visit the hospital.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'AIRPLANE',
+      definitions: [
+        'A vehicle that flies in the sky',
+        'A type of food',
+        'A game',
+        'A color'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I fly in an airplane to travel.',
+        'The airplane is very big.',
+        'She takes an airplane to Paris.',
+        'We see the airplane in the sky.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'OCEAN',
+      definitions: [
+        'A very large body of salt water',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I swim in the ocean.',
+        'The ocean is very deep.',
+        'She loves the ocean.',
+        'We see fish in the ocean.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'MOUNTAIN',
+      definitions: [
+        'A very high piece of land',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I climb the mountain.',
+        'The mountain is very tall.',
+        'She sees the mountain from far.',
+        'We hike up the mountain.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'LIBRARY',
+      definitions: [
+        'A place where you can borrow books',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I go to the library to read.',
+        'The library has many books.',
+        'She works at the library.',
+        'We study at the library.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'MUSEUM',
+      definitions: [
+        'A place where you see old things and art',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I visit the museum on weekends.',
+        'The museum is very interesting.',
+        'She works at the museum.',
+        'We learn at the museum.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'RESTAURANT',
+      definitions: [
+        'A place where you eat food',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I eat dinner at the restaurant.',
+        'The restaurant is very nice.',
+        'She works at the restaurant.',
+        'We go to the restaurant.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'BICYCLE',
+      definitions: [
+        'A vehicle with two wheels',
+        'A type of food',
+        'A game',
+        'A color'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I ride my bicycle to school.',
+        'The bicycle is red.',
+        'She buys a new bicycle.',
+        'We ride bicycles in the park.'
+      ],
+      correctSentenceIndex: 0
     }
   ],
   hard: [
@@ -394,6 +870,159 @@ const WORD_CHALLENGES = {
         'The philosophy of science is fascinating.'
       ],
       correctSentenceIndex: 0
+    },
+    {
+      word: 'UNIVERSITY',
+      definitions: [
+        'A place where students study after high school',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I study at the university.',
+        'The university is very large.',
+        'She teaches at the university.',
+        'We graduate from university.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'SCIENCE',
+      definitions: [
+        'The study of the natural world',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I love to study science.',
+        'Science helps us understand the world.',
+        'She is a science teacher.',
+        'We do experiments in science class.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'MATHEMATICS',
+      definitions: [
+        'The study of numbers and shapes',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I study mathematics at school.',
+        'Mathematics is very important.',
+        'She is good at mathematics.',
+        'We solve problems in mathematics.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'LITERATURE',
+      definitions: [
+        'Books and written works',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I read literature in class.',
+        'Literature is very interesting.',
+        'She studies English literature.',
+        'We discuss literature in class.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'HISTORY',
+      definitions: [
+        'The study of past events',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I learn about history in school.',
+        'History teaches us about the past.',
+        'She is a history teacher.',
+        'We study world history.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'GEOGRAPHY',
+      definitions: [
+        'The study of Earth and its features',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I study geography at school.',
+        'Geography helps us understand the world.',
+        'She teaches geography.',
+        'We learn about countries in geography.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'CHEMISTRY',
+      definitions: [
+        'The study of chemicals and reactions',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I study chemistry in the laboratory.',
+        'Chemistry is very interesting.',
+        'She is a chemistry professor.',
+        'We do experiments in chemistry.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'BIOLOGY',
+      definitions: [
+        'The study of living things',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I study biology at university.',
+        'Biology helps us understand life.',
+        'She is a biology teacher.',
+        'We learn about animals in biology.'
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: 'PHYSICS',
+      definitions: [
+        'The study of matter and energy',
+        'A type of food',
+        'A vehicle',
+        'A game'
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        'I study physics at school.',
+        'Physics explains how things work.',
+        'She is a physics professor.',
+        'We learn about forces in physics.'
+      ],
+      correctSentenceIndex: 0
     }
   ]
 };
@@ -410,7 +1039,22 @@ const SENTENCES_FOR_PRACTICE = {
     'The sun is hot.',
     'Close the door.',
     'They eat lunch.',
-    'Can you help me?'
+    'Can you help me?',
+    'I see a bird.',
+    'The dog is happy.',
+    'She has a book.',
+    'We play outside.',
+    'He likes apples.',
+    'The tree is tall.',
+    'I drink water.',
+    'She has a cat.',
+    'We go to school.',
+    'The sun is bright.',
+    'I eat bread.',
+    'She drinks milk.',
+    'We see flowers.',
+    'The car is red.',
+    'I sit on a chair.'
   ],
   medium: [
     'I like to play football.',
@@ -422,7 +1066,22 @@ const SENTENCES_FOR_PRACTICE = {
     'The sun is shining today.',
     'Please close the window.',
     'They are eating lunch together.',
-    'Can you help me with homework?'
+    'Can you help me with homework?',
+    'I go to school every morning.',
+    'The teacher is very kind.',
+    'She plays music on the piano.',
+    'We visit the museum on weekends.',
+    'He rides his bicycle to work.',
+    'The restaurant serves delicious food.',
+    'I study at the library after school.',
+    'She works at the hospital.',
+    'We travel by airplane to other countries.',
+    'The ocean is very deep and blue.',
+    'I climb the mountain with my friends.',
+    'She calls me on the telephone.',
+    'We eat dinner at the restaurant.',
+    'The computer is very fast and new.',
+    'I learn about history in my class.'
   ],
   hard: [
     'The students are studying for their exam.',
@@ -434,7 +1093,17 @@ const SENTENCES_FOR_PRACTICE = {
     'We need to finish this project today.',
     'The museum has many interesting exhibits.',
     'He practices piano every afternoon.',
-    'The restaurant serves delicious food.'
+    'The restaurant serves delicious food.',
+    'I study philosophy at the university.',
+    'Science helps us understand the natural world.',
+    'Mathematics is essential for many careers.',
+    'Literature opens our minds to new ideas.',
+    'History teaches us valuable lessons from the past.',
+    'Geography helps us understand different countries.',
+    'Chemistry explains how substances interact.',
+    'Biology studies all living organisms.',
+    'Physics describes the fundamental laws of nature.',
+    'The university offers many different courses.'
   ]
 };
 
