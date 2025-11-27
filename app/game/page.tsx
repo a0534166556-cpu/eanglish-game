@@ -54,7 +54,7 @@ function GameBoardWrapper({ gameId, user }: { gameId: string; user: any }) {
     
     const fetchGame = async () => {
       try {
-        const response = await fetch(`/api/games/word-clash?action=get&gameId=${gameId}`);
+        const response = await fetch(`/api/games/word-clash?gameId=${gameId}`);
         if (response.ok) {
           const data = await response.json();
           if (isMounted) {
@@ -244,7 +244,7 @@ function GamePageContent() {
     
     try {
       // בדוק אם המשחק קיים ואם המשתמש הוא player1
-      const response = await fetch(`/api/games/word-clash?action=get&gameId=${gameIdToJoin}`);
+      const response = await fetch(`/api/games/word-clash?gameId=${gameIdToJoin}`);
       if (response.ok) {
         const data = await response.json();
         const game = data.game;
