@@ -1247,6 +1247,9 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    console.log('GET endpoint called');
+    console.log('Request URL:', req.url);
+    
     const { searchParams } = new URL(req.url);
     const gameId = searchParams.get('gameId');
     
@@ -1273,6 +1276,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ game: games[gameId] });
   } catch (error) {
     console.error('GET endpoint error:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
