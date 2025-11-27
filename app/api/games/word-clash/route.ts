@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '../../../../lib/rateLimiter';
-
-// Persistent storage using JSON files (simulated localStorage on server)
-const GAMES_FILE = './games.json';
-const fs = require('fs');
-const path = require('path');
+import { prisma } from '@/lib/prisma';
 
 // Word Clash questions organized by difficulty
 const WORD_CLASH_QUESTIONS = {
@@ -536,23 +532,79 @@ function getRandomQuestion(difficulty: string) {
 }
 
 // Helper functions for persistent storage
-function loadGames() {
+async function loadGames() {
   try {
-    if (fs.existsSync(GAMES_FILE)) {
-      const data = fs.readFileSync(GAMES_FILE, 'utf8');
-      return JSON.parse(data);
+    const games = await prisma.wordClashGame.findMany();
+    const gamesMap: Record<string, any> = {};
+    
+    for (const game of games) {
+      try {
+        const currentWordData = JSON.parse(game.currentWord);
+        gamesMap[game.gameId] = {
+          gameId: game.gameId,
+          status: game.status,
+          currentRound: game.currentRound,
+          maxRounds: game.maxRounds,
+          difficulty: currentWordData.difficulty || 'easy',
+          currentWord: currentWordData,
+          players: JSON.parse(game.players),
+          playerStates: JSON.parse(game.playerStates),
+          lastMove: game.lastMove ? JSON.parse(game.lastMove) : null,
+          winner: game.winner,
+          createdAt: game.createdAt.getTime(),
+          updatedAt: game.updatedAt.getTime(),
+          chatMessages: game.chatMessages ? JSON.parse(game.chatMessages) : [],
+          revealedLetters: game.revealedLetters ? JSON.parse(game.revealedLetters) : {},
+          // Additional fields that might be in the game object
+          previousQuestions: currentWordData.previousQuestions || [],
+          questionResults: currentWordData.questionResults || {},
+          timerStartTime: currentWordData.timerStartTime,
+          timeLeft: currentWordData.timeLeft,
+        };
+      } catch (parseError) {
+        console.error('Error parsing game data:', game.gameId, parseError);
+      }
     }
+    
+    return gamesMap;
   } catch (error) {
-    console.error('Error loading games:', error);
+    console.error('Error loading games from database:', error);
+    return {};
   }
-  return {};
 }
 
-function saveGames(games: any) {
+async function saveGames(games: Record<string, any>) {
   try {
-    fs.writeFileSync(GAMES_FILE, JSON.stringify(games, null, 2));
+    for (const [gameId, gameData] of Object.entries(games)) {
+      const gameToSave = {
+        gameId: gameId,
+        status: gameData.status || 'waiting',
+        currentRound: gameData.currentRound || 0,
+        maxRounds: gameData.maxRounds || 5,
+        currentWord: JSON.stringify({
+          ...gameData.currentWord,
+          difficulty: gameData.difficulty || 'easy',
+          previousQuestions: gameData.previousQuestions || [],
+          questionResults: gameData.questionResults || {},
+          timerStartTime: gameData.timerStartTime,
+          timeLeft: gameData.timeLeft,
+        }),
+        players: JSON.stringify(gameData.players || {}),
+        playerStates: JSON.stringify(gameData.playerStates || {}),
+        lastMove: gameData.lastMove ? JSON.stringify(gameData.lastMove) : null,
+        winner: gameData.winner || null,
+        chatMessages: gameData.chatMessages ? JSON.stringify(gameData.chatMessages) : null,
+        revealedLetters: gameData.revealedLetters ? JSON.stringify(gameData.revealedLetters) : null,
+      };
+
+      await prisma.wordClashGame.upsert({
+        where: { gameId: gameId },
+        update: gameToSave,
+        create: gameToSave,
+      });
+    }
   } catch (error) {
-    console.error('Error saving games:', error);
+    console.error('Error saving games to database:', error);
   }
 }
 
@@ -600,13 +652,16 @@ export async function POST(req: NextRequest) {
         const randomWordChallenge = getRandomWordChallenge(difficulty, 0, []);
         
         const newGame = {
-          id: newGameId,
+          gameId: newGameId,
           status: 'waiting',
           currentRound: 0,
           maxRounds: 5,
           difficulty: difficulty,
           currentWord: randomWordChallenge,
           previousQuestions: [], // Track previous questions for dictation logic
+          questionResults: {},
+          timerStartTime: undefined,
+          timeLeft: 20,
           players: {
             player1: sanitizedPlayerId,
             player2: null,
@@ -616,6 +671,7 @@ export async function POST(req: NextRequest) {
             player1: {
               score: 0,
               isReady: false, // יוצר המשחק לא מוכן אוטומטית
+              lastAnswerTime: undefined,
               powerUps: {
                 revealLetter: 3,
                 skipWord: 2,
@@ -625,6 +681,7 @@ export async function POST(req: NextRequest) {
             player2: {
               score: 0,
               isReady: false,
+              lastAnswerTime: undefined,
               powerUps: {
                 revealLetter: 3,
                 skipWord: 2,
@@ -634,6 +691,7 @@ export async function POST(req: NextRequest) {
             player3: {
               score: 0,
               isReady: false,
+              lastAnswerTime: undefined,
               powerUps: {
                 revealLetter: 3,
                 skipWord: 2,
@@ -654,21 +712,21 @@ export async function POST(req: NextRequest) {
         };
         
         // Load existing games
-        const createGames = loadGames();
+        const createGames = await loadGames();
         
         // Save new game
         createGames[newGameId] = newGame;
-        saveGames(createGames);
+        await saveGames(createGames);
         
         console.log('Created game:', newGameId, 'for player:', sanitizedPlayerId);
-        console.log('Games saved to file');
+        console.log('Games saved to database');
         console.log('Game data:', JSON.stringify(newGame, null, 2));
         
         return NextResponse.json({ gameId: newGameId, game: newGame });
 
       case 'join':
         // Load existing games
-        const joinGames = loadGames();
+        const joinGames = await loadGames();
         
         if (!gameId || !joinGames[gameId]) {
           console.log('Game not found:', gameId);
@@ -716,7 +774,7 @@ export async function POST(req: NextRequest) {
         
         // Save updated game
         joinGames[gameId] = existingGame;
-        saveGames(joinGames);
+        await saveGames(joinGames);
         
         console.log('Player joined game:', gameId, 'player:', sanitizedPlayerId);
         console.log('Game status:', existingGame.status);
@@ -726,7 +784,7 @@ export async function POST(req: NextRequest) {
 
       case 'get':
         // Load existing games
-        const getGames = loadGames();
+        const getGames = await loadGames();
         
         if (!gameId || !getGames[gameId]) {
           console.log('Game not found for get:', gameId);
@@ -741,7 +799,7 @@ export async function POST(req: NextRequest) {
 
       case 'start':
         // Start the game - requires at least 2 players
-        const startGames = loadGames();
+        const startGames = await loadGames();
         
         if (!gameId) {
           return NextResponse.json({ error: 'Game ID is required' }, { status: 400 });
@@ -793,14 +851,14 @@ export async function POST(req: NextRequest) {
         gameToStart.updatedAt = Date.now();
         
         startGames[gameId] = gameToStart;
-        saveGames(startGames);
+        await saveGames(startGames);
         
         console.log('Game started:', gameId, 'with', playerCount, 'players');
         return NextResponse.json({ game: gameToStart });
 
       case 'move':
         // Load existing games
-        const moveGames = loadGames();
+        const moveGames = await loadGames();
         
         if (!gameId || !moveGames[gameId]) {
           return NextResponse.json({ error: 'Game not found' }, { status: 404 });
@@ -1009,7 +1067,7 @@ export async function POST(req: NextRequest) {
         
       case 'nextRound':
         // Move to next round after showing results
-        const nextGames = loadGames();
+        const nextGames = await loadGames();
         
         if (!gameId || !nextGames[gameId]) {
           return NextResponse.json({ error: 'Game not found' }, { status: 404 });
@@ -1054,7 +1112,7 @@ export async function POST(req: NextRequest) {
             
             // Save updated game with timeout answers
             nextGames[gameId] = nextGame;
-            saveGames(nextGames);
+            await saveGames(nextGames);
           }
         }
         
@@ -1088,7 +1146,7 @@ export async function POST(req: NextRequest) {
           nextGame.updatedAt = Date.now();
           
           nextGames[gameId] = nextGame;
-          saveGames(nextGames);
+          await saveGames(nextGames);
           
           return NextResponse.json({ game: nextGame });
         } else {
@@ -1133,7 +1191,7 @@ export async function POST(req: NextRequest) {
         
         // Save updated game
         moveGames[gameId] = currentGame;
-        saveGames(moveGames);
+        await saveGames(moveGames);
         
         return NextResponse.json({ game: currentGame });
 
@@ -1155,7 +1213,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Load existing games
-  const games = loadGames();
+  const games = await loadGames();
   
   if (!games[gameId]) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 });

@@ -47,29 +47,89 @@ const joinGame = async (gameId: string, userId: string, userName: string) => {
 function GameBoardWrapper({ gameId, user }: { gameId: string; user: any }) {
   const [game, setGame] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchGame = async () => {
       try {
         const response = await fetch(`/api/games/word-clash?action=get&gameId=${gameId}`);
         if (response.ok) {
           const data = await response.json();
-          setGame(data.game);
+          if (isMounted) {
+            setGame(data.game);
+            setError(null);
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Failed to load game' }));
+          if (isMounted) {
+            setError(errorData.error || 'שגיאה בטעינת המשחק');
+            setLoading(false);
+          }
         }
       } catch (err) {
         console.error('Error fetching game:', err);
+        if (isMounted) {
+          setError('שגיאה בחיבור לשרת');
+          setLoading(false);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchGame();
     const interval = setInterval(fetchGame, 2000); // עדכון כל 2 שניות
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [gameId]);
 
-  if (loading || !game) {
-    return <div className="flex items-center justify-center min-h-screen">טוען משחק...</div>;
+  if (loading && !game) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <p className="text-xl text-gray-600">טוען משחק...</p>
+      </div>
+    );
+  }
+
+  if (error && !game) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md text-center">
+          <h3 className="text-lg font-bold mb-2">שגיאה בטעינת המשחק</h3>
+          <p className="mb-4">{error}</p>
+          <button
+            onClick={() => window.location.href = '/games/word-clash'}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            חזרה לדף המשחק
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!game) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-6 py-4 rounded-lg max-w-md text-center">
+          <h3 className="text-lg font-bold mb-2">המשחק לא נמצא</h3>
+          <p className="mb-4">המשחק עם ה-ID הזה לא קיים או נמחק.</p>
+          <button
+            onClick={() => window.location.href = '/games/word-clash'}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            חזרה לדף המשחק
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // זיהוי השחקן לפי ה-ID שלו במשחק

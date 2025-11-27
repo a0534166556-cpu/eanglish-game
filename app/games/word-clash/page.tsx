@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdManager from "@/app/components/ads/AdManager";
 import { useSubscription } from '@/lib/useSubscription';
+import useAuthUser from '@/lib/useAuthUser';
 
 export default function WordClashGame() {
   const [gameId, setGameId] = useState('');
@@ -16,6 +17,7 @@ export default function WordClashGame() {
   const [hasPremiumPass, setHasPremiumPass] = useState(false);
   const router = useRouter();
   const { isSubscribed } = useSubscription();
+  const { user } = useAuthUser();
 
   // בדיקת גישה למשחק
   useEffect(() => {
@@ -63,6 +65,11 @@ export default function WordClashGame() {
       }
     }
 
+    if (!user) {
+      setError('נא להתחבר כדי ליצור משחק');
+      return;
+    }
+
     setIsCreating(true);
     setError('');
     
@@ -72,18 +79,19 @@ export default function WordClashGame() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'create',
-          playerId: 'player_' + Date.now(),
-          playerName: 'Player 1',
+          playerId: user.id || `user_${Date.now()}`,
+          playerName: user.name || user.email || 'Player 1',
           difficulty: 'easy'
         })
       });
 
       const data = await response.json();
       
-      if (response.ok) {
+      if (response.ok && data.gameId) {
         setGameId(data.gameId);
         setGameData(data.game);
-        router.push(`/game?gameId=${data.gameId}`);
+        // Use window.location for more reliable navigation
+        window.location.href = `/game?gameId=${data.gameId}`;
       } else {
         setError(data.error || 'שגיאה ביצירת המשחק');
       }
@@ -114,6 +122,11 @@ export default function WordClashGame() {
       }
     }
 
+    if (!user) {
+      setError('נא להתחבר כדי להצטרף למשחק');
+      return;
+    }
+
     setIsJoining(true);
     setError('');
     
@@ -124,18 +137,18 @@ export default function WordClashGame() {
         body: JSON.stringify({
           action: 'join',
           gameId: gameId.trim(),
-          playerId: 'player_' + Date.now(),
-          playerName: 'Player 2',
+          playerId: user.id || `user_${Date.now()}`,
+          playerName: user.name || user.email || 'Player 2',
           difficulty: 'easy'
         })
       });
 
       const data = await response.json();
       
-      if (response.ok) {
+      if (response.ok && data.game) {
         setGameData(data.game);
-        // מעבר ישיר למשחק עם הקוד שכבר הוזן
-        router.push(`/game?gameId=${gameId.trim()}&joined=true`);
+        // Use window.location for more reliable navigation
+        window.location.href = `/game?gameId=${gameId.trim()}&joined=true`;
       } else {
         setError(data.error || 'שגיאה בהצטרפות למשחק');
       }
