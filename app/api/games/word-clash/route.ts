@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '../../../../lib/rateLimiter';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // Word Clash questions organized by difficulty
 const WORD_CLASH_QUESTIONS = {
   easy: [
@@ -534,7 +536,9 @@ function getRandomQuestion(difficulty: string) {
 // Helper functions for persistent storage
 async function loadGames() {
   try {
+    console.log('loadGames: Starting to fetch games from database...');
     const games = await prisma.wordClashGame.findMany();
+    console.log('loadGames: Found', games.length, 'games in database');
     const gamesMap: Record<string, any> = {};
     
     for (const game of games) {
@@ -561,14 +565,19 @@ async function loadGames() {
           timerStartTime: currentWordData.timerStartTime,
           timeLeft: currentWordData.timeLeft,
         };
+        console.log('loadGames: Successfully parsed game:', game.gameId);
       } catch (parseError) {
         console.error('Error parsing game data:', game.gameId, parseError);
       }
     }
     
+    console.log('loadGames: Returning', Object.keys(gamesMap).length, 'games');
     return gamesMap;
   } catch (error) {
     console.error('Error loading games from database:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', error.message, error.stack);
+    }
     return {};
   }
 }
@@ -711,15 +720,28 @@ export async function POST(req: NextRequest) {
           }
         };
         
-        // Load existing games
-        const createGames = await loadGames();
+        // Save new game directly to database
+        console.log('Creating new game:', newGameId, 'for player:', sanitizedPlayerId);
         
-        // Save new game
-        createGames[newGameId] = newGame;
-        await saveGames(createGames);
+        try {
+          await saveGames({ [newGameId]: newGame });
+          console.log('Game saved to database successfully');
+          
+          // Verify the game was saved by loading it back
+          const verifyGames = await loadGames();
+          if (verifyGames[newGameId]) {
+            console.log('Game verified in database:', newGameId);
+          } else {
+            console.error('ERROR: Game was not found after saving!', newGameId);
+          }
+        } catch (saveError) {
+          console.error('Error saving game to database:', saveError);
+          return NextResponse.json({ 
+            error: 'Failed to save game',
+            details: saveError instanceof Error ? saveError.message : 'Unknown error'
+          }, { status: 500 });
+        }
         
-        console.log('Created game:', newGameId, 'for player:', sanitizedPlayerId);
-        console.log('Games saved to database');
         console.log('Game data:', JSON.stringify(newGame, null, 2));
         
         return NextResponse.json({ gameId: newGameId, game: newGame });
@@ -1224,19 +1246,36 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const gameId = searchParams.get('gameId');
-  
-  if (!gameId) {
-    return NextResponse.json({ error: 'Game ID is required' }, { status: 400 });
-  }
+  try {
+    const { searchParams } = new URL(req.url);
+    const gameId = searchParams.get('gameId');
+    
+    console.log('GET request for game:', gameId);
+    
+    if (!gameId) {
+      console.log('GET error: Game ID is required');
+      return NextResponse.json({ error: 'Game ID is required' }, { status: 400 });
+    }
 
-  // Load existing games
-  const games = await loadGames();
-  
-  if (!games[gameId]) {
-    return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+    // Load existing games
+    console.log('Loading games from database...');
+    const games = await loadGames();
+    console.log('Loaded games count:', Object.keys(games).length);
+    console.log('Available game IDs:', Object.keys(games));
+    
+    if (!games[gameId]) {
+      console.log('Game not found:', gameId);
+      console.log('Available games:', Object.keys(games));
+      return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+    }
+    
+    console.log('Game found:', gameId, 'status:', games[gameId].status);
+    return NextResponse.json({ game: games[gameId] });
+  } catch (error) {
+    console.error('GET endpoint error:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
-  
-  return NextResponse.json({ game: games[gameId] });
 }
