@@ -1062,8 +1062,45 @@ export async function POST(req: NextRequest) {
           currentGame.questionResults[playerSymbol].answerTimeSeconds = answerTimeSeconds;
         }
         
-        // Don't move to next round automatically - wait for nextRound action
-        // This allows showing results first
+        // Check if game is finished
+        if (allAnswered && currentGame.currentRound >= currentGame.maxRounds - 1) {
+          // Game finished - keep results for final display
+          currentGame.status = 'finished';
+          const scores = {
+            player1: currentGame.playerStates.player1.score,
+            player2: currentGame.playerStates.player2.score,
+            player3: currentGame.playerStates.player3.score
+          };
+          
+          // Find winner
+          const maxScore = Math.max(scores.player1, scores.player2, scores.player3);
+          const winners = [];
+          if (scores.player1 === maxScore && currentGame.players.player1) winners.push('player1');
+          if (scores.player2 === maxScore && currentGame.players.player2) winners.push('player2');
+          if (scores.player3 === maxScore && currentGame.players.player3) winners.push('player3');
+          
+          if (winners.length === 1) {
+            currentGame.winner = winners[0] as 'player1' | 'player2' | 'player3';
+          } else {
+            currentGame.winner = 'draw';
+          }
+        }
+        
+        // Update lastMove and save
+        currentGame.updatedAt = Date.now();
+        
+        console.log('Game updated:', { 
+          playerSymbol, 
+          isCorrect, 
+          score: currentGame.playerStates[playerSymbol].score,
+          questionResults: currentGame.questionResults
+        });
+        
+        // Save updated game
+        moveGames[gameId] = currentGame;
+        await saveGames(moveGames);
+        
+        return NextResponse.json({ game: currentGame });
         
       case 'nextRound':
         // Move to next round after showing results
@@ -1150,50 +1187,32 @@ export async function POST(req: NextRequest) {
           
           return NextResponse.json({ game: nextGame });
         } else {
-          return NextResponse.json({ error: 'Game finished' }, { status: 400 });
-        }
-        
-        if (allAnswered && currentGame.currentRound >= currentGame.maxRounds - 1) {
-          // Game finished - keep results for final display
-        } else if (currentGame.currentRound >= currentGame.maxRounds - 1 && allAnswered) {
           // Game finished
-          currentGame.status = 'finished';
+          nextGame.status = 'finished';
           const scores = {
-            player1: currentGame.playerStates.player1.score,
-            player2: currentGame.playerStates.player2.score,
-            player3: currentGame.playerStates.player3.score
+            player1: nextGame.playerStates.player1.score,
+            player2: nextGame.playerStates.player2.score,
+            player3: nextGame.playerStates.player3.score
           };
           
           // Find winner
           const maxScore = Math.max(scores.player1, scores.player2, scores.player3);
           const winners = [];
-          if (scores.player1 === maxScore && currentGame.players.player1) winners.push('player1');
-          if (scores.player2 === maxScore && currentGame.players.player2) winners.push('player2');
-          if (scores.player3 === maxScore && currentGame.players.player3) winners.push('player3');
+          if (scores.player1 === maxScore && nextGame.players.player1) winners.push('player1');
+          if (scores.player2 === maxScore && nextGame.players.player2) winners.push('player2');
+          if (scores.player3 === maxScore && nextGame.players.player3) winners.push('player3');
           
           if (winners.length === 1) {
-            currentGame.winner = winners[0] as 'player1' | 'player2' | 'player3';
+            nextGame.winner = winners[0] as 'player1' | 'player2' | 'player3';
           } else {
-            currentGame.winner = 'draw';
+            nextGame.winner = 'draw';
           }
+          
+          nextGames[gameId] = nextGame;
+          await saveGames(nextGames);
+          
+          return NextResponse.json({ game: nextGame });
         }
-        
-        // Score already updated above in the questionResults section
-        // Just update the lastMove and save
-        currentGame.updatedAt = Date.now();
-        
-        console.log('Game updated:', { 
-          playerSymbol, 
-          isCorrect, 
-          score: currentGame.playerStates[playerSymbol].score,
-          questionResults: currentGame.questionResults
-        });
-        
-        // Save updated game
-        moveGames[gameId] = currentGame;
-        await saveGames(moveGames);
-        
-        return NextResponse.json({ game: currentGame });
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
