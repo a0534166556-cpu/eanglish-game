@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import useAuthUser from '@/lib/useAuthUser';
 
 // פונקציה לחילוץ מילים אנגליות מטקסט
 const extractEnglishWords = (text: string): string[] => {
@@ -54,7 +55,7 @@ const generateVocabularyFromQuestions = (questions: any[]): { en: string; he: st
 const UNITS = [
   { id: '1', name: 'יחידה 1 - מילים בסיסיות', description: 'בעלי חיים, צבעים, מספרים, חלקי גוף' },
   { id: '2', name: 'יחידה 2 - בית ומשפחה', description: 'בית, משפחה, בגדים, אוכל' },
-  { id: '3', name: 'יחידה 3 - אוכל ושתייה', description: 'אוכל, שתייה, ארוחות, תבלינים' },
+  { id: '3', name: 'יחידה 3 - בית ספר ופעילויות', description: 'בית ספר, ספורט, תחבורה, טבע' },
   { id: '4', name: 'יחידה 4 - זמן ומזג אוויר', description: 'ימים, חודשים, עונות, מזג אוויר' },
   { id: '5', name: 'יחידה 5 - דקדוק בסיסי', description: 'פעלים, שמות עצם, תיאורים, משפטים' },
   { id: '6', name: 'יחידה 6 - אוצר מילים מתקדם', description: 'מקצועות, מקומות, תחבורה מתקדמת' },
@@ -389,12 +390,19 @@ export default function ClassroomTeacherPage() {
 
   // טען נתונים ממסד הנתונים
   useEffect(() => {
-    loadSessions();
-  }, []);
+    if (user && user.id) {
+      loadSessions();
+    }
+  }, [user]);
 
   const loadSessions = async () => {
+    if (!user || !user.id) {
+      console.error('User not logged in');
+      return;
+    }
+    
     try {
-      const response = await fetch('/api/classroom/get-sessions');
+      const response = await fetch(`/api/classroom/get-sessions?teacherId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -417,6 +425,11 @@ export default function ClassroomTeacherPage() {
 
   const createNewSession = async () => {
     if (!newSessionTitle.trim()) return;
+    
+    if (!user || !user.id) {
+      alert('יש להתחבר כדי ליצור כיתה');
+      return;
+    }
 
     try {
       const response = await fetch('/api/classroom/create-session', {
@@ -429,7 +442,8 @@ export default function ClassroomTeacherPage() {
           description: newSessionDescription,
           unit: newSessionUnit,
           level: newSessionLevel,
-          teacherName: 'מורה' // אפשר להוסיף שדה למורה
+          teacherName: user.name || user.email || 'מורה',
+          teacherId: user.id // שולח את ה-userId של המשתמש המחובר
         }),
       });
 

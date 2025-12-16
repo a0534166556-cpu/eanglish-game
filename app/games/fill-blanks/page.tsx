@@ -721,8 +721,6 @@ function FillBlanks() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [score, setScore] = useState(0);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [wrongAnswers, setWrongAnswers] = useState(0);
   const [time, setTime] = useState(0);
   const [finished, setFinished] = useState(false);
   const [started, setStarted] = useState(false);
@@ -1973,8 +1971,6 @@ function FillBlanks() {
         
         setCurrentQuestionIndex(0);
         setScore(0);
-        setCorrectAnswers(0);
-        setWrongAnswers(0);
         setTime(0);
         setFinished(false);
         setSelectedOption(null);
@@ -2159,12 +2155,7 @@ function FillBlanks() {
     const isCorrect = option === currentQuestion.answer;
     
     setFeedback({ correct: isCorrect, answer: currentQuestion.answer });
-    setScore(prev => prev + (isCorrect ? 3 : -2));
-    if (isCorrect) {
-      setCorrectAnswers(prev => prev + 1);
-    } else {
-      setWrongAnswers(prev => prev + 1);
-    }
+    setScore(prev => prev + (isCorrect ? 10 : -2));
     setSelectedOption(option);
 
     if (isCorrect) {
@@ -2281,10 +2272,6 @@ function FillBlanks() {
         setFinished(true);
         if (user) {
           try {
-            const totalQuestions = questions.length;
-            const won = correctAnswers > totalQuestions / 2;
-            const perfectScore = correctAnswers === totalQuestions && wrongAnswers === 0;
-            
             const response = await fetch('/api/games/update-stats', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -2292,11 +2279,8 @@ function FillBlanks() {
                 userId: user.id,
                 gameName: 'FillInTheBlanks',
                 score,
-                won: won,
+                won: score > 0, // נחשב ניצחון אם הניקוד גדול מ-0
                 time,
-                correctAnswers: correctAnswers,
-                totalQuestions: totalQuestions,
-                perfectScore: perfectScore,
               }),
             });
             
@@ -2320,8 +2304,6 @@ function FillBlanks() {
     setQuestions([]);
     setCurrentQuestionIndex(0);
     setScore(0);
-    setCorrectAnswers(0);
-    setWrongAnswers(0);
     setTime(0);
     setSelectedOption(null);
     setFeedback(null);
@@ -2631,12 +2613,9 @@ function FillBlanks() {
   }
 
   if (finished) {
-    const totalQuestions = questions.length;
-    const accuracy = totalQuestions > 0 ? correctAnswers / totalQuestions : 0;
-    const perfectScore = correctAnswers === totalQuestions && wrongAnswers === 0;
+    const accuracy = score > 0 ? score / (questions.length * 10) : 0;
     let medal, label;
-    if (perfectScore) { medal = '🥇'; label = 'ניצחת בבקיאות מלאה!'; }
-    else if (accuracy >= 0.9) { medal = '🥇'; label = 'מצוין!'; }
+    if (accuracy >= 0.9) { medal = '🥇'; label = 'מצוין!'; }
     else if (accuracy >= 0.7) { medal = '🥈'; label = 'כל הכבוד!'; }
     else if (accuracy > 0.4) { medal = '🥉'; label = 'יפה מאוד!'; }
     else { medal = '🤔'; label = 'אפשר להשתפר!'; }
@@ -2689,8 +2668,6 @@ function FillBlanks() {
                 setQuestions([]);
                 setCurrentQuestionIndex(0);
                 setScore(0);
-                setCorrectAnswers(0);
-                setWrongAnswers(0);
                 setTime(0);
                 setSelectedOption(null);
                 setFeedback(null);

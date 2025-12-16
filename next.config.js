@@ -4,6 +4,9 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   
+  // עוזר עם בעיות נתיבים בעברית ב-Windows
+  distDir: '.next',
+  
   // Skip static generation errors - allow build to continue
   typescript: {
     ignoreBuildErrors: true,
@@ -32,18 +35,9 @@ const nextConfig = {
       };
     }
     
-    // Path alias resolution
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': require('path').resolve(__dirname),
-    };
-    
-    // שיפור ביצועים - cache
+    // שיפור ביצועים - cache (שונה ל-memory בגלל בעיות עם נתיבים עבריים)
     config.cache = {
-      type: 'filesystem',
-      buildDependencies: {
-        config: [__filename],
-      },
+      type: 'memory',
     };
     
     return config;
@@ -52,6 +46,16 @@ const nextConfig = {
   // שיפור ביצועים - experimental features
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
+    // מניעת יצירת קישורים סימבוליים שעלולים לגרום לבעיות עם נתיבים בעברית
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+  
+  // מניעת יצירת קישורים סימבוליים ב-.next
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
   },
 };
 

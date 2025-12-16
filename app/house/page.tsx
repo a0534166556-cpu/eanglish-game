@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSubscription } from '@/lib/useSubscription';
 
 interface ShopItem {
   id: string;
@@ -56,7 +55,6 @@ export default function VirtualHouse() {
   const [showNewHouseModal, setShowNewHouseModal] = useState(false);
   const [newHouseName, setNewHouseName] = useState('');
   const router = useRouter();
-  const { isPremium } = useSubscription();
 
   const categories = [
     { id: 'all', name: 'הכל', icon: '🏠' },
@@ -170,99 +168,17 @@ export default function VirtualHouse() {
     }
   };
 
-  const loadHouses = async () => {
-    if (!user) return;
-    
-    try {
-      console.log('🔵 [house/page] Loading houses for user:', user.id);
-      const response = await fetch(`/api/house/houses?userId=${user.id}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ [house/page] Received houses data:', data);
-        const userHouses = data.houses || [];
-        setHouses(userHouses);
-        
-        // אם אין בית נבחר, בחר את הבית ברירת המחדל או הראשון
-        if (!currentHouseId && userHouses.length > 0) {
-          const defaultHouse = userHouses.find((h: House) => h.isDefault) || userHouses[0];
-          setCurrentHouseId(defaultHouse.id);
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('❌ [house/page] Failed to load houses:', response.status, errorData);
-        setHouses([]);
-        // נסה ליצור בית ברירת מחדל אם יש שגיאה
-        if (response.status === 500) {
-          console.log('⚠️ [house/page] Server error, will retry on next load');
-        }
-      }
-    } catch (error) {
-      console.error('❌ [house/page] Failed to load houses:', error);
-      setHouses([]);
-    }
-  };
-
-  const switchHouse = async (houseId: string) => {
-    setCurrentHouseId(houseId);
-    // loadHouseItems יקרא אוטומטית כש-currentHouseId משתנה
-  };
-
-  const createNewHouse = async (houseName: string) => {
-    if (!user) return;
-    
-    try {
-      const response = await fetch('/api/house/houses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          name: houseName
-        }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const newHouse = data.house;
-        
-        // עדכן את רשימת הבתים
-        await loadHouses();
-        
-        // עבור לבית החדש
-        setCurrentHouseId(newHouse.id);
-        
-        // סגור את המודל
-        setShowNewHouseModal(false);
-        setNewHouseName('');
-        
-        alert(`בית חדש "${houseName}" נוצר בהצלחה! 🏠`);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'שגיאה ביצירת בית חדש');
-      }
-    } catch (error) {
-      console.error('Failed to create new house:', error);
-      alert('שגיאה ביצירת בית חדש');
-    }
-  };
-
   const loadHouseItems = async () => {
-    if (!user || !currentHouseId) {
+    if (!user) {
       setIsLoading(false);
       return;
     }
     
     try {
-      const response = await fetch(`/api/house/items?userId=${user.id}&houseId=${currentHouseId}`);
+      const response = await fetch(`/api/house/items?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
-        // סנן רק את הפריטים של הבית הנוכחי
-        const currentHouseItems = (data.houseItems || []).filter((item: HouseItem) => 
-          item.houseId === currentHouseId || !item.houseId
-        );
-        setHouseItems(currentHouseItems);
+        setHouseItems(data.houseItems || []);
       } else {
         console.error('Failed to load house items:', response.status);
         setHouseItems([]);
@@ -281,24 +197,19 @@ export default function VirtualHouse() {
       return;
     }
 
-    // חישוב מחיר עם הנחה של 50% למנוי Premium
-    const finalPrice = isPremium ? Math.floor(item.price * 0.5) : item.price;
-
     console.log('Buying item:', item);
     console.log('User:', user);
     console.log('User diamonds:', user.diamonds);
     console.log('Item price:', item.price);
-    console.log('Final price (with discount):', finalPrice);
-    console.log('Is Premium:', isPremium);
-    console.log('Has enough diamonds:', user.diamonds >= finalPrice);
+    console.log('Has enough diamonds:', user.diamonds >= item.price);
 
     if (!user.diamonds && user.diamonds !== 0) {
       alert('שגיאה: לא נמצאו נתוני יהלומים. אנא רענן את הדף.');
       return;
     }
 
-    if (user.diamonds < finalPrice) {
-      alert(`אין לך מספיק יהלומים! יש לך ${user.diamonds} 💎 ואתה צריך ${finalPrice} 💎${isPremium ? ' (עם הנחה של 50%)' : ''}`);
+    if (user.diamonds < item.price) {
+      alert(`אין לך מספיק יהלומים! יש לך ${user.diamonds} 💎 ואתה צריך ${item.price} 💎`);
       return;
     }
 
@@ -310,8 +221,7 @@ export default function VirtualHouse() {
         },
         body: JSON.stringify({
           userId: user.id,
-          itemId: item.id,
-          houseId: currentHouseId
+          itemId: item.id
         }),
       });
 
@@ -1570,34 +1480,20 @@ export default function VirtualHouse() {
                   <h3 className="font-bold text-base mb-2 text-gray-800">{item.name}</h3>
                   <p className="text-sm text-gray-600 mb-4 leading-relaxed">{item.description}</p>
                   <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <div className="flex items-center text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg">
-                        <span className="text-lg mr-1">💎</span>
-                        {isPremium ? (
-                          <div className="flex items-center gap-2">
-                            <span className="line-through text-gray-400 text-sm">{item.price}</span>
-                            <span className="font-bold text-lg">{Math.floor(item.price * 0.5)}</span>
-                          </div>
-                        ) : (
-                          <span className="font-bold text-lg">{item.price}</span>
-                        )}
-                      </div>
-                      {isPremium && (
-                        <div className="text-xs text-green-600 font-bold mt-1">
-                          ✨ 50% הנחה למנוי Premium!
-                        </div>
-                      )}
+                    <div className="flex items-center text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg">
+                      <span className="text-lg mr-1">💎</span>
+                      <span className="font-bold text-lg">{item.price}</span>
                     </div>
                     <button
                       onClick={() => buyItem(item)}
-                      disabled={user.diamonds < (isPremium ? Math.floor(item.price * 0.5) : item.price)}
+                      disabled={user.diamonds < item.price}
                       className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 ${
-                        user.diamonds >= (isPremium ? Math.floor(item.price * 0.5) : item.price)
+                        user.diamonds >= item.price
                           ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
                     >
-                      {user.diamonds >= (isPremium ? Math.floor(item.price * 0.5) : item.price) ? '🛒 קנה' : '❌ חסר כסף'}
+                      {user.diamonds >= item.price ? '🛒 קנה' : '❌ חסר כסף'}
                     </button>
                   </div>
                 </div>

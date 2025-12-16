@@ -4,7 +4,6 @@ import { useSearchParams } from 'next/navigation';
 import useAuthUser from "@/lib/useAuthUser";
 import AdManager from "@/app/components/ads/AdManager";
 import { getTranslationWithFallback } from "@/lib/translations";
-import LevelUpModal from '@/app/components/common/LevelUpModal';
 
 interface MultipleChoiceQuestion {
   id: number;
@@ -270,8 +269,6 @@ function MultipleChoiceGame() {
   const [questions, setQuestions] = useState<MultipleChoiceQuestion[]>([]);
   const [current, setCurrent] = useState(0);
   const [score, setScore] = useState(0);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [wrongAnswers, setWrongAnswers] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
@@ -287,8 +284,6 @@ function MultipleChoiceGame() {
   const [selectedWordsCount, setSelectedWordsCount] = useState<number | null>(null);
   const [selectedWords, setSelectedWords] = useState<Array<{word: string, translation: string}>>([]);
   const [showWordSelector, setShowWordSelector] = useState(false);
-  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
-  const [levelUpData, setLevelUpData] = useState<{ oldLevel: number; newLevel: number } | null>(null);
   
   const successAudio = useRef<HTMLAudioElement | null>(null);
   const failAudio = useRef<HTMLAudioElement | null>(null);
@@ -421,8 +416,6 @@ function MultipleChoiceGame() {
       }
       setCurrent(0);
       setScore(0);
-      setCorrectAnswers(0);
-      setWrongAnswers(0);
       setTime(0);
       setFinished(false);
       setSelected(null);
@@ -695,8 +688,7 @@ function MultipleChoiceGame() {
     if (isCorrect) {
       const explanation = question.explanationHe || question.explanation || `התשובה הנכונה היא "${question.answer}".`;
       setFeedback(`נכון! 🎉\n\nהסבר: ${explanation}`);
-      setScore(prev => prev + 3);
-      setCorrectAnswers(prev => prev + 1);
+      setScore(prev => prev + 10);
       if (successAudio.current) {
         successAudio.current.currentTime = 0;
         successAudio.current.play().catch(err => console.error('Error playing success audio:', err));
@@ -704,8 +696,6 @@ function MultipleChoiceGame() {
     } else {
       const explanation = question.explanationHe || question.explanation || `התשובה הנכונה היא "${question.answer}".`;
       setFeedback(`לא נכון! ❌\n\nהסבר: ${explanation}`);
-      setScore(prev => Math.max(0, prev - 2));
-      setWrongAnswers(prev => prev + 1);
       addMistake(question.id);
       if (failAudio.current) {
         failAudio.current.currentTime = 0;
@@ -788,10 +778,6 @@ function MultipleChoiceGame() {
       
       if (user) {
         try {
-          const totalQuestions = questions.length;
-          const won = correctAnswers > (totalQuestions / 2); // ניצחון אם ענה על יותר מ-50% נכון
-          const perfectScore = correctAnswers === totalQuestions && wrongAnswers === 0; // בקיאות מלאה אם ענה על כל השאלות נכון
-          
           const response = await fetch('/api/games/update-stats', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -799,10 +785,7 @@ function MultipleChoiceGame() {
               userId: user.id,
               gameName: 'MultipleChoice',
               score,
-              won: won,
-              correctAnswers: correctAnswers,
-              totalQuestions: totalQuestions,
-              perfectScore: perfectScore,
+              won: score > 0,
               time,
             }),
           });
@@ -817,14 +800,6 @@ function MultipleChoiceGame() {
               if (updateUser && user) {
                 updateUser(user);
               }
-            }
-            // בדוק אם המשתמש עלה רמה
-            if (data.levelUp && data.oldLevel !== undefined && data.newLevel !== undefined) {
-              setLevelUpData({
-                oldLevel: data.oldLevel,
-                newLevel: data.newLevel
-              });
-              setShowLevelUpModal(true);
             }
           }
         } catch (error) {
@@ -1088,18 +1063,8 @@ function MultipleChoiceGame() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-400 via-purple-300 to-purple-500 flex items-center justify-center p-4">
         <div className="max-w-4xl w-full bg-gradient-to-br from-white to-blue-50 rounded-3xl shadow-2xl p-8 text-center border-4 border-blue-200">
-          {correctAnswers === questions.length && wrongAnswers === 0 ? (
-            <div className="mb-6">
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent mb-4 animate-pulse">🏆 ניצחת בבקיאות מלאה!</h1>
-              <p className="text-3xl text-yellow-600 font-bold mb-2">כל הכבוד! ענית נכון על כל השאלות!</p>
-            </div>
-          ) : correctAnswers > (questions.length / 2) ? (
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-6">🎉 כל הכבוד! ניצחת!</h1>
-          ) : (
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">📊 המשחק הסתיים</h1>
-          )}
-          <p className="text-2xl text-blue-600 mb-2 font-bold">הציון שלך: {score} נקודות</p>
-          <p className="text-xl text-gray-600 mb-2">תשובות נכונות: {correctAnswers} / {questions.length}</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">🎉 כל הכבוד!</h1>
+          <p className="text-2xl text-blue-600 mb-4 font-bold">הציון שלך: {score} נקודות</p>
           <p className="text-xl text-purple-600 mb-8 font-semibold">זמן: {Math.floor(time / 60)}:{(time % 60).toString().padStart(2, '0')}</p>
           
           {/* רשימת המילים שנלמדו */}
@@ -1236,19 +1201,6 @@ function MultipleChoiceGame() {
       
       <AdManager showBanner={true} bannerPosition="bottom" testMode={false} />
       
-      {/* Level Up Modal */}
-      {levelUpData && (
-        <LevelUpModal
-          show={showLevelUpModal}
-          oldLevel={levelUpData.oldLevel}
-          newLevel={levelUpData.newLevel}
-          onClose={() => {
-            setShowLevelUpModal(false);
-            setLevelUpData(null);
-          }}
-        />
-      )}
-
       {/* Achievement Modal */}
       {showAchievementModal && newlyCompletedAchievements.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowAchievementModal(false)}>

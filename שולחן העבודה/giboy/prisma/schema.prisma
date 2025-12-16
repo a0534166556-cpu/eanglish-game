@@ -103,15 +103,15 @@ model WordClashGame {
   status          String
   currentRound    Int      @default(0)
   maxRounds       Int      @default(5)
-  currentWord     String
-  players         String
-  playerStates    String
-  lastMove        String?
+  currentWord     String   @db.LongText
+  players         String   @db.LongText
+  playerStates    String   @db.LongText
+  lastMove        String?  @db.LongText
   winner          String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  chatMessages    String?
-  revealedLetters String?
+  chatMessages    String?  @db.LongText
+  revealedLetters String?  @db.LongText
 }
 
 model Achievement {

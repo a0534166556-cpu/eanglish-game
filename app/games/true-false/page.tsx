@@ -844,7 +844,7 @@ function TrueFalse() {
     }
     
     if (isCorrect) {
-      setScore((s) => s + 3); // 3 נקודות לתשובה נכונה
+      setScore((s) => s + 10);
       if (successAudio.current) {
         successAudio.current.currentTime = 0;
         successAudio.current.play();

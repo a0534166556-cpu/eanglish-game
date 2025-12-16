@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import useAuthUser from '@/lib/useAuthUser';
 
 interface ShopItem {
@@ -16,11 +15,10 @@ interface ShopItem {
 }
 
 export default function PaymentPage() {
-  const { user, loading: authLoading } = useAuthUser();
+  const { user } = useAuthUser();
   const [loading, setLoading] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState('');
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
     // Check if there's an item to buy from the shop
@@ -37,27 +35,9 @@ export default function PaymentPage() {
     }
   }, []);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
-
   const handlePayment = async (amount: number, description: string, coins?: number, diamonds?: number) => {
-    // Double check user from localStorage as fallback
-    const userFromStorage = localStorage.getItem('user');
-    if (!user && !userFromStorage) {
+    if (!user) {
       alert('נא להתחבר תחילה');
-      router.push('/login');
-      return;
-    }
-    
-    // Use user from hook or parse from localStorage
-    const currentUser = user || (userFromStorage ? JSON.parse(userFromStorage) : null);
-    if (!currentUser) {
-      alert('נא להתחבר תחילה');
-      router.push('/login');
       return;
     }
 
@@ -88,7 +68,7 @@ export default function PaymentPage() {
 
       if (result.success) {
         // Add coins/diamonds to user account
-        const newUser = { ...currentUser };
+        const newUser = { ...user };
         
         if (selectedItem) {
           // Handle specific item from shop
@@ -221,30 +201,6 @@ export default function PaymentPage() {
       color: 'from-purple-500 to-pink-600'
     },
   ];
-
-  // Show loading while checking authentication
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">טוען...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show message if not authenticated (will redirect)
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🔒</div>
-          <p className="text-xl text-gray-600">מעבר לדף ההתחברות...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">

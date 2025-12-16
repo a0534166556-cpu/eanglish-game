@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimit } from '../../../../lib/rateLimiter';
 import { prisma } from '@/lib/prisma';
 
-export const dynamic = 'force-dynamic';
-
 // Word Clash questions organized by difficulty
 const WORD_CLASH_QUESTIONS = {
   easy: [
@@ -252,1037 +250,144 @@ const WORD_CLASH_QUESTIONS = {
   ]
 };
 
-// Word challenges for Word Clash game
-const WORD_CHALLENGES = {
-  easy: [
-    {
-      word: 'APPLE',
-      definitions: [
-        'A red or green fruit that grows on trees',
-        'A type of computer made by Apple Inc.',
-        'A round object used in sports',
-        'A color between red and yellow'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I eat an apple every day for breakfast.',
-        'The apple is a popular fruit worldwide.',
-        'She bought a red apple from the store.',
-        'An apple a day keeps the doctor away.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'CAT',
-      definitions: [
-        'A small furry animal that meows',
-        'A type of vehicle',
-        'A tool for cutting',
-        'A musical instrument'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'My cat likes to sleep on the sofa.',
-        'The cat is playing with a ball.',
-        'She has a black and white cat.',
-        'The cat caught a mouse.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'DOG',
-      definitions: [
-        'A loyal animal that barks',
-        'A type of food',
-        'A weather condition',
-        'A piece of furniture'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The dog is playing in the park.',
-        'My dog loves to go for walks.',
-        'She has a friendly dog.',
-        'The dog is very happy.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'HOUSE',
-      definitions: [
-        'A building where people live',
-        'A type of music',
-        'A game',
-        'A color'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I live in a big house.',
-        'The house has three bedrooms.',
-        'She bought a new house.',
-        'Our house is near the school.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'BOOK',
-      definitions: [
-        'Pages bound together for reading',
-        'A type of food',
-        'A vehicle',
-        'A musical instrument'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I read a book every night.',
-        'The book is very interesting.',
-        'She wrote a new book.',
-        'This book has 300 pages.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'SUN',
-      definitions: [
-        'The star that gives us light and heat',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The sun is very bright today.',
-        'I love to sit in the sun.',
-        'The sun rises in the east.',
-        'The sun gives us light.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'TREE',
-      definitions: [
-        'A tall plant with branches and leaves',
-        'A type of food',
-        'A vehicle',
-        'A color'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The tree is very tall.',
-        'I sit under the tree.',
-        'The tree has green leaves.',
-        'We plant a tree in spring.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'WATER',
-      definitions: [
-        'A clear liquid we drink',
-        'A type of food',
-        'A vehicle',
-        'A color'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I drink water every day.',
-        'The water is cold.',
-        'We need water to live.',
-        'She pours water into the glass.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'CAR',
-      definitions: [
-        'A vehicle with four wheels',
-        'A type of food',
-        'A game',
-        'A color'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I drive a red car.',
-        'The car is very fast.',
-        'She bought a new car.',
-        'We go to school by car.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'BIRD',
-      definitions: [
-        'An animal that can fly',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The bird is flying high.',
-        'I see a bird in the tree.',
-        'The bird sings a song.',
-        'She loves to watch birds.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'FISH',
-      definitions: [
-        'An animal that lives in water',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The fish swims in the water.',
-        'I catch a big fish.',
-        'The fish is very colorful.',
-        'She likes to eat fish.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'MOON',
-      definitions: [
-        'The object that shines at night',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The moon is very bright.',
-        'I see the moon at night.',
-        'The moon is round.',
-        'She looks at the moon.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'STAR',
-      definitions: [
-        'A bright object in the sky at night',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I see a star in the sky.',
-        'The star is very bright.',
-        'She wishes upon a star.',
-        'We count the stars at night.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'FLOWER',
-      definitions: [
-        'A colorful plant that smells nice',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The flower is very beautiful.',
-        'I pick a red flower.',
-        'The flower smells good.',
-        'She gives me a flower.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'CHAIR',
-      definitions: [
-        'A piece of furniture to sit on',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I sit on a chair.',
-        'The chair is very comfortable.',
-        'She moves the chair.',
-        'We need more chairs.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'TABLE',
-      definitions: [
-        'A piece of furniture with a flat top',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I put the book on the table.',
-        'The table is made of wood.',
-        'She sets the table for dinner.',
-        'We eat at the table.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'PEN',
-      definitions: [
-        'A tool for writing',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I write with a pen.',
-        'The pen is blue.',
-        'She loses her pen.',
-        'We need a new pen.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'SCHOOL',
-      definitions: [
-        'A place where children learn',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I go to school every day.',
-        'The school is very big.',
-        'She teaches at the school.',
-        'We learn at school.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'TEACHER',
-      definitions: [
-        'A person who teaches students',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The teacher is very kind.',
-        'I like my teacher.',
-        'She is a good teacher.',
-        'The teacher explains the lesson.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'FRIEND',
-      definitions: [
-        'A person you like and trust',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'My friend is very nice.',
-        'I play with my friend.',
-        'She is my best friend.',
-        'We are good friends.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'MUSIC',
-      definitions: [
-        'Sounds that are pleasant to hear',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I love to listen to music.',
-        'The music is very beautiful.',
-        'She plays music on the piano.',
-        'We dance to the music.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'FOOD',
-      definitions: [
-        'Something we eat to live',
-        'A type of animal',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I eat healthy food.',
-        'The food is delicious.',
-        'She cooks good food.',
-        'We buy food at the store.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'MILK',
-      definitions: [
-        'A white drink from cows',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I drink milk every morning.',
-        'The milk is cold.',
-        'She buys milk at the store.',
-        'We need more milk.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'BREAD',
-      definitions: [
-        'A food made from flour',
-        'A type of drink',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I eat bread for breakfast.',
-        'The bread is fresh.',
-        'She bakes bread at home.',
-        'We buy bread every day.'
-      ],
-      correctSentenceIndex: 0
-    }
-  ],
-  medium: [
-    {
-      word: 'ELEPHANT',
-      definitions: [
-        'A large gray animal with a trunk',
-        'A type of building',
-        'A musical instrument',
-        'A color'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'The elephant is the largest land animal.',
-        'An elephant has a long trunk.',
-        'She saw an elephant at the zoo.',
-        'The elephant is very intelligent.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'COMPUTER',
-      definitions: [
-        'An electronic device for processing data',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I use my computer every day.',
-        'The computer is very fast.',
-        'She bought a new computer.',
-        'This computer has 16GB of RAM.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'TELEPHONE',
-      definitions: [
-        'A device for talking to people far away',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I call my friend on the telephone.',
-        'The telephone is ringing.',
-        'She answers the telephone.',
-        'We use the telephone to talk.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'HOSPITAL',
-      definitions: [
-        'A place where doctors help sick people',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I go to the hospital when I am sick.',
-        'The hospital is very clean.',
-        'She works at the hospital.',
-        'We visit the hospital.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'AIRPLANE',
-      definitions: [
-        'A vehicle that flies in the sky',
-        'A type of food',
-        'A game',
-        'A color'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I fly in an airplane to travel.',
-        'The airplane is very big.',
-        'She takes an airplane to Paris.',
-        'We see the airplane in the sky.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'OCEAN',
-      definitions: [
-        'A very large body of salt water',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I swim in the ocean.',
-        'The ocean is very deep.',
-        'She loves the ocean.',
-        'We see fish in the ocean.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'MOUNTAIN',
-      definitions: [
-        'A very high piece of land',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I climb the mountain.',
-        'The mountain is very tall.',
-        'She sees the mountain from far.',
-        'We hike up the mountain.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'LIBRARY',
-      definitions: [
-        'A place where you can borrow books',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I go to the library to read.',
-        'The library has many books.',
-        'She works at the library.',
-        'We study at the library.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'MUSEUM',
-      definitions: [
-        'A place where you see old things and art',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I visit the museum on weekends.',
-        'The museum is very interesting.',
-        'She works at the museum.',
-        'We learn at the museum.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'RESTAURANT',
-      definitions: [
-        'A place where you eat food',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I eat dinner at the restaurant.',
-        'The restaurant is very nice.',
-        'She works at the restaurant.',
-        'We go to the restaurant.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'BICYCLE',
-      definitions: [
-        'A vehicle with two wheels',
-        'A type of food',
-        'A game',
-        'A color'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I ride my bicycle to school.',
-        'The bicycle is red.',
-        'She buys a new bicycle.',
-        'We ride bicycles in the park.'
-      ],
-      correctSentenceIndex: 0
-    }
-  ],
-  hard: [
-    {
-      word: 'PHILOSOPHY',
-      definitions: [
-        'The study of fundamental questions about existence',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'She studies philosophy at university.',
-        'Philosophy asks deep questions about life.',
-        'Ancient Greek philosophy is still studied today.',
-        'The philosophy of science is fascinating.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'UNIVERSITY',
-      definitions: [
-        'A place where students study after high school',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I study at the university.',
-        'The university is very large.',
-        'She teaches at the university.',
-        'We graduate from university.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'SCIENCE',
-      definitions: [
-        'The study of the natural world',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I love to study science.',
-        'Science helps us understand the world.',
-        'She is a science teacher.',
-        'We do experiments in science class.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'MATHEMATICS',
-      definitions: [
-        'The study of numbers and shapes',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I study mathematics at school.',
-        'Mathematics is very important.',
-        'She is good at mathematics.',
-        'We solve problems in mathematics.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'LITERATURE',
-      definitions: [
-        'Books and written works',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I read literature in class.',
-        'Literature is very interesting.',
-        'She studies English literature.',
-        'We discuss literature in class.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'HISTORY',
-      definitions: [
-        'The study of past events',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I learn about history in school.',
-        'History teaches us about the past.',
-        'She is a history teacher.',
-        'We study world history.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'GEOGRAPHY',
-      definitions: [
-        'The study of Earth and its features',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I study geography at school.',
-        'Geography helps us understand the world.',
-        'She teaches geography.',
-        'We learn about countries in geography.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'CHEMISTRY',
-      definitions: [
-        'The study of chemicals and reactions',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I study chemistry in the laboratory.',
-        'Chemistry is very interesting.',
-        'She is a chemistry professor.',
-        'We do experiments in chemistry.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'BIOLOGY',
-      definitions: [
-        'The study of living things',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I study biology at university.',
-        'Biology helps us understand life.',
-        'She is a biology teacher.',
-        'We learn about animals in biology.'
-      ],
-      correctSentenceIndex: 0
-    },
-    {
-      word: 'PHYSICS',
-      definitions: [
-        'The study of matter and energy',
-        'A type of food',
-        'A vehicle',
-        'A game'
-      ],
-      correctDefinitionIndex: 0,
-      sentences: [
-        'I study physics at school.',
-        'Physics explains how things work.',
-        'She is a physics professor.',
-        'We learn about forces in physics.'
-      ],
-      correctSentenceIndex: 0
-    }
-  ]
-};
-
-// Sentences for recording and dictation
-const SENTENCES_FOR_PRACTICE = {
-  easy: [
-    'I love cats.',
-    'The cat is big.',
-    'I drink tea.',
-    'We go to the park.',
-    'He reads a book.',
-    'I like blue.',
-    'The sun is hot.',
-    'Close the door.',
-    'They eat lunch.',
-    'Can you help me?',
-    'I see a bird.',
-    'The dog is happy.',
-    'She has a book.',
-    'We play outside.',
-    'He likes apples.',
-    'The tree is tall.',
-    'I drink water.',
-    'She has a cat.',
-    'We go to school.',
-    'The sun is bright.',
-    'I eat bread.',
-    'She drinks milk.',
-    'We see flowers.',
-    'The car is red.',
-    'I sit on a chair.'
-  ],
-  medium: [
-    'I like to play football.',
-    'The cat is sleeping on the sofa.',
-    'She drinks a cup of tea.',
-    'We are going to the park.',
-    'He reads a book every night.',
-    'My favorite color is blue.',
-    'The sun is shining today.',
-    'Please close the window.',
-    'They are eating lunch together.',
-    'Can you help me with homework?',
-    'I go to school every morning.',
-    'The teacher is very kind.',
-    'She plays music on the piano.',
-    'We visit the museum on weekends.',
-    'He rides his bicycle to work.',
-    'The restaurant serves delicious food.',
-    'I study at the library after school.',
-    'She works at the hospital.',
-    'We travel by airplane to other countries.',
-    'The ocean is very deep and blue.',
-    'I climb the mountain with my friends.',
-    'She calls me on the telephone.',
-    'We eat dinner at the restaurant.',
-    'The computer is very fast and new.',
-    'I learn about history in my class.'
-  ],
-  hard: [
-    'The students are studying for their exam.',
-    'We should protect the environment.',
-    'I enjoy listening to classical music.',
-    'The teacher explains the lesson clearly.',
-    'They are planning a summer vacation.',
-    'She works at a large company.',
-    'We need to finish this project today.',
-    'The museum has many interesting exhibits.',
-    'He practices piano every afternoon.',
-    'The restaurant serves delicious food.',
-    'I study philosophy at the university.',
-    'Science helps us understand the natural world.',
-    'Mathematics is essential for many careers.',
-    'Literature opens our minds to new ideas.',
-    'History teaches us valuable lessons from the past.',
-    'Geography helps us understand different countries.',
-    'Chemistry explains how substances interact.',
-    'Biology studies all living organisms.',
-    'Physics describes the fundamental laws of nature.',
-    'The university offers many different courses.'
-  ]
-};
-
-// Helper function to create different question types
-function createQuestionByType(type: string, difficulty: string, roundNumber: number, previousQuestions: any[] = []): any {
-  const baseChallenge = WORD_CHALLENGES[difficulty as keyof typeof WORD_CHALLENGES] || WORD_CHALLENGES.easy;
-  const randomIndex = Math.floor(Math.random() * baseChallenge.length);
-  const base = baseChallenge[randomIndex];
-  
-  const sentences = SENTENCES_FOR_PRACTICE[difficulty as keyof typeof SENTENCES_FOR_PRACTICE] || SENTENCES_FOR_PRACTICE.easy;
-  const randomSentence = sentences[Math.floor(Math.random() * sentences.length)];
-  
-  // Check if this sentence was recorded earlier in the game
-  const wasRecorded = previousQuestions.some(q => 
-    q.questionType === 'recording' && q.sentenceToRecord === randomSentence
-  );
-  
-  switch (type) {
-    case 'multiple-choice':
-      console.log('📝 Creating multiple-choice question:', {
-        word: base.word,
-        definitions: base.definitions,
-        correctDefinitionIndex: base.correctDefinitionIndex,
-        correctDefinition: base.definitions[base.correctDefinitionIndex]
-      });
-      return {
-        word: base.word,
-        questionType: 'multiple-choice',
-        definitions: base.definitions,
-        correctDefinitionIndex: base.correctDefinitionIndex
-      };
-    
-    case 'sentence-choice':
-      console.log('📝 Creating sentence-choice question:', {
-        word: base.word,
-        sentences: base.sentences,
-        correctSentenceIndex: base.correctSentenceIndex,
-        correctSentence: base.sentences[base.correctSentenceIndex]
-      });
-      return {
-        word: base.word,
-        questionType: 'sentence-choice',
-        sentences: base.sentences,
-        correctSentenceIndex: base.correctSentenceIndex
-      };
-    
-    case 'recording':
-      return {
-        word: base.word,
-        questionType: 'recording',
-        sentenceToRecord: randomSentence,
-        wasRecorded: false
-      };
-    
-    case 'sentence-scramble':
-      const words = randomSentence.replace(/[.,!?]/g, '').split(' ');
-      const scrambled = [...words].sort(() => Math.random() - 0.5);
-      return {
-        word: base.word,
-        questionType: 'sentence-scramble',
-        scrambledWords: scrambled,
-        correctSentence: randomSentence
-      };
-    
-    case 'dictation':
-      return {
-        word: base.word,
-        questionType: 'dictation',
-        sentenceToRecord: randomSentence,
-        wasRecorded: wasRecorded
-      };
-    
-    default:
-      return {
-        word: base.word,
-        questionType: 'multiple-choice',
-        definitions: base.definitions,
-        correctDefinitionIndex: base.correctDefinitionIndex
-      };
-  }
-}
-
-// Helper function to get random word challenge by difficulty with question type rotation
-function getRandomWordChallenge(difficulty: string, roundNumber: number = 0, previousQuestions: any[] = []) {
-  // Rotate question types: multiple-choice, sentence-choice, recording, sentence-scramble, dictation
-  const questionTypes: string[] = ['multiple-choice', 'sentence-choice', 'recording', 'sentence-scramble', 'dictation'];
-  const questionType = questionTypes[roundNumber % questionTypes.length];
-  
-  return createQuestionByType(questionType, difficulty, roundNumber, previousQuestions);
-}
-
-// Helper function to get random question by difficulty (kept for backward compatibility)
+// Helper function to get random question by difficulty
 function getRandomQuestion(difficulty: string) {
   const questions = WORD_CLASH_QUESTIONS[difficulty as keyof typeof WORD_CLASH_QUESTIONS] || WORD_CLASH_QUESTIONS.easy;
   const randomIndex = Math.floor(Math.random() * questions.length);
   return questions[randomIndex];
 }
 
-// Helper functions for persistent storage
+// Helper functions for persistent storage using Prisma
 async function loadGames() {
   try {
-    console.log('loadGames: Starting to fetch games from database...');
     const games = await prisma.wordClashGame.findMany();
-    console.log('loadGames: Found', games.length, 'games in database');
-    const gamesMap: Record<string, any> = {};
-    
+    console.log(`[loadGames] Found ${games.length} games in database`);
+    const gamesMap: { [key: string]: any } = {};
     for (const game of games) {
       try {
-        const currentWordData = JSON.parse(game.currentWord);
+        // Try to parse currentWord as JSON (if it's a full question object), otherwise use as text
+        let currentQuestion;
+        try {
+          currentQuestion = JSON.parse(game.currentWord);
+        } catch {
+          // If parsing fails, it's just text, create a simple question object
+          currentQuestion = { text: game.currentWord || '', answer: '', explanation: '' };
+        }
+        
+        // Parse JSON fields with error handling
+        let players = {};
+        let playerStates = {};
+        let lastMove = null;
+        let chatMessages: any[] = [];
+        let revealedLetters = { player1: [], player2: [] };
+        
+        try {
+          players = JSON.parse(game.players || '{}');
+        } catch (e) {
+          console.error(`[loadGames] Error parsing players for game ${game.gameId}:`, e);
+        }
+        
+        try {
+          playerStates = JSON.parse(game.playerStates || '{}');
+        } catch (e) {
+          console.error(`[loadGames] Error parsing playerStates for game ${game.gameId}:`, e);
+        }
+        
+        if (game.lastMove) {
+          try {
+            lastMove = JSON.parse(game.lastMove);
+          } catch (e) {
+            console.error(`[loadGames] Error parsing lastMove for game ${game.gameId}:`, e);
+          }
+        }
+        
+        if (game.chatMessages) {
+          try {
+            chatMessages = JSON.parse(game.chatMessages);
+          } catch (e) {
+            console.error(`[loadGames] Error parsing chatMessages for game ${game.gameId}:`, e);
+          }
+        }
+        
+        if (game.revealedLetters) {
+          try {
+            revealedLetters = JSON.parse(game.revealedLetters);
+          } catch (e) {
+            console.error(`[loadGames] Error parsing revealedLetters for game ${game.gameId}:`, e);
+          }
+        }
+        
         gamesMap[game.gameId] = {
-          gameId: game.gameId,
+          id: game.gameId,
           status: game.status,
           currentRound: game.currentRound,
           maxRounds: game.maxRounds,
-          difficulty: currentWordData.difficulty || 'easy',
-          currentWord: currentWordData,
-          players: JSON.parse(game.players),
-          playerStates: JSON.parse(game.playerStates),
-          lastMove: game.lastMove ? JSON.parse(game.lastMove) : null,
+          difficulty: 'easy', // Default, can be extended
+          currentQuestion: currentQuestion,
+          players: players,
+          playerStates: playerStates,
+          lastMove: lastMove,
           winner: game.winner,
           createdAt: game.createdAt.getTime(),
           updatedAt: game.updatedAt.getTime(),
-          chatMessages: game.chatMessages ? JSON.parse(game.chatMessages) : [],
-          revealedLetters: game.revealedLetters ? JSON.parse(game.revealedLetters) : {},
-          // Additional fields that might be in the game object
-          previousQuestions: currentWordData.previousQuestions || [],
-          questionResults: currentWordData.questionResults || {},
-          timerStartTime: currentWordData.timerStartTime,
-          timeLeft: currentWordData.timeLeft,
+          chatMessages: chatMessages,
+          revealedLetters: revealedLetters
         };
-        console.log('loadGames: Successfully parsed game:', game.gameId);
-      } catch (parseError) {
-        console.error('Error parsing game data:', game.gameId, parseError);
+      } catch (error) {
+        console.error(`[loadGames] Error processing game ${game.gameId}:`, error);
+        // Continue with other games even if one fails
       }
     }
-    
-    console.log('loadGames: Returning', Object.keys(gamesMap).length, 'games');
+    console.log(`[loadGames] Loaded ${Object.keys(gamesMap).length} games successfully`);
     return gamesMap;
   } catch (error) {
-    console.error('Error loading games from database:', error);
-    if (error instanceof Error) {
-      console.error('Error details:', error.message, error.stack);
-    }
+    console.error('[loadGames] Error loading games from database:', error);
     return {};
   }
 }
 
-async function saveGames(games: Record<string, any>) {
+async function saveGame(gameId: string, gameData: any) {
   try {
-    for (const [gameId, gameData] of Object.entries(games)) {
-      const gameToSave = {
-        gameId: gameId,
-        status: gameData.status || 'waiting',
-        currentRound: gameData.currentRound || 0,
-        maxRounds: gameData.maxRounds || 5,
-        currentWord: JSON.stringify({
-          ...gameData.currentWord,
-          difficulty: gameData.difficulty || 'easy',
-          previousQuestions: gameData.previousQuestions || [],
-          questionResults: gameData.questionResults || {},
-          timerStartTime: gameData.timerStartTime,
-          timeLeft: gameData.timeLeft,
-        }),
-        players: JSON.stringify(gameData.players || {}),
-        playerStates: JSON.stringify(gameData.playerStates || {}),
-        lastMove: gameData.lastMove ? JSON.stringify(gameData.lastMove) : null,
-        winner: gameData.winner || null,
-        chatMessages: gameData.chatMessages ? JSON.stringify(gameData.chatMessages) : null,
-        revealedLetters: gameData.revealedLetters ? JSON.stringify(gameData.revealedLetters) : null,
-      };
+    const existingGame = await prisma.wordClashGame.findUnique({
+      where: { gameId }
+    });
 
-      await prisma.wordClashGame.upsert({
-        where: { gameId: gameId },
-        update: gameToSave,
-        create: gameToSave,
+    // Save currentQuestion as JSON string in currentWord field
+    const currentQuestionStr = gameData.currentQuestion 
+      ? JSON.stringify(gameData.currentQuestion)
+      : (gameData.currentWord || '');
+    
+    const gameRecord = {
+      gameId: gameData.id || gameId,
+      status: gameData.status || 'waiting',
+      currentRound: gameData.currentRound || 0,
+      maxRounds: gameData.maxRounds || 5,
+      currentWord: currentQuestionStr,
+      players: JSON.stringify(gameData.players || {}),
+      playerStates: JSON.stringify(gameData.playerStates || {}),
+      lastMove: gameData.lastMove ? JSON.stringify(gameData.lastMove) : null,
+      winner: gameData.winner || null,
+      chatMessages: gameData.chatMessages ? JSON.stringify(gameData.chatMessages) : null,
+      revealedLetters: gameData.revealedLetters ? JSON.stringify(gameData.revealedLetters) : null
+    };
+
+    if (existingGame) {
+      console.log(`[saveGame] Updating existing game: ${gameId}`);
+      await prisma.wordClashGame.update({
+        where: { gameId },
+        data: gameRecord
       });
+      console.log(`[saveGame] Game ${gameId} updated successfully`);
+    } else {
+      console.log(`[saveGame] Creating new game: ${gameId}`);
+      await prisma.wordClashGame.create({
+        data: gameRecord
+      });
+      console.log(`[saveGame] Game ${gameId} created successfully`);
     }
   } catch (error) {
-    console.error('Error saving games to database:', error);
+    console.error(`[saveGame] Error saving game ${gameId}:`, error);
+    throw error;
   }
 }
 
@@ -1294,62 +399,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
     }
     
-    // Parse request body once - can only be read once
     const body = await req.json();
-    const { action, gameId, playerId, playerName, difficulty = 'easy', answer, selectedIndex, answerValue } = body;
+    const { action, gameId, playerId, playerName, difficulty = 'easy' } = body;
+    console.log(`[POST] Action: ${action}, gameId: ${gameId}, playerId: ${playerId}`);
     
-    // Input validation - 'start' and 'get' actions don't require playerId/playerName
-    if (!action) {
-      return NextResponse.json({ error: 'Missing action' }, { status: 400 });
+    // Input validation
+    if (!action || !playerId || !playerName) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
     
-    // Sanitize playerId and playerName if provided
-    const sanitizedPlayerId = playerId ? playerId.toString().replace(/[<>\"'&]/g, '') : '';
-    const sanitizedPlayerName = playerName ? playerName.toString().replace(/[<>\"'&]/g, '') : '';
+    // Sanitize inputs
+    const sanitizedPlayerId = playerId.toString().replace(/[<>\"'&]/g, '');
+    const sanitizedPlayerName = playerName.toString().replace(/[<>\"'&]/g, '');
     
-    // For actions that require playerId and playerName
-    if (action !== 'start' && action !== 'get') {
-      if (!playerId || !playerName) {
-        return NextResponse.json({ error: 'Missing required fields: playerId and playerName' }, { status: 400 });
-      }
-      
-      // Length validation
-      if (sanitizedPlayerId.length > 50 || sanitizedPlayerName.length > 50) {
-        return NextResponse.json({ error: 'Input too long' }, { status: 400 });
-      }
-      
-      if (sanitizedPlayerId.length === 0 || sanitizedPlayerName.length === 0) {
-        return NextResponse.json({ error: 'Input cannot be empty' }, { status: 400 });
-      }
+    // Length validation
+    if (sanitizedPlayerId.length > 50 || sanitizedPlayerName.length > 50) {
+      return NextResponse.json({ error: 'Input too long' }, { status: 400 });
+    }
+    
+    if (sanitizedPlayerId.length === 0 || sanitizedPlayerName.length === 0) {
+      return NextResponse.json({ error: 'Input cannot be empty' }, { status: 400 });
     }
 
     switch (action) {
       case 'create':
         const newGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        // Get random word challenge based on difficulty with question type rotation
-        const randomWordChallenge = getRandomWordChallenge(difficulty, 0, []);
+        // Get random question based on difficulty
+        const randomQuestion = getRandomQuestion(difficulty);
         
         const newGame = {
-          gameId: newGameId,
+          id: newGameId,
           status: 'waiting',
           currentRound: 0,
           maxRounds: 5,
           difficulty: difficulty,
-          currentWord: randomWordChallenge,
-          previousQuestions: [], // Track previous questions for dictation logic
-          questionResults: {},
-          timerStartTime: undefined,
-          timeLeft: 20,
+          currentQuestion: randomQuestion,
           players: {
             player1: sanitizedPlayerId,
-            player2: null,
-            player3: null
+            player2: null
           },
           playerStates: {
             player1: {
               score: 0,
-              isReady: false, // יוצר המשחק לא מוכן אוטומטית
-              lastAnswerTime: undefined,
+              isReady: true,
               powerUps: {
                 revealLetter: 3,
                 skipWord: 2,
@@ -1359,17 +451,6 @@ export async function POST(req: NextRequest) {
             player2: {
               score: 0,
               isReady: false,
-              lastAnswerTime: undefined,
-              powerUps: {
-                revealLetter: 3,
-                skipWord: 2,
-                freezeOpponent: 1
-              }
-            },
-            player3: {
-              score: 0,
-              isReady: false,
-              lastAnswerTime: undefined,
               powerUps: {
                 revealLetter: 3,
                 skipWord: 2,
@@ -1384,171 +465,89 @@ export async function POST(req: NextRequest) {
           chatMessages: [],
           revealedLetters: {
             player1: [],
-            player2: [],
-            player3: []
+            player2: []
           }
         };
         
-        // Save new game directly to database
-        console.log('Creating new game:', newGameId, 'for player:', sanitizedPlayerId);
-        
+        // Save new game to database
         try {
-          await saveGames({ [newGameId]: newGame });
-          console.log('Game saved to database successfully');
+          await saveGame(newGameId, newGame);
+          console.log('[POST create] Game saved successfully:', newGameId);
+        } catch (saveError: any) {
+          console.error('[POST create] Error saving game:', saveError);
           
-          // Verify the game was saved by loading it back
-          const verifyGames = await loadGames();
-          if (verifyGames[newGameId]) {
-            console.log('Game verified in database:', newGameId);
-          } else {
-            console.error('ERROR: Game was not found after saving!', newGameId);
+          // Check if it's a Prisma P2000 error (column too long)
+          if (saveError?.code === 'P2000' && saveError?.meta?.column_name) {
+            const columnName = saveError.meta.column_name;
+            console.error(`[POST create] Database column ${columnName} is too small. Run: npx prisma db push`);
+            return NextResponse.json({ 
+              error: `Database schema needs update. Please run: npx prisma db push`,
+              details: `Column ${columnName} is too small for the data`
+            }, { status: 500 });
           }
-        } catch (saveError) {
-          console.error('Error saving game to database:', saveError);
+          
           return NextResponse.json({ 
-            error: 'Failed to save game',
-            details: saveError instanceof Error ? saveError.message : 'Unknown error'
+            error: 'Failed to save game to database',
+            details: saveError?.message || 'Unknown error'
           }, { status: 500 });
         }
         
-        console.log('Game data:', JSON.stringify(newGame, null, 2));
-        
+        console.log('[POST create] Created game:', newGameId, 'for player:', sanitizedPlayerId);
         return NextResponse.json({ gameId: newGameId, game: newGame });
 
       case 'join':
-        // Load existing games
+        // Load existing game from database
+        console.log(`[POST join] Attempting to join game: ${gameId}`);
         const joinGames = await loadGames();
+        console.log(`[POST join] Loaded ${Object.keys(joinGames).length} games`);
         
         if (!gameId || !joinGames[gameId]) {
-          console.log('Game not found:', gameId);
-          console.log('Available games:', Object.keys(joinGames));
+          console.log(`[POST join] Game not found: ${gameId}`);
+          console.log(`[POST join] Available games:`, Object.keys(joinGames));
           return NextResponse.json({ error: 'Game not found' }, { status: 404 });
         }
 
         const existingGame = joinGames[gameId];
-        
-        // בדיקה אם המשתמש כבר במשחק
-        if (existingGame.players.player1 === sanitizedPlayerId) {
-          console.log('User is already player1 in this game');
-          return NextResponse.json({ game: existingGame });
-        }
-        
-        if (existingGame.players.player2 === sanitizedPlayerId) {
-          console.log('User is already player2 in this game');
-          return NextResponse.json({ game: existingGame });
-        }
-        
-        if (existingGame.players.player3 === sanitizedPlayerId) {
-          console.log('User is already player3 in this game');
-          return NextResponse.json({ game: existingGame });
-        }
-        
-        // בדיקה אם המשחק מלא (3 שחקנים)
-        if (existingGame.players.player1 && existingGame.players.player2 && existingGame.players.player3) {
-          console.log('Game is full:', gameId);
-          return NextResponse.json({ error: 'המשחק מלא (3 שחקנים)' }, { status: 400 });
+        if (existingGame.players.player2) {
+          console.log(`[POST join] Game is full: ${gameId}`);
+          return NextResponse.json({ error: 'Game is full' }, { status: 400 });
         }
 
-        // הוספת שחקן למקום הפנוי הראשון
-        if (!existingGame.players.player2) {
-          existingGame.players.player2 = sanitizedPlayerId;
-          existingGame.playerStates.player2.isReady = false;
-        } else if (!existingGame.players.player3) {
-          existingGame.players.player3 = sanitizedPlayerId;
-          existingGame.playerStates.player3.isReady = false;
-        }
-        
-        // המשחק נשאר ב-'waiting' עד שיוחלט להתחיל אותו
-        existingGame.status = 'waiting';
-        
+        // Add second player
+        existingGame.players.player2 = sanitizedPlayerId;
+        existingGame.status = 'active';
         existingGame.updatedAt = Date.now();
         
-        // Save updated game
-        joinGames[gameId] = existingGame;
-        await saveGames(joinGames);
+        // Save updated game to database
+        try {
+          await saveGame(gameId, existingGame);
+          console.log(`[POST join] Game updated successfully: ${gameId}`);
+        } catch (saveError) {
+          console.error(`[POST join] Error saving game:`, saveError);
+          return NextResponse.json({ error: 'Failed to update game in database' }, { status: 500 });
+        }
         
-        console.log('Player joined game:', gameId, 'player:', sanitizedPlayerId);
-        console.log('Game status:', existingGame.status);
-        console.log('Players:', existingGame.players);
-        
+        console.log(`[POST join] Player joined game: ${gameId}, player: ${sanitizedPlayerId}`);
         return NextResponse.json({ game: existingGame });
 
       case 'get':
-        // Load existing games
+        // Load existing game from database
+        console.log(`[GET] Fetching game: ${gameId}`);
         const getGames = await loadGames();
+        console.log(`[GET] Loaded ${Object.keys(getGames).length} games, looking for: ${gameId}`);
+        console.log(`[GET] Available game IDs:`, Object.keys(getGames));
         
         if (!gameId || !getGames[gameId]) {
-          console.log('Game not found for get:', gameId);
-          console.log('Available games:', Object.keys(getGames));
+          console.log(`[GET] Game not found: ${gameId}`);
           return NextResponse.json({ error: 'Game not found' }, { status: 404 });
         }
 
         const gameData = getGames[gameId];
-        console.log('Getting game:', gameId, 'status:', gameData.status);
-        console.log('Game data:', JSON.stringify(gameData, null, 2));
+        console.log(`[GET] Found game ${gameId}, status: ${gameData.status}`);
         return NextResponse.json({ game: gameData });
 
-      case 'start':
-        // Start the game - requires at least 2 players
-        const startGames = await loadGames();
-        
-        if (!gameId) {
-          return NextResponse.json({ error: 'Game ID is required' }, { status: 400 });
-        }
-        
-        if (!startGames[gameId]) {
-          console.log('Game not found for start:', gameId);
-          console.log('Available games:', Object.keys(startGames));
-          return NextResponse.json({ error: 'Game not found' }, { status: 404 });
-        }
-        
-        const gameToStart = startGames[gameId];
-        
-        // Count how many players are in the game
-        const playerCount = [
-          gameToStart.players.player1,
-          gameToStart.players.player2,
-          gameToStart.players.player3
-        ].filter(p => p !== null).length;
-        
-        if (playerCount < 2) {
-          return NextResponse.json({ error: 'נדרשים לפחות 2 שחקנים כדי להתחיל את המשחק' }, { status: 400 });
-        }
-        
-        // Mark all players as ready
-        if (gameToStart.players.player1) {
-          gameToStart.playerStates.player1.isReady = true;
-        }
-        if (gameToStart.players.player2) {
-          gameToStart.playerStates.player2.isReady = true;
-        }
-        if (gameToStart.players.player3) {
-          gameToStart.playerStates.player3.isReady = true;
-        }
-        
-        // Start the game
-        gameToStart.status = 'active';
-        if (!gameToStart.previousQuestions) {
-          gameToStart.previousQuestions = [];
-        }
-        gameToStart.currentWord = getRandomWordChallenge(gameToStart.difficulty || 'easy', 0, gameToStart.previousQuestions);
-        // Initialize timer
-        gameToStart.timerStartTime = Date.now();
-        gameToStart.timeLeft = 20; // Default time
-        if (gameToStart.currentWord.questionType === 'dictation' && gameToStart.currentWord.wasRecorded) {
-          gameToStart.timeLeft = 40; // Double time for dictation
-        }
-        gameToStart.questionResults = {}; // Reset question results
-        gameToStart.updatedAt = Date.now();
-        
-        startGames[gameId] = gameToStart;
-        await saveGames(startGames);
-        
-        console.log('Game started:', gameId, 'with', playerCount, 'players');
-        return NextResponse.json({ game: gameToStart });
-
       case 'move':
-        // Load existing games
+        // Load existing game from database
         const moveGames = await loadGames();
         
         if (!gameId || !moveGames[gameId]) {
@@ -1556,402 +555,72 @@ export async function POST(req: NextRequest) {
         }
 
         const currentGame = moveGames[gameId];
+        const { answer, selectedIndex } = await req.json();
         
-        console.log('Move action received:', { gameId, playerId: sanitizedPlayerId, answer, selectedIndex, answerValue });
-        
-        // Check if answer is correct based on question type
-        let isCorrect = false;
-        const currentWord = currentGame.currentWord;
-        
-        if (!currentWord) {
-          console.error('No current word in game');
-          return NextResponse.json({ error: 'No current question' }, { status: 400 });
-        }
-        
-        if (answer === 'definition' && currentWord.questionType === 'multiple-choice') {
-          // Ensure both are numbers for proper comparison
-          const selectedIdx = typeof selectedIndex === 'string' ? parseInt(selectedIndex, 10) : (selectedIndex ?? -1);
-          const correctIdx = typeof currentWord.correctDefinitionIndex === 'string' ? parseInt(currentWord.correctDefinitionIndex, 10) : (currentWord.correctDefinitionIndex ?? -1);
-          
-          // Handle NaN cases
-          const selectedIdxValid = !isNaN(selectedIdx) && selectedIdx >= 0;
-          const correctIdxValid = !isNaN(correctIdx) && correctIdx >= 0;
-          
-          isCorrect = selectedIdxValid && correctIdxValid && selectedIdx === correctIdx;
-          
-          console.log('🔍 Multiple choice answer check:', { 
-            selectedIndex, 
-            selectedIdx, 
-            selectedIdxValid,
-            correctIndex: currentWord.correctDefinitionIndex, 
-            correctIdx,
-            correctIdxValid,
-            isCorrect,
-            typeSelected: typeof selectedIndex,
-            typeCorrect: typeof currentWord.correctDefinitionIndex,
-            definitions: currentWord.definitions?.length,
-            selectedDefinition: currentWord.definitions?.[selectedIdx],
-            correctDefinition: currentWord.definitions?.[correctIdx]
-          });
-        } else if (answer === 'sentence' && currentWord.questionType === 'sentence-choice') {
-          // Ensure both are numbers for proper comparison
-          const selectedIdx = typeof selectedIndex === 'string' ? parseInt(selectedIndex, 10) : (selectedIndex ?? -1);
-          const correctIdx = typeof currentWord.correctSentenceIndex === 'string' ? parseInt(currentWord.correctSentenceIndex, 10) : (currentWord.correctSentenceIndex ?? -1);
-          
-          // Handle NaN cases
-          const selectedIdxValid = !isNaN(selectedIdx) && selectedIdx >= 0;
-          const correctIdxValid = !isNaN(correctIdx) && correctIdx >= 0;
-          
-          isCorrect = selectedIdxValid && correctIdxValid && selectedIdx === correctIdx;
-          
-          console.log('🔍 Sentence choice answer check:', { 
-            selectedIndex, 
-            selectedIdx,
-            selectedIdxValid,
-            correctIndex: currentWord.correctSentenceIndex, 
-            correctIdx,
-            correctIdxValid,
-            isCorrect,
-            typeSelected: typeof selectedIndex,
-            typeCorrect: typeof currentWord.correctSentenceIndex,
-            sentences: currentWord.sentences?.length,
-            selectedSentence: currentWord.sentences?.[selectedIdx],
-            correctSentence: currentWord.sentences?.[correctIdx]
-          });
-        } else if (answer === 'recording' && currentWord.questionType === 'recording') {
-          // For recording, answerValue should be 'correct' or 'incorrect'
-          isCorrect = answerValue === 'correct';
-          // Track that this sentence was recorded
-          if (!currentGame.previousQuestions) {
-            currentGame.previousQuestions = [];
-          }
-          currentGame.previousQuestions.push({
-            questionType: 'recording',
-            sentenceToRecord: currentWord.sentenceToRecord
-          });
-        } else if (answer === 'sentence-scramble' && currentWord.questionType === 'sentence-scramble') {
-          // For sentence scramble, answerValue should be 'correct' or 'incorrect'
-          isCorrect = answerValue === 'correct';
-          console.log('🔍 Sentence scramble answer check:', {
-            answerValue,
-            isCorrect,
-            correctSentence: currentWord.correctSentence,
-            questionType: currentWord.questionType
-          });
-        } else if (answer === 'dictation' && currentWord.questionType === 'dictation') {
-          // For dictation, answerValue should be 'correct' or 'incorrect'
-          isCorrect = answerValue === 'correct';
-          console.log('🔍 Dictation answer check:', {
-            answerValue,
-            isCorrect,
-            sentenceToRecord: currentWord.sentenceToRecord,
-            questionType: currentWord.questionType
-          });
-        } else {
-          console.warn('⚠️ Unknown answer type or question type mismatch:', {
-            answer,
-            questionType: currentWord.questionType,
-            selectedIndex,
-            answerValue
-          });
-        }
+        // Check if answer is correct
+        const isCorrect = currentGame.currentQuestion?.answer === answer;
 
-        // Update game state - use sanitizedPlayerId
-        let playerSymbol: 'player1' | 'player2' | 'player3' = 'player1';
-        if (currentGame.players.player1 === sanitizedPlayerId) {
-          playerSymbol = 'player1';
-        } else if (currentGame.players.player2 === sanitizedPlayerId) {
-          playerSymbol = 'player2';
-        } else if (currentGame.players.player3 === sanitizedPlayerId) {
-          playerSymbol = 'player3';
-        } else {
-          console.error('Player not found in game:', { 
-            sanitizedPlayerId, 
-            players: currentGame.players 
-          });
-          return NextResponse.json({ error: 'Player not found in game' }, { status: 400 });
-        }
-        
-        console.log('Player symbol determined:', playerSymbol);
-        
+        // Update game state
+        const playerSymbol = currentGame.players.player1 === playerId ? 'player1' : 'player2';
         currentGame.lastMove = {
           player: playerSymbol,
           answer: answer,
           isCorrect: isCorrect,
           time: Date.now(),
-          selectedIndex: selectedIndex || 0
-        };
-        
-        // Calculate answer time relative to timer start
-        const answerTime = currentGame.timerStartTime ? Date.now() - currentGame.timerStartTime : 0;
-        
-        // Mark this player as answered
-        currentGame.playerStates[playerSymbol].lastAnswerTime = Date.now();
-        
-        // Save result for this question
-        if (!currentGame.questionResults) {
-          currentGame.questionResults = {};
-        }
-        currentGame.questionResults[playerSymbol] = {
-          isCorrect: isCorrect,
-          answerTime: answerTime,
           selectedIndex: selectedIndex
         };
-        
-        // Update score
+
         if (isCorrect) {
-          currentGame.playerStates[playerSymbol].score += 3;
-        } else {
-          currentGame.playerStates[playerSymbol].score = Math.max(0, currentGame.playerStates[playerSymbol].score - 2);
+          currentGame.playerStates[playerSymbol].score += 10;
         }
-        
-        // Count how many players are in the game and how many answered
-        const activePlayers = [
-          currentGame.players.player1,
-          currentGame.players.player2,
-          currentGame.players.player3
-        ].filter(p => p !== null);
-        
-        const answeredPlayers = activePlayers.filter((_, index) => {
-          const playerKey = `player${index + 1}` as 'player1' | 'player2' | 'player3';
-          return currentGame.questionResults?.[playerKey] !== undefined;
-        });
-        
-        // Check if all players answered - add speed bonus
-        const allAnswered = answeredPlayers.length === activePlayers.length;
-        
-        // Calculate speed bonus for this player based on answer time (in seconds)
-        const answerTimeSeconds = answerTime / 1000;
-        let speedBonus = 0;
-        let speedBonusText = '';
-        
-        if (isCorrect) {
-          if (answerTimeSeconds <= 5) {
-            speedBonus = 3;
-            speedBonusText = '0-5 שניות';
-          } else if (answerTimeSeconds <= 10) {
-            speedBonus = 2;
-            speedBonusText = '5-10 שניות';
-          } else if (answerTimeSeconds <= 16) {
-            speedBonus = 1;
-            speedBonusText = '10-16 שניות';
-          } else {
-            speedBonus = 0;
-            speedBonusText = '16-20 שניות';
-          }
-          
-          // Add speed bonus to score
-          if (speedBonus > 0) {
-            currentGame.playerStates[playerSymbol].score += speedBonus;
-          }
-        }
-        
-        // Store speed bonus info in questionResults for UI display
-        if (currentGame.questionResults[playerSymbol]) {
-          currentGame.questionResults[playerSymbol].speedBonus = speedBonus;
-          currentGame.questionResults[playerSymbol].speedBonusText = speedBonusText;
-          currentGame.questionResults[playerSymbol].answerTimeSeconds = answerTimeSeconds;
-        }
-        
-        // Check if game is finished
-        if (allAnswered && currentGame.currentRound >= currentGame.maxRounds - 1) {
-          // Game finished - keep results for final display
-          currentGame.status = 'finished';
-          const scores = {
-            player1: currentGame.playerStates.player1.score,
-            player2: currentGame.playerStates.player2.score,
-            player3: currentGame.playerStates.player3.score
-          };
-          
-          // Find winner
-          const maxScore = Math.max(scores.player1, scores.player2, scores.player3);
-          const winners = [];
-          if (scores.player1 === maxScore && currentGame.players.player1) winners.push('player1');
-          if (scores.player2 === maxScore && currentGame.players.player2) winners.push('player2');
-          if (scores.player3 === maxScore && currentGame.players.player3) winners.push('player3');
-          
-          if (winners.length === 1) {
-            currentGame.winner = winners[0] as 'player1' | 'player2' | 'player3';
-          } else {
-            currentGame.winner = 'draw';
-          }
-        }
-        
-        // Update lastMove and save
+
         currentGame.updatedAt = Date.now();
         
-        console.log('Game updated:', { 
-          playerSymbol, 
-          isCorrect, 
-          score: currentGame.playerStates[playerSymbol].score,
-          questionResults: currentGame.questionResults
-        });
-        
-        // Save updated game
-        moveGames[gameId] = currentGame;
-        await saveGames(moveGames);
+        // Save updated game to database
+        await saveGame(gameId, currentGame);
         
         return NextResponse.json({ game: currentGame });
-        
-      case 'nextRound':
-        // Move to next round after showing results
-        const nextGames = await loadGames();
-        
-        if (!gameId || !nextGames[gameId]) {
-          return NextResponse.json({ error: 'Game not found' }, { status: 404 });
-        }
-        
-        const nextGame = nextGames[gameId];
-        
-        // Before moving to next round, check if timer expired and submit timeout answers for players who haven't answered
-        if (nextGame.status === 'active' && nextGame.currentWord && nextGame.timerStartTime && nextGame.timeLeft !== undefined) {
-          const elapsed = (Date.now() - nextGame.timerStartTime) / 1000;
-          const calculatedTimeLeft = Math.max(0, Math.floor(nextGame.timeLeft - elapsed));
-          
-          if (calculatedTimeLeft <= 0) {
-            // Timer expired - submit timeout answers for all players who haven't answered
-            const activePlayers = [
-              { id: nextGame.players.player1, symbol: 'player1' as const },
-              { id: nextGame.players.player2, symbol: 'player2' as const },
-              { id: nextGame.players.player3, symbol: 'player3' as const }
-            ].filter(p => p.id !== null);
-            
-            if (!nextGame.questionResults) {
-              nextGame.questionResults = {};
-            }
-            
-            activePlayers.forEach(({ symbol }) => {
-              if (!nextGame.questionResults[symbol]) {
-                // Player hasn't answered - submit timeout answer (incorrect, -2 points)
-                console.log(`⏰ Submitting timeout answer for ${symbol}`);
-                nextGame.questionResults[symbol] = {
-                  isCorrect: false,
-                  answerTime: nextGame.timeLeft * 1000, // Full time as answer time
-                  selectedIndex: undefined,
-                  speedBonus: 0,
-                  speedBonusText: '',
-                  answerTimeSeconds: nextGame.timeLeft
-                };
-                
-                // Update score (-2 points for timeout)
-                nextGame.playerStates[symbol].score = Math.max(0, nextGame.playerStates[symbol].score - 2);
-              }
-            });
-            
-            // Save updated game with timeout answers
-            nextGames[gameId] = nextGame;
-            await saveGames(nextGames);
-          }
-        }
-        
-        if (nextGame.currentRound < nextGame.maxRounds - 1) {
-          // Move to next round
-          nextGame.currentRound += 1;
-          // Generate new question for next round
-          nextGame.currentWord = getRandomWordChallenge(
-            nextGame.difficulty || 'easy', 
-            nextGame.currentRound, 
-            nextGame.previousQuestions || []
-          );
-          nextGame.lastMove = null;
-          nextGame.questionResults = {}; // Reset question results
-          // Reset player answer times
-          if (nextGame.players.player1) {
-            nextGame.playerStates.player1.lastAnswerTime = undefined;
-          }
-          if (nextGame.players.player2) {
-            nextGame.playerStates.player2.lastAnswerTime = undefined;
-          }
-          if (nextGame.players.player3) {
-            nextGame.playerStates.player3.lastAnswerTime = undefined;
-          }
-          // Initialize timer for new question
-          nextGame.timerStartTime = Date.now();
-          nextGame.timeLeft = 20;
-          if (nextGame.currentWord.questionType === 'dictation' && nextGame.currentWord.wasRecorded) {
-            nextGame.timeLeft = 40;
-          }
-          nextGame.updatedAt = Date.now();
-          
-          nextGames[gameId] = nextGame;
-          await saveGames(nextGames);
-          
-          return NextResponse.json({ game: nextGame });
-        } else {
-          // Game finished
-          nextGame.status = 'finished';
-          const scores = {
-            player1: nextGame.playerStates.player1.score,
-            player2: nextGame.playerStates.player2.score,
-            player3: nextGame.playerStates.player3.score
-          };
-          
-          // Find winner
-          const maxScore = Math.max(scores.player1, scores.player2, scores.player3);
-          const winners = [];
-          if (scores.player1 === maxScore && nextGame.players.player1) winners.push('player1');
-          if (scores.player2 === maxScore && nextGame.players.player2) winners.push('player2');
-          if (scores.player3 === maxScore && nextGame.players.player3) winners.push('player3');
-          
-          if (winners.length === 1) {
-            nextGame.winner = winners[0] as 'player1' | 'player2' | 'player3';
-          } else {
-            nextGame.winner = 'draw';
-          }
-          
-          nextGames[gameId] = nextGame;
-          await saveGames(nextGames);
-          
-          return NextResponse.json({ game: nextGame });
-        }
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
-  } catch (error) {
-    console.error('Game API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[POST] Game API error:', error);
+    console.error('[POST] Error stack:', error?.stack);
+    console.error('[POST] Error message:', error?.message);
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error?.message : undefined
+    }, { status: 500 });
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
-    console.log('GET endpoint called');
-    console.log('Request URL:', req.url);
-    
     const { searchParams } = new URL(req.url);
     const gameId = searchParams.get('gameId');
     
-    console.log('GET request for game:', gameId);
+    console.log(`[GET endpoint] Requested gameId: ${gameId}`);
     
     if (!gameId) {
-      console.log('GET error: Game ID is required');
       return NextResponse.json({ error: 'Game ID is required' }, { status: 400 });
     }
 
-    // Load existing games
-    console.log('Loading games from database...');
+    // Load existing games from database
     const games = await loadGames();
-    console.log('Loaded games count:', Object.keys(games).length);
-    console.log('Available game IDs:', Object.keys(games));
+    console.log(`[GET endpoint] Loaded ${Object.keys(games).length} games`);
+    console.log(`[GET endpoint] Looking for gameId: ${gameId}`);
+    console.log(`[GET endpoint] Available gameIds:`, Object.keys(games));
     
     if (!games[gameId]) {
-      console.log('Game not found:', gameId);
-      console.log('Available games:', Object.keys(games));
+      console.log(`[GET endpoint] Game ${gameId} not found in loaded games`);
       return NextResponse.json({ error: 'Game not found' }, { status: 404 });
     }
     
-    console.log('Game found:', gameId, 'status:', games[gameId].status);
+    console.log(`[GET endpoint] Returning game ${gameId}`);
     return NextResponse.json({ game: games[gameId] });
   } catch (error) {
-    console.error('GET endpoint error:', error);
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('[GET endpoint] Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

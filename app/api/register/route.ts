@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
-export const dynamic = 'force-dynamic';
-
 export async function POST(req: NextRequest) {
   console.log('REGISTER API CALLED');
   try {
@@ -33,11 +31,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (err) {
     console.error('REGISTER SERVER ERROR:', err);
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Error details:', errorMessage);
-    return NextResponse.json({ 
-      error: 'Server error', 
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

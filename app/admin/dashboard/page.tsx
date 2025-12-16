@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import useAuthUser from '@/lib/useAuthUser';
+import { useAuthUser } from '@/lib/useAuthUser';
 
 interface DashboardData {
   overview: {

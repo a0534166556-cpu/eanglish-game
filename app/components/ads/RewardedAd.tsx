@@ -50,20 +50,11 @@ export default function RewardedAd({
             amount: rewardAmount
           };
           
-          console.log('🎬 Ad watched completely, giving reward:', reward);
-          
           if (onReward) {
-            try {
-              onReward(reward);
-              console.log('✅ Reward callback executed successfully');
-            } catch (error) {
-              console.error('❌ Error in reward callback:', error);
-            }
-          } else {
-            console.warn('⚠️ No reward callback provided');
+            onReward(reward);
           }
           
-          console.log(`✅ Reward given: ${rewardAmount} ${rewardType}`);
+          console.log(`Reward given: ${rewardAmount} ${rewardType}`);
         }
       }, interval);
       
@@ -89,21 +80,23 @@ export default function RewardedAd({
             </div>
             <p className="text-sm mb-4">{Math.round(adProgress)}%</p>
             
-            {/* AdSense Ad */}
-            {process.env.NEXT_PUBLIC_ADSENSE_REWARDED_VIDEO ? (
-              <div className="bg-white bg-opacity-20 rounded-lg p-6 mb-4 min-h-[300px] flex items-center justify-center">
+            {/* AdSense or Simulated Ad */}
+            <div className="bg-white bg-opacity-20 rounded-lg p-6 mb-4 min-h-[300px] flex items-center justify-center">
+              {testMode || !process.env.NEXT_PUBLIC_ADSENSE_REWARDED_VIDEO ? (
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📺</div>
+                  <p className="text-lg">פרסומת דמו</p>
+                  <p className="text-sm mt-2">בסביבת ייצור, כאן תוצג פרסומת אמיתית</p>
+                </div>
+              ) : (
                 <AdSense
-                  adSlot={process.env.NEXT_PUBLIC_ADSENSE_REWARDED_VIDEO}
+                  adSlot={process.env.NEXT_PUBLIC_ADSENSE_REWARDED_VIDEO || '5555666677'}
                   adFormat="fluid"
                   adStyle={{ display: 'block', width: '100%', height: '400px' }}
                   testMode={testMode}
                 />
-              </div>
-            ) : (
-              <div className="bg-white bg-opacity-20 rounded-lg p-6 mb-4 min-h-[300px] flex items-center justify-center">
-                <p className="text-white/80">טוען פרסומת...</p>
-              </div>
-            )}
+              )}
+            </div>
             
             <p className="text-sm opacity-80">הפרסומת תסתיים אוטומטית בעוד כמה שניות...</p>
           </div>
@@ -126,6 +119,19 @@ export default function RewardedAd({
     );
   }
 
-  // אם הפרסומת כבר נצפתה, לא צריך להציג כלום
-  return null;
+  return (
+    <div className={`rewarded-ad-trigger ${className}`}>
+      <div className="ad-prompt">
+        <h3>🎬 צפו במודעה וקבלו פרס!</h3>
+        <p>קבלו {rewardAmount} {rewardType === 'diamonds' ? 'יהלומים' : rewardType === 'coins' ? 'מטבעות' : 'נקודות'} בחינם!</p>
+        <button
+          onClick={handleWatchAd}
+          disabled={isLoading}
+          className="watch-ad-button"
+        >
+          {isLoading ? 'טוען...' : '🎥 צפו במודעה'}
+        </button>
+      </div>
+    </div>
+  );
 }

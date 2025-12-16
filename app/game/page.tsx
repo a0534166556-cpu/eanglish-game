@@ -44,133 +44,6 @@ const joinGame = async (gameId: string, userId: string, userName: string) => {
   return true;
 };
 
-function GameBoardWrapper({ gameId, user }: { gameId: string; user: any }) {
-  const [game, setGame] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchGame = async () => {
-      try {
-        const response = await fetch(`/api/games/word-clash?gameId=${gameId}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (isMounted) {
-            setGame(data.game);
-            setError(null);
-          }
-        } else {
-          const errorData = await response.json().catch(() => ({ error: 'Failed to load game' }));
-          if (isMounted) {
-            setError(errorData.error || 'שגיאה בטעינת המשחק');
-            setLoading(false);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching game:', err);
-        if (isMounted) {
-          setError('שגיאה בחיבור לשרת');
-          setLoading(false);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchGame();
-    const interval = setInterval(fetchGame, 2000); // עדכון כל 2 שניות
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [gameId]);
-
-  if (loading && !game) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-xl text-gray-600">טוען משחק...</p>
-      </div>
-    );
-  }
-
-  if (error && !game) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg max-w-md text-center">
-          <h3 className="text-lg font-bold mb-2">שגיאה בטעינת המשחק</h3>
-          <p className="mb-4">{error}</p>
-          <button
-            onClick={() => window.location.href = '/games/word-clash'}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            חזרה לדף המשחק
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!game) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-6 py-4 rounded-lg max-w-md text-center">
-          <h3 className="text-lg font-bold mb-2">המשחק לא נמצא</h3>
-          <p className="mb-4">המשחק עם ה-ID הזה לא קיים או נמחק.</p>
-          <button
-            onClick={() => window.location.href = '/games/word-clash'}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            חזרה לדף המשחק
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // זיהוי השחקן לפי ה-ID שלו במשחק
-  let currentPlayerSymbol: 'player1' | 'player2' = 'player1';
-  if (game.players.player1 === user.id) {
-    currentPlayerSymbol = 'player1';
-  } else if (game.players.player2 === user.id) {
-    currentPlayerSymbol = 'player2';
-  }
-
-  return (
-    <div className="flex flex-col gap-4 w-full max-w-4xl">
-      {/* Game ID Display */}
-      <div className="bg-blue-100 border border-blue-300 rounded-lg p-4 text-center">
-        <h3 className="text-lg font-bold text-blue-800 mb-2">Game ID</h3>
-        <div className="bg-white p-3 rounded border font-mono text-lg break-all">
-          {gameId}
-        </div>
-        <p className="text-sm text-blue-600 mt-2">
-          {game.status === 'waiting' ? 'שתף את ה-ID הזה עם השחקן השני' : 'המשחק פעיל!'}
-        </p>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText(gameId);
-            alert('Game ID הועתק!');
-          }}
-          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          העתק Game ID
-        </button>
-      </div>
-      
-      <GameBoard
-        gameId={gameId}
-        currentPlayerId={user.id}
-        currentPlayerSymbol={currentPlayerSymbol}
-      />
-    </div>
-  );
-}
-
 function GamePageContent() {
   const { user, loading } = useAuthUser();
   const router = useRouter();
@@ -178,127 +51,88 @@ function GamePageContent() {
   const [gameId, setGameId] = useState<string>('');
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPlayerSymbol, setCurrentPlayerSymbol] = useState<'player1' | 'player2'>('player1');
+  const [gameData, setGameData] = useState<any>(null);
 
   // בדיקה אם המשתמש הגיע עם gameId מה-URL
   useEffect(() => {
     const urlGameId = searchParams?.get('gameId');
     const joined = searchParams?.get('joined');
+    const creator = searchParams?.get('creator');
     
-    if (urlGameId && user) {
+    if (urlGameId) {
       setGameId(urlGameId);
-      // אם המשתמש הצטרף למשחק, ננסה להתחבר אוטומטית
-      if (joined === 'true') {
-        handleAutoJoin(urlGameId);
+      // אם המשתמש הוא יוצר המשחק או הצטרף למשחק, ננסה להתחבר אוטומטית
+      if (user && (creator === 'true' || joined === 'true')) {
+        handleAutoJoinAsCreator(urlGameId);
+      } else if (creator === 'true' && !user) {
+        // אם המשתמש הוא יוצר המשחק אבל עדיין לא נטען, נחכה לו
+        // ה-useEffect יקרא שוב כש-user יהיה מוכן
       }
-      // לא נכנסים אוטומטית - המשתמש צריך להצטרף ידנית
     }
   }, [searchParams, user]);
 
-  const handleAutoJoin = async (gameIdToJoin: string) => {
-    if (!user) {
-      console.log('No user, cannot auto-join');
-      return;
-    }
-    
-    try {
-      console.log('Auto joining game:', gameIdToJoin, 'for user:', user.id, user.name);
-      const response = await fetch('/api/games/word-clash', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'join',
-          gameId: gameIdToJoin,
-          playerId: user.id,
-          playerName: user.name || user.email || 'Player'
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Failed to join game:', response.status, errorData);
-        // אם המשחק כבר מלא או שהמשתמש כבר במשחק, זה בסדר
-        if (errorData.error?.includes('full') || errorData.error?.includes('already')) {
-          console.log('Game is full or user already in game, continuing...');
-          setError(null);
-        } else {
-          setError(errorData.error || 'Failed to join game');
-        }
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('Successfully auto-joined game:', data);
-      setError(null);
-    } catch (err) {
-      console.error('Error auto-joining game:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to join game';
-      setError(errorMessage);
-    }
-  };
-
   const handleAutoJoinAsCreator = async (gameIdToJoin: string) => {
     if (!user) {
-      console.log('No user, cannot check/join as creator');
+      console.log('User not ready yet, waiting...');
       return;
     }
     
     try {
-      // בדוק אם המשחק קיים ואם המשתמש הוא player1
+      // ראשית, נבדוק אם המשתמש כבר במשחק
       const response = await fetch(`/api/games/word-clash?gameId=${gameIdToJoin}`);
       if (response.ok) {
         const data = await response.json();
         const game = data.game;
+        setGameData(game); // שמור את נתוני המשחק
         
-        console.log('Game data:', game);
-        console.log('User ID:', user.id);
-        console.log('Player1:', game.players.player1);
-        console.log('Player2:', game.players.player2);
+        // בדוק אם המשתמש הוא player1 (יוצר המשחק)
+        if (game.players.player1 && game.players.player1 === user.id) {
+          console.log('User is already player1 in the game, no need to join');
+          setCurrentPlayerSymbol('player1');
+          setError(null);
+          // המשתמש כבר במשחק, אז פשוט נציג את המשחק
+          // ה-GameBoard יטען את המשחק אוטומטית
+          return;
+        }
         
-        // אם המשתמש הוא player1, הוא כבר במשחק - אין צורך להצטרף שוב
-        if (game.players.player1 === user.id) {
-          console.log('User is already player1 in this game, no need to join');
+        // בדוק אם המשתמש הוא player2
+        if (game.players.player2 && game.players.player2 === user.id) {
+          console.log('User is already player2 in the game, no need to join');
+          setCurrentPlayerSymbol('player2');
           setError(null);
           return;
         }
         
-        // אם המשתמש הוא player2, הוא כבר במשחק - אין צורך להצטרף שוב
-        if (game.players.player2 === user.id) {
-          console.log('User is already player2 in this game, no need to join');
-          setError(null);
-          return;
-        }
+        // אם המשתמש לא במשחק, נצטרף
+        console.log('Auto joining game as creator:', gameIdToJoin, 'for user:', user.id, user.name);
+        await joinGame(gameIdToJoin, user.id, user.name);
+        console.log('Successfully auto-joined game');
         
-        // אם המשחק עדיין מחכה לשחקן שני והמשתמש לא במשחק, נצטרף
-        if (game.status === 'waiting' && !game.players.player2) {
-          console.log('Game is waiting for player2, joining as player2');
-          const joinResponse = await fetch('/api/games/word-clash', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'join',
-              gameId: gameIdToJoin,
-              playerId: user.id,
-              playerName: user.name || user.email || 'Player'
-            })
-          });
+        // טען שוב את המשחק כדי לקבל את הנתונים המעודכנים
+        const updatedResponse = await fetch(`/api/games/word-clash?gameId=${gameIdToJoin}`);
+        if (updatedResponse.ok) {
+          const updatedData = await updatedResponse.json();
+          const updatedGame = updatedData.game;
+          setGameData(updatedGame);
           
-          if (!joinResponse.ok) {
-            const errorData = await joinResponse.json();
-            console.error('Failed to join game as creator:', joinResponse.status, errorData);
-            setError(errorData.error || 'Failed to join game');
-          } else {
-            console.log('Successfully joined game as creator');
-            setError(null);
+          // זהה את השחקן
+          if (updatedGame.players.player1 === user.id) {
+            setCurrentPlayerSymbol('player1');
+          } else if (updatedGame.players.player2 === user.id) {
+            setCurrentPlayerSymbol('player2');
           }
         }
+        
+        setError(null);
       } else {
-        const errorData = await response.json();
-        console.error('Failed to get game:', response.status, errorData);
-        setError(errorData.error || 'Failed to load game');
+        const errorText = await response.text();
+        console.error('Failed to fetch game:', response.status, errorText);
+        setError('Failed to load game');
       }
     } catch (err) {
-      console.error('Error checking/joining game as creator:', err);
-      setError(err instanceof Error ? err.message : 'Failed to check game');
+      console.error('Error auto-joining game:', err);
+      setError(err instanceof Error ? err.message : 'Failed to join game');
     }
   };
 
@@ -313,13 +147,6 @@ function GamePageContent() {
       const newGameId = await createGame(user.id, user.name);
       console.log('Created game with ID:', newGameId);
       setGameId(newGameId);
-      // Automatically join the game as creator
-      try {
-        await joinGame(newGameId, user.id, user.name);
-        console.log('Creator automatically joined the game');
-      } catch (err) {
-        console.error('Error auto-joining as creator:', err);
-      }
       setError(null);
     } catch (err) {
       console.error('Error creating game:', err);
@@ -420,7 +247,33 @@ function GamePageContent() {
           </button>
         </div>
       ) : (
-        <GameBoardWrapper gameId={gameId} user={user} />
+        <div className="flex flex-col gap-4 w-full max-w-4xl">
+          {/* Game ID Display */}
+          <div className="bg-blue-100 border border-blue-300 rounded-lg p-4 text-center">
+            <h3 className="text-lg font-bold text-blue-800 mb-2">Game ID</h3>
+            <div className="bg-white p-3 rounded border font-mono text-lg break-all">
+              {gameId}
+            </div>
+            <p className="text-sm text-blue-600 mt-2">
+              שתף את ה-ID הזה עם השחקן השני
+            </p>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(gameId);
+                alert('Game ID הועתק!');
+              }}
+              className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              העתק Game ID
+            </button>
+          </div>
+          
+          <GameBoard
+            gameId={gameId}
+            currentPlayerId={user.id}
+            currentPlayerSymbol={currentPlayerSymbol}
+          />
+        </div>
       )}
     </div>
   );

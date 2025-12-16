@@ -253,38 +253,34 @@ function SentenceBuilderGame() {
       localStorage.setItem(`sb-totalTime-${difficulty}`, String(totalTime + timer * questions.length));
       localStorage.setItem(`sb-correctCount-${difficulty}`, String(correctCount + (score > 0 ? 1 : 0)));
       
-      // עדכון ניקוד במסד נתונים - השתמש ב-update-stats API
+      // עדכון ניקוד במסד נתונים
       const userStr = localStorage.getItem('user');
       if (userStr) {
         const user = JSON.parse(userStr);
         
-        // הגבל את הניקוד המקסימלי למשחק - מקסימום 1000 נקודות
-        const maxScorePerGame = 1000;
-        const cappedScore = Math.min(score, maxScorePerGame);
-        
-        // עדכון ניקוד במסד נתונים דרך update-stats API
-        fetch('/api/games/update-stats', {
-          method: 'POST',
+        // עדכון ניקוד במסד נתונים
+        fetch(`/api/user/${user.id}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: user.id,
-            gameName: 'sentence-builder',
-            score: cappedScore,
-            won: score > 0,
-            correctAnswers: score > 0 ? 1 : 0,
-            totalQuestions: 1
+            points: user.points + score,
+            gamesPlayed: user.gamesPlayed + 1,
+            gamesWon: user.gamesWon + (score > 0 ? 1 : 0)
           })
-        }).then(async (response) => {
-          if (response.ok) {
-            const data = await response.json();
-            // עדכון localStorage עם הנתונים המעודכנים
-            if (data.user) {
-              localStorage.setItem('user', JSON.stringify(data.user));
-            }
-          }
-        }).catch(error => {
-          console.error('Error updating stats:', error);
+        }).then(() => {
+          // עדכון רמה
+          fetch('/api/user/update-rank', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id })
+          });
         });
+        
+        // עדכון localStorage
+        user.points += score;
+        user.gamesPlayed += 1;
+        if (score > 0) user.gamesWon += 1;
+        localStorage.setItem('user', JSON.stringify(user));
       }
       
       // Leaderboard

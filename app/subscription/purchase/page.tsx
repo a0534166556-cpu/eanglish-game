@@ -12,11 +12,14 @@ export default function PurchaseSubscriptionPage() {
     {
       id: 'basic',
       name: 'Basic',
-      price: 10.00,
+      price: 19.90,
       currency: 'ILS',
       period: 'חודש',
       features: [
-        'ביטול פרסומות במשחקים'
+        'גישה לכל המשחקים הבסיסיים',
+        'ביטול פרסומות במשחקים',
+        'פרופיל מותאם אישית',
+        'מעקב אחר התקדמות'
       ],
       color: 'from-blue-400 to-blue-600',
       icon: '🌟',
@@ -32,7 +35,7 @@ export default function PurchaseSubscriptionPage() {
         'כל התכונות של Basic',
         'גישה למשחק Word Clash',
         'תכונות מתקדמות בבית הוירטואלי',
-        '50% הנחה על כל הפריטים בבית הוירטואלי ובחנות',
+        'פריטים אקסקלוסיביים בחנות',
         'עדיפות בתמיכה'
       ],
       color: 'from-purple-400 to-purple-600',
@@ -48,7 +51,6 @@ export default function PurchaseSubscriptionPage() {
       features: [
         'כל התכונות של Premium',
         'חיסכון של 16% לעומת תשלום חודשי',
-        '50% הנחה על כל הפריטים בבית הוירטואלי ובחנות',
         'גישה מוקדמת לתכונות חדשות',
         'תמיכה עדיפות 24/7',
         'הטבות בלעדיות'
@@ -60,13 +62,21 @@ export default function PurchaseSubscriptionPage() {
   ];
 
   const handlePurchase = async () => {
-    if (!selectedPlan) {
-      alert('אנא בחר תוכנית מנוי');
-      return;
-    }
+    setIsLoading(true);
     
-    // מעבר לדף התשלום עם פרמטר התוכנית שנבחרה
-    router.push(`/subscription/payment?plan=${selectedPlan}`);
+    try {
+      // כאן יהיה הלוגיקה של רכישת המנוי
+      // כרגע נפנה לדף ניהול המנויים
+      setTimeout(() => {
+        setIsLoading(false);
+        router.push('/subscription');
+      }, 2000);
+      
+      // TODO: הוסף אינטגרציה עם מערכת תשלומים אמיתית
+    } catch (error) {
+      console.error('Error purchasing subscription:', error);
+      setIsLoading(false);
+    }
   };
 
   return (

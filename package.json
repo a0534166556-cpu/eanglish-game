@@ -8,10 +8,13 @@
   },
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
+    "dev:clean": "powershell -ExecutionPolicy Bypass -File ./clean-and-run.ps1",
     "build": "prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
+    "db:push": "prisma db push",
+    "add-subscription": "node scripts/add-subscription.js",
     "test:performance": "node scripts/performance-test.js",
     "test:security": "node scripts/security-test.js",
     "test:scalability": "node scripts/scalability-test.js",
@@ -29,7 +32,6 @@
     "@types/axios": "^0.9.36",
     "@types/nodemailer": "^7.0.1",
     "@types/recharts": "^1.8.29",
-    "autoprefixer": "^10.4.17",
     "axios": "^1.12.2",
     "bcryptjs": "^3.0.2",
     "canvas-confetti": "^1.9.3",
@@ -38,7 +40,6 @@
     "mysql2": "^3.14.1",
     "next": "^14.1.0",
     "nodemailer": "^7.0.6",
-    "postcss": "^8.4.35",
     "prisma": "^6.16.2",
     "react": "^18",
     "react-dom": "^18",
@@ -49,7 +50,6 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "stripe": "^18.5.0",
-    "tailwindcss": "^3.4.1",
     "zustand": "^4.4.6"
   },
   "devDependencies": {
@@ -58,8 +58,11 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.17",
     "eslint": "^8",
     "eslint-config-next": "14.1.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }
 }

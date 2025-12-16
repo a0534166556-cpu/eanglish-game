@@ -648,7 +648,7 @@ function SentenceScramble() {
     const isCorrect = selected.join(' ') === questions[currentIdx].text;
     
     if (isCorrect) {
-      setScore((s) => s + 3); // 3 נקודות לתשובה נכונה
+      setScore((s) => s + 10);
       setFeedback('נכון!');
       if (successAudio.current) {
         successAudio.current.currentTime = 0;

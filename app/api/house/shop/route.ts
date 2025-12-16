@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, itemId, houseId } = await request.json();
+    const { userId, itemId } = await request.json();
 
     if (!userId || !itemId) {
       return NextResponse.json(
@@ -70,31 +70,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // בדיקת מנוי Premium להנחה של 50%
-    const subscription = await prisma.subscription.findFirst({
-      where: {
-        userId: userId,
-        status: 'active',
-        plan: { in: ['premium', 'yearly'] }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    // בדיקה אם המנוי עדיין פעיל
-    let isPremium = false;
-    if (subscription) {
-      const now = new Date();
-      const endDate = new Date(subscription.endDate);
-      if (endDate > now) {
-        isPremium = true;
-      }
-    }
-
-    // חישוב מחיר עם הנחה של 50% למנוי Premium
-    const finalPrice = isPremium ? Math.floor(shopItem.price * 0.5) : shopItem.price;
-
     // בדיקה אם למשתמש יש מספיק יהלומים
-    if (user.diamonds < finalPrice) {
+    if (user.diamonds < shopItem.price) {
       return NextResponse.json(
         { error: 'Insufficient diamonds' },
         { status: 400 }
@@ -110,20 +87,15 @@ export async function POST(request: NextRequest) {
     else if (shopItem.name.includes('ארון')) defaultScale = 2.0;
     else if (shopItem.name.includes('כיסא')) defaultScale = 1.8;
     
-    // מצא את הבית הנוכחי של המשתמש
-    // אם המשתמש שולח houseId, השתמש בו; אחרת, מצא את הבית ברירת המחדל
-    let targetHouseId = houseId;
-    
-    if (!targetHouseId) {
-      const currentHouse = await prisma.house.findFirst({
-        where: { userId },
-        orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }]
-      });
-      targetHouseId = currentHouse?.id;
-    }
+    // מצא את הבית הנוכחי של המשתמש (ברירת מחדל או הראשון)
+    const currentHouse = await prisma.house.findFirst({
+      where: { userId },
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }]
+    });
 
     // אם אין בית, צור בית ברירת מחדל
-    if (!targetHouseId) {
+    let houseId = currentHouse?.id;
+    if (!houseId) {
       const newHouse = await prisma.house.create({
         data: {
           userId,
@@ -131,14 +103,14 @@ export async function POST(request: NextRequest) {
           isDefault: true
         }
       });
-      targetHouseId = newHouse.id;
+      houseId = newHouse.id;
     }
 
     // רכישת הפריט
     const houseItem = await prisma.houseItem.create({
       data: {
         userId,
-        houseId: targetHouseId,
+        houseId: houseId,
         shopItemId: itemId,
         positionX: 0,
         positionY: 0,
@@ -148,21 +120,18 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // הפחתת יהלומים מהמשתמש (עם הנחה אם יש מנוי Premium)
+    // הפחתת יהלומים מהמשתמש
     await prisma.user.update({
       where: { id: userId },
       data: {
-        diamonds: user.diamonds - finalPrice
+        diamonds: user.diamonds - shopItem.price
       }
     });
 
     return NextResponse.json({
       success: true,
       houseItem,
-      remainingDiamonds: user.diamonds - finalPrice,
-      originalPrice: shopItem.price,
-      finalPrice: finalPrice,
-      discount: isPremium ? 50 : 0
+      remainingDiamonds: user.diamonds - shopItem.price
     });
 
   } catch (error) {

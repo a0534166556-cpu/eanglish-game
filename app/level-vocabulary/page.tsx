@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AdManager from '@/app/components/ads/AdManager';
 
@@ -1887,7 +1887,7 @@ const DIFFICULTY_LEVELS = {
   }
 };
 
-function LevelVocabularyPageContent() {
+export default function LevelVocabularyPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const level = searchParams?.get('level') || 'easy';
@@ -2002,14 +2002,6 @@ function LevelVocabularyPageContent() {
           </div>
         </div>
       </div>
-  );
-}
-
-export default function LevelVocabularyPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">טוען...</div>}>
-      <LevelVocabularyPageContent />
-    </Suspense>
   );
 }
 

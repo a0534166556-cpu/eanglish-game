@@ -1800,6 +1800,8 @@ const SHOP_ITEMS = [
   { id: 'wisdom_crystal', name: 'קריסטל חכמה', icon: '💎', price: 1000, description: 'השג חכמה נוספת למשחק', effect: 'wisdom', count: 1 },
   { id: 'master_key', name: 'מפתח מאסטר', icon: '🗝️', price: 1200, description: 'פתח את כל הקטגוריות', effect: 'master_unlock', permanent: true },
   { id: 'legendary_boost', name: 'בוסט אגדי', icon: '🌟', price: 1500, description: 'בוסט מיוחד לכל המשחק', effect: 'legendary', count: 1 },
+  // גלגל מזל – כרטיס לסיבוב אחד של הגלגל
+  { id: 'fortune_wheel', name: 'גלגל מזל', icon: '🎡', price: 400, description: 'כרטיס לסיבוב גלגל מזל עם פרסים: מטבעות, יהלומים, תג, אווטאר ו-XP', effect: 'fortune_wheel', count: 1 },
 ];
 
 const DAILY_CHALLENGES = [
@@ -1991,6 +1993,9 @@ export default function MixedQuizGame() {
   const [inventory, setInventory] = useState<{[key: string]: number}>({});
   const [showShop, setShowShop] = useState<boolean>(false);
   const [activeItems, setActiveItems] = useState<string[]>([]);
+  const [showFortuneWheel, setShowFortuneWheel] = useState<boolean>(false);
+  const [isSpinningWheel, setIsSpinningWheel] = useState<boolean>(false);
+  const [wheelRewardText, setWheelRewardText] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [xp, setXp] = useState<number>(0);
   const [achievements, setAchievements] = useState<string[]>([]);
@@ -2106,7 +2111,8 @@ export default function MixedQuizGame() {
 
   useEffect(() => {
     const diff = difficulties.find(d => d.key === difficulty)!;
-    setQuestions(pickQuestions(QUESTIONS, lang, diff.count, category));
+    const newQuestions = pickQuestions(QUESTIONS, lang, diff.count, category);
+    setQuestions(newQuestions);
     setCurrent(0);
     setScore(0);
     setSelected(null);
@@ -2127,8 +2133,8 @@ export default function MixedQuizGame() {
     setMistakeQuestions(mistakes);
     setCountdown(getInitialTime(difficulty));
     setTimeUp(false);
-    if (questions.length > 0) {
-      const idx = Math.floor(Math.random() * questions.length);
+    if (newQuestions.length > 0) {
+      const idx = Math.floor(Math.random() * newQuestions.length);
       setGoldenIdx(idx);
     }
   }, [difficulty, lang, category]);
@@ -2141,14 +2147,20 @@ export default function MixedQuizGame() {
 
   useEffect(() => {
     if (finished || timeUp || pauseTimer) return;
-    if (countdown <= 0) {
-      setTimeUp(true);
-      setFinished(true);
-      return;
-    }
-    const interval = setInterval(() => setCountdown(t => t - 1), 1000);
+    
+    const interval = setInterval(() => {
+      setCountdown(t => {
+        if (t <= 1) {
+          setTimeUp(true);
+          setFinished(true);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    
     return () => clearInterval(interval);
-  }, [finished, timeUp, countdown, pauseTimer]);
+  }, [finished, timeUp, pauseTimer]);
 
   useEffect(() => {
     if (feedback === 'correct') {
@@ -2164,10 +2176,44 @@ export default function MixedQuizGame() {
         return newAmount;
       });
 
-      // Check for achievements
-      checkAchievements();
+      // Check for achievements - use current values from closure
+      const newAchievements: string[] = [];
+      if (!achievements.includes('first_win') && stats.correct > 0) {
+        newAchievements.push('first_win');
+      }
+      if (!achievements.includes('perfect_game') && stats.total >= 5 && stats.correct === stats.total) {
+        newAchievements.push('perfect_game');
+      }
+      if (!achievements.includes('marathon_master') && marathon && stats.correct >= 10) {
+        newAchievements.push('marathon_master');
+      }
+      
+      if (newAchievements.length > 0) {
+        setAchievements(prev => {
+          const updated = [...prev, ...newAchievements];
+          localStorage.setItem('quiz-achievements', JSON.stringify(updated));
+          return updated;
+        });
+
+        const totalReward = newAchievements.reduce((sum, id) => {
+          const achievement = ACHIEVEMENTS.find(a => a.id === id);
+          return sum + (achievement?.reward || 0);
+        }, 0);
+
+        if (totalReward > 0) {
+          setCoins(c => {
+            const newAmount = c + totalReward;
+            localStorage.setItem('quiz-coins', newAmount.toString());
+            return newAmount;
+          });
+        }
+
+        const lastAchieved = ACHIEVEMENTS.find(a => a.id === newAchievements[newAchievements.length - 1]) || null;
+        setLastAchievement(lastAchieved);
+        setTimeout(() => setLastAchievement(null), 3000);
+      }
     }
-  }, [feedback]);
+  }, [feedback, stats, difficulty, isVip, achievements, marathon]);
 
   // Update daily challenges progress
   useEffect(() => {
@@ -2242,7 +2288,7 @@ export default function MixedQuizGame() {
         return updated;
       });
     }
-  }, [feedback]);
+  }, [feedback, timer, category, marathon]);
 
   function handleSelect(idx: number) {
     if (selected !== null) return;
@@ -2265,8 +2311,8 @@ export default function MixedQuizGame() {
 
     const isCorrect = idx === shuffledAnswerIdx;
     if (isCorrect) {
-      // 3 נקודות בסיסיות לתשובה נכונה
-      const basePoints = 3;
+      // הגבלת נקודות - מקסימום 10 נקודות לשאלה (בלי בונוסים)
+      const basePoints = 10;
       let finalPoints = basePoints;
 
       if (activeItems.includes('double_points')) {
@@ -2281,9 +2327,9 @@ export default function MixedQuizGame() {
       const isGolden = current === goldenIdx;
       if (isGolden) finalPoints *= 2;
       
-      // הגבלת נקודות מקסימליות לשאלה - מקסימום 3 נקודות בסיסיות (בלי בונוסים)
-      // זה מבטיח שמשחק מרתון עם 50 שאלות ייתן מקסימום 150 נקודות (50 * 3)
-      finalPoints = Math.min(finalPoints, 3);
+      // הגבלת נקודות מקסימליות לשאלה - מקסימום 10 נקודות (בלי בונוסים)
+      // זה מבטיח שמשחק מרתון עם 50 שאלות ייתן מקסימום 500 נקודות
+      finalPoints = Math.min(finalPoints, 10);
 
       setScore(s => s + finalPoints);
       if (isGolden) {
@@ -2462,7 +2508,81 @@ export default function MixedQuizGame() {
       case 'category_unlock':
         // Unlock new category logic
         break;
+      case 'fortune_wheel':
+        // נשתמש בגלגל מזל דרך פונקציה ייעודית (spinFortuneWheel)
+        setShowFortuneWheel(true);
+        break;
     }
+  }
+
+  // גלגל מזל – סיבוב פרסים אקראיים
+  function spinFortuneWheel() {
+    if (isSpinningWheel) return;
+    if (!inventory['fortune_wheel'] || inventory['fortune_wheel'] <= 0) return;
+
+    setIsSpinningWheel(true);
+    setWheelRewardText(null);
+
+    // רשימת פרסים אפשריים
+    const rewards = [
+      { type: 'coins', amount: 150, label: '150 מטבעות' },
+      { type: 'coins', amount: 300, label: '300 מטבעות' },
+      { type: 'diamonds', amount: 30, label: '30 יהלומים' },
+      { type: 'xp', amount: 250, label: '250 XP' },
+      { type: 'tag', id: 'lucky_star', label: 'תג מיוחד ⭐ בן מזל' },
+      { type: 'avatar', id: 'lucky_avatar', label: 'אווטאר מיוחד 🎭 בן מזל' },
+    ];
+
+    const reward = rewards[Math.floor(Math.random() * rewards.length)];
+
+    // הורד כרטיס גלגל מהמלאי
+    setInventory(prev => {
+      const currentCount = prev['fortune_wheel'] || 0;
+      const newInv = { ...prev, fortune_wheel: Math.max(0, currentCount - 1) };
+      localStorage.setItem('quiz-inventory', JSON.stringify(newInv));
+      return newInv;
+    });
+
+    // דמיין סיבוב של הגלגל
+    setTimeout(() => {
+      // החלת הפרס
+      if (reward.type === 'coins') {
+        setCoins(c => {
+          const newAmount = c + (reward.amount || 0);
+          localStorage.setItem('quiz-coins', newAmount.toString());
+          return newAmount;
+        });
+      } else if (reward.type === 'diamonds') {
+        try {
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            const userObj = JSON.parse(userStr);
+            userObj.diamonds = (userObj.diamonds || 0) + (reward.amount || 0);
+            localStorage.setItem('user', JSON.stringify(userObj));
+            // לעדכן רכיבים אחרים שמאזינים ל-localStorage
+            window.dispatchEvent(new StorageEvent('storage', { key: 'user', newValue: JSON.stringify(userObj) } as any));
+          }
+        } catch {}
+      } else if (reward.type === 'xp') {
+        setXp(x => {
+          const newXp = x + (reward.amount || 0);
+          localStorage.setItem('quiz-xp', newXp.toString());
+          return newXp;
+        });
+      } else if (reward.type === 'tag' && reward.id) {
+        setActiveTags(prev => {
+          const updated = Array.from(new Set([...(prev || []), reward.id!]));
+          localStorage.setItem('quiz-tags', JSON.stringify(updated));
+          return updated;
+        });
+      } else if (reward.type === 'avatar' && reward.id) {
+        setActiveAvatar(reward.id);
+        localStorage.setItem('quiz-avatar', reward.id);
+      }
+
+      setWheelRewardText(reward.label);
+      setIsSpinningWheel(false);
+    }, 1500);
   }
 
   function checkAchievements() {
@@ -2660,6 +2780,12 @@ export default function MixedQuizGame() {
       case 'vip_pass':
         setIsVip(true);
         setBonus({ points: 0, message: '👑 VIP הופעל!' });
+        setTimeout(() => setBonus(null), 2000);
+        break;
+      case 'fortune_wheel':
+        // שימוש בכרטיס גלגל מזל – פתח את אזור הגלגל
+        setShowFortuneWheel(true);
+        setBonus({ points: 0, message: '🎡 גלגל המזל מוכן לסיבוב!' });
         setTimeout(() => setBonus(null), 2000);
         break;
     }
@@ -3033,6 +3159,38 @@ export default function MixedQuizGame() {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* גלגל מזל – זמין רק אם יש כרטיסים במלאי */}
+              <div className="bg-gradient-to-r from-pink-100 to-red-100 p-4 rounded-xl border-2 border-pink-300">
+                <h3 className="text-xl font-bold text-pink-800 mb-4 flex items-center gap-2">
+                  <span className="text-2xl">🎡</span>
+                  גלגל מזל
+                </h3>
+                <p className="text-sm text-gray-700 mb-2">
+                  קנה בחנות את הפריט <strong>\"גלגל מזל\"</strong> כדי לקבל כרטיסי סיבוב. כל סיבוב יכול לתת מטבעות, יהלומים, תג מיוחד, אוואטר מיוחד או XP.
+                </p>
+                <p className="text-sm text-blue-700 mb-4">
+                  כרטיסים ברשותך: <strong>{inventory['fortune_wheel'] || 0}</strong>
+                </p>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={spinFortuneWheel}
+                    disabled={(inventory['fortune_wheel'] || 0) <= 0 || isSpinningWheel}
+                    className={`px-6 py-3 rounded-full font-bold text-white shadow-lg transition-all duration-200 ${
+                      (inventory['fortune_wheel'] || 0) > 0 && !isSpinningWheel
+                        ? 'bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600'
+                        : 'bg-gray-300 cursor-not-allowed'
+                    }`}
+                  >
+                    {isSpinningWheel ? '🎡 מסתובב...' : '🎡 סובב את גלגל המזל'}
+                  </button>
+                  {wheelRewardText && (
+                    <div className="text-sm font-semibold text-pink-800">
+                      זכית ב: {wheelRewardText}
+                    </div>
+                  )}
                 </div>
               </div>
               {/* הצג רמז בודד כפריט עצמאי אם יש במלאי */}

@@ -3,9 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getRankByPoints, getRankByUserStats, calculateTotalScore, calculateProgress, calculateRankProgress, RANKS, RankInfo, calculateLevelProgress, canLevelUp, calculateLevelRequirements } from '@/lib/rankSystem';
+import { getRankByPoints, calculateTotalScore, calculateProgress, RANKS, RankInfo, calculateLevelProgress, canLevelUp } from '@/lib/rankSystem';
 import RankUpModal from '@/app/components/common/RankUpModal';
-import LevelUpModal from '@/app/components/common/LevelUpModal';
 
 interface UserData {
   id: string;
@@ -38,8 +37,6 @@ export default function ProfilePage() {
   const [ownedTags, setOwnedTags] = useState<string[]>([]);
   const [achievementsXP, setAchievementsXP] = useState<number>(0);
   const [completedAchievementsCount, setCompletedAchievementsCount] = useState<number>(0);
-  const [showLevelUpModal, setShowLevelUpModal] = useState(false);
-  const [levelUpData, setLevelUpData] = useState<{ oldLevel: number; newLevel: number } | null>(null);
   
   // Debug state changes
   useEffect(() => {
@@ -189,12 +186,6 @@ export default function ProfilePage() {
       const response = await fetch(`/api/user/${userId}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('📊 Fetched user data from API:', {
-          level: data.level,
-          points: data.points,
-          gamesPlayed: data.gamesPlayed,
-          gamesWon: data.gamesWon
-        });
         setUserData(data);
         
         // עדכן אווטארים ותגים מה-DB
@@ -235,37 +226,28 @@ export default function ProfilePage() {
           console.log('⚠️ No ownedTags in fetchUserData, keeping current state');
         }
         
-        // טען הישגים שהושלמו
-        let completedCount = 0;
-        try {
-          const achievementsResponse = await fetch(`/api/achievements?userId=${userId}&sync=true`);
-          if (achievementsResponse.ok) {
-            const achievementsData = await achievementsResponse.json();
-            completedCount = achievementsData.completedAchievementsCount || 0;
-            setCompletedAchievementsCount(completedCount);
-          }
-        } catch (error) {
-          console.error('Failed to fetch achievements:', error);
-        }
-        
-        // חשב דרגה נוכחית - לפי כל הנתונים (נקודות, משחקים, ניצחונות, הישגים)
+        // חשב דרגה נוכחית - רק לפי נקודות בסיסיות, לא כולל בונוסים
+        // זה מבטיח שהדרגה תהיה הגיונית לפי הפעילות האמיתית
         const basePoints = data.points || 0;
-        const rank = getRankByUserStats({
-          points: basePoints,
-          gamesPlayed: data.gamesPlayed || 0,
-          gamesWon: data.gamesWon || 0,
-          completedAchievementsCount: completedCount
-        });
-        // חשב התקדמות לדרגה הבאה לפי כל הנתונים
-        const progress = calculateRankProgress({
-          points: basePoints,
-          gamesPlayed: data.gamesPlayed || 0,
-          gamesWon: data.gamesWon || 0,
-          completedAchievementsCount: completedCount
-        });
+        const rank = getRankByPoints(basePoints);
+        const progress = calculateProgress(basePoints);
         
         setCurrentRank(rank);
         setRankProgress(progress);
+        
+        // טען הישגים כדי לחשב achievementsXP ומספר הישגים שהושלמו
+        try {
+          const achievementsResponse = await fetch(`/api/achievements?userId=${userId}`);
+          if (achievementsResponse.ok) {
+            const achievementsData = await achievementsResponse.json();
+            const completedAchievements = achievementsData.achievements?.filter((a: any) => a.isCompleted) || [];
+            const totalXP = completedAchievements.reduce((sum: number, a: any) => sum + (a.xpReward || 0), 0);
+            setAchievementsXP(totalXP);
+            setCompletedAchievementsCount(completedAchievements.length);
+          }
+        } catch (error) {
+          console.error('Error loading achievements:', error);
+        }
         
         // Update user state and localStorage with fresh data
         if (user) {
@@ -280,108 +262,27 @@ export default function ProfilePage() {
           setUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
           console.log('Profile - Updated user data from database:', updatedUser);
-        }
-        
-        // טען הישגים כדי לחשב achievementsXP ומספר הישגים שהושלמו
-        // ואז בדוק אם המשתמש יכול לעלות רמה
-        try {
-          const achievementsResponse = await fetch(`/api/achievements?userId=${userId}`);
-          if (achievementsResponse.ok) {
-            const achievementsData = await achievementsResponse.json();
-            const completedAchievements = achievementsData.achievements?.filter((a: any) => a.isCompleted) || [];
-            const totalXP = completedAchievements.reduce((sum: number, a: any) => sum + (a.xpReward || 0), 0);
-            const completedCount = completedAchievements.length;
-            setAchievementsXP(totalXP);
-            setCompletedAchievementsCount(completedCount);
-            
-            // תמיד קרא ל-API לעדכון רמה - המערכת תבדוק ותעדכן אוטומטית על פי הנתונים
-            const currentUser = user || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null);
-            if (currentUser) {
-              // חשב דרישות לרמה הנוכחית
-              const requirements = calculateLevelRequirements(data.level);
-              console.log('🔍 Level up check for level', data.level, ':', {
-                points: data.points,
-                pointsNeeded: requirements.pointsNeeded,
-                gamesWon: data.gamesWon,
-                winsNeeded: requirements.winsNeeded,
-                gamesPlayed: data.gamesPlayed,
-                gamesNeeded: requirements.gamesNeeded,
-                completedAchievementsCount: completedCount,
-                achievementsNeeded: requirements.achievementsNeeded
-              });
-              
-              const canLevel = canLevelUp({
-                points: data.points,
-                gamesWon: data.gamesWon,
-                gamesPlayed: data.gamesPlayed,
-                level: data.level,
-                completedAchievementsCount: completedCount
-              });
-              
-              console.log('✅ Can level up?', canLevel);
-              
-              // תמיד קרא ל-API לעדכון רמה - המערכת תבדוק ותעדכן אוטומטית
-              console.log('🔄 Calling update-rank API to sync level automatically...');
-              fetch('/api/user/update-rank', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: currentUser.id })
-              })
-              .then(updateResponse => {
-                if (updateResponse.ok) {
-                  return updateResponse.json();
-                }
-                return updateResponse.text().then(text => {
-                  throw new Error(`Failed to update rank: ${text}`);
-                });
-              })
-              .then(updateData => {
-                console.log('📊 Level update response:', updateData);
-                // רענן את הנתונים אחרי עדכון הרמה (גם אם לא עלה רמה, כדי לוודא שהנתונים מעודכנים)
-                return fetch(`/api/user/${currentUser.id}`);
-              })
-              .then(refreshResponse => {
-                if (refreshResponse && refreshResponse.ok) {
-                  return refreshResponse.json();
-                }
-                throw new Error('Failed to refresh user data');
-              })
-              .then(refreshData => {
-                if (refreshData) {
-                  console.log('🔄 Refreshed user data:', refreshData);
-                  setUserData(refreshData);
-                  // עדכן את ה-state עם הנתונים המעודכנים
-                  if (user) {
-                    const updatedUser = {
-                      ...user,
-                      level: refreshData.level,
-                      points: refreshData.points,
-                      gamesPlayed: refreshData.gamesPlayed,
-                      gamesWon: refreshData.gamesWon
-                    };
-                    setUser(updatedUser);
-                    localStorage.setItem('user', JSON.stringify(updatedUser));
-                  }
-                    // אם הרמה השתנתה, הצג modal
-                    if (refreshData.level !== data.level) {
-                      console.log('🎉 Level changed from', data.level, 'to', refreshData.level, '! Showing level up modal...');
-                      setLevelUpData({
-                        oldLevel: data.level,
-                        newLevel: refreshData.level
-                      });
-                      setShowLevelUpModal(true);
-                    }
-                }
-              })
-              .catch(error => {
-                console.error('❌ Error updating rank:', error);
-              });
+          
+          // עדכן רמה אוטומטית אם המשתמש עומד בדרישות
+          try {
+            await fetch('/api/user/update-rank', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: user.id })
+            });
+            // רענן את הנתונים אחרי עדכון הרמה
+            const refreshResponse = await fetch(`/api/user/${user.id}`);
+            if (refreshResponse.ok) {
+              const refreshData = await refreshResponse.json();
+              setUserData(refreshData);
+              if (refreshData.level !== data.level) {
+                // אם הרמה השתנתה, רענן את הדף
+                window.location.reload();
+              }
             }
-          } else {
-            console.error('❌ Failed to fetch achievements');
+          } catch (error) {
+            console.error('Error updating rank:', error);
           }
-        } catch (error) {
-          console.error('❌ Error loading achievements:', error);
         }
       } else {
         console.error('Failed to fetch user data');
@@ -725,13 +626,13 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600">נקודות</span>
                           <span className="text-sm font-bold text-blue-600">
-                            {levelProgress.current.points} / {levelProgress.requirements.pointsNeeded}
+                            {levelProgress.requirements.pointsNeeded} / {levelProgress.current.points}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(100, Math.max(0, (levelProgress.current.points / levelProgress.requirements.pointsNeeded) * 100))}%` }}
+                            style={{ width: `${Math.min(100, (levelProgress.current.points / levelProgress.requirements.pointsNeeded) * 100)}%` }}
                           ></div>
                         </div>
                       </div>
@@ -741,13 +642,13 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600">משחקים שוחקו</span>
                           <span className="text-sm font-bold text-green-600">
-                            {levelProgress.current.games} / {levelProgress.requirements.gamesNeeded}
+                            {levelProgress.requirements.gamesNeeded} / {levelProgress.current.games}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(100, Math.max(0, (levelProgress.current.games / levelProgress.requirements.gamesNeeded) * 100))}%` }}
+                            style={{ width: `${Math.min(100, (levelProgress.current.games / levelProgress.requirements.gamesNeeded) * 100)}%` }}
                           ></div>
                         </div>
                       </div>
@@ -757,13 +658,13 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600">משחקים שניצחו</span>
                           <span className="text-sm font-bold text-orange-600">
-                            {levelProgress.current.wins} / {levelProgress.requirements.winsNeeded}
+                            {levelProgress.requirements.winsNeeded} / {levelProgress.current.wins}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-orange-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(100, Math.max(0, (levelProgress.current.wins / levelProgress.requirements.winsNeeded) * 100))}%` }}
+                            style={{ width: `${Math.min(100, (levelProgress.current.wins / levelProgress.requirements.winsNeeded) * 100)}%` }}
                           ></div>
                         </div>
                       </div>
@@ -773,13 +674,13 @@ export default function ProfilePage() {
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium text-gray-600">הישגים</span>
                           <span className="text-sm font-bold text-purple-600">
-                            {levelProgress.current.achievements} / {levelProgress.requirements.achievementsNeeded}
+                            {levelProgress.requirements.achievementsNeeded} / {levelProgress.current.achievements}
                           </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
                             className="bg-purple-500 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(100, Math.max(0, (levelProgress.current.achievements / levelProgress.requirements.achievementsNeeded) * 100))}%` }}
+                            style={{ width: `${Math.min(100, (levelProgress.current.achievements / levelProgress.requirements.achievementsNeeded) * 100)}%` }}
                           ></div>
                         </div>
                       </div>
@@ -788,15 +689,56 @@ export default function ProfilePage() {
                     {/* Level Up Message */}
                     {canLevel && (
                       <div className="mt-6 p-4 bg-gradient-to-r from-green-100 to-blue-100 rounded-xl border-2 border-green-300">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mb-3">
                           <span className="text-2xl">🎉</span>
                           <span className="text-lg font-bold text-green-800">
                             אתה יכול לעלות לרמה {userData.level + 1}!
                           </span>
                         </div>
-                        <p className="text-green-700 mt-2">
-                          כל הדרישות מולאו! המשך לשחק כדי לעלות רמה.
+                        <p className="text-green-700 mb-3">
+                          כל הדרישות מולאו! לחץ על הכפתור כדי לעלות רמה.
                         </p>
+                        <button
+                          onClick={async () => {
+                            try {
+                              console.log('🔄 [profile] Level up button clicked');
+                              const response = await fetch('/api/user/update-rank', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: user?.id })
+                              });
+                              
+                              if (response.ok) {
+                                const data = await response.json();
+                                console.log('📊 [profile] Update rank response:', data);
+                                
+                                if (data.levelUp) {
+                                  // רענן את הנתונים
+                                  if (user?.id) {
+                                    await fetchUserData(user.id);
+                                  }
+                                  // הצג הודעה
+                                  alert(`🎉 עלית לרמה ${data.level}!`);
+                                  // רענן את הדף
+                                  window.location.reload();
+                                } else {
+                                  console.warn('⚠️ [profile] Level up returned false:', data);
+                                  alert(`לא ניתן לעלות רמה. בדוק את הקונסול (F12) לפרטים נוספים.`);
+                                }
+                              } else {
+                                const errorText = await response.text();
+                                console.error('❌ [profile] Update rank failed:', errorText);
+                                alert(`שגיאה בעליית רמה: ${errorText}`);
+                              }
+                            } catch (error) {
+                              console.error('❌ [profile] Error leveling up:', error);
+                              alert('שגיאה בעליית רמה. נסה שוב.');
+                            }
+                          }}
+                          className="px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg font-bold hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg"
+                        >
+                          ⬆️ עלה לרמה {userData.level + 1}
+                        </button>
                       </div>
                     )}
 
@@ -808,10 +750,10 @@ export default function ProfilePage() {
                       </div>
                       <p className="text-yellow-700 text-sm">
                         ככל שהרמה גבוהה יותר, הדרישות גדלות באופן אקספוננציאלי. 
-                        רמה {userData.level + 1} דורשת {Math.floor(200 * Math.pow(1.5, userData.level))} נקודות, 
-                        {Math.floor(10 * Math.pow(1.5, userData.level))} משחקים, 
-                        {Math.floor(6 * Math.pow(1.5, userData.level))} ניצחונות ו-
-                        {Math.max(2, Math.floor(3 * Math.pow(1.5, userData.level)))} הישגים.
+                        רמה {userData.level + 1} דורשת {Math.floor(100 * Math.pow(1.5, userData.level))} נקודות, 
+                        {Math.floor(5 * Math.pow(1.5, userData.level))} משחקים, 
+                        {Math.floor(3 * Math.pow(1.5, userData.level))} ניצחונות ו-
+                        {Math.floor(2 * Math.pow(1.5, userData.level))} הישגים.
                       </p>
                     </div>
                   </div>
@@ -1075,22 +1017,6 @@ export default function ProfilePage() {
           show={showRankUpModal}
           newRank={newRankInfo}
           onClose={() => setShowRankUpModal(false)}
-        />
-      )}
-
-      {/* Level Up Modal */}
-      {levelUpData && (
-        <LevelUpModal
-          show={showLevelUpModal}
-          oldLevel={levelUpData.oldLevel}
-          newLevel={levelUpData.newLevel}
-          onClose={() => {
-            setShowLevelUpModal(false);
-            // רענן את הדף אחרי סגירת ה-modal
-            setTimeout(() => {
-              window.location.reload();
-            }, 300);
-          }}
         />
       )}
     </div>

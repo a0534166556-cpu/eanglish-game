@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense, useEffect } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import AdBanner from '@/app/components/common/AdBanner';
@@ -111,27 +111,7 @@ function Games() {
   const searchParams = useSearchParams();
   const level = searchParams?.get('level') || '';
   const levelObj = levelLabels[level];
-  const { isSubscribed, isLoading, isPremium } = useSubscription();
-  const [hasPremiumPass, setHasPremiumPass] = useState(false);
-
-  // בדיקת כרטיס פרמיום מפרסומת
-  useEffect(() => {
-    const checkPremiumPass = () => {
-      const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
-      setHasPremiumPass((premiumPasses['word-clash'] || 0) > 0);
-    };
-    
-    checkPremiumPass();
-    // האזנה לשינויים ב-localStorage
-    const handleStorageChange = () => checkPremiumPass();
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('premiumPassUpdated', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('premiumPassUpdated', handleStorageChange);
-    };
-  }, []);
+  const { isSubscribed, isLoading } = useSubscription();
 
   const filteredGames = games.filter((game) =>
     game.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -219,15 +199,9 @@ function Games() {
         <div className="flex flex-col gap-4 md:gap-8">
           {/* Big cards side by side */}
           <div className="flex flex-col lg:flex-row justify-center items-center gap-4 md:gap-8 mb-4 md:mb-8">
-            {filteredGames.filter(g => g.id === 'word-clash' || g.id === 'picture-description-duel' || g.id === 'mixed-quiz').map((game) => {
-              // בדיקה אם יש גישה למשחק Word Clash (מנוי או כרטיס מפרסומת)
-              const hasAccess = game.id === 'word-clash' 
-                ? (isSubscribed || hasPremiumPass)
-                : isSubscribed;
-              
-              return (
+            {filteredGames.filter(g => g.id === 'word-clash' || g.id === 'picture-description-duel' || g.id === 'mixed-quiz').map((game) => (
               <div key={game.id} className="relative">
-                {game.isPremium && !hasAccess ? (
+                {game.isPremium && !isSubscribed ? (
                   <div className="relative group bg-white bg-opacity-90 rounded-2xl shadow-2xl p-4 md:p-6 cursor-pointer transition-all duration-300 border-4 border-purple-500 animate-glow-card z-10 w-full max-w-[300px] md:max-w-[340px] min-h-[200px] md:min-h-[260px] flex flex-col items-center hover:shadow-[0_0_40px_10px_rgba(147,51,234,0.3)]">
                     <div className="absolute -top-8 left-1/2 -translate-x-1/2 select-none text-[4rem] drop-shadow-2xl animate-bounce-slow bg-gradient-to-r from-purple-400 via-pink-400 to-pink-600 bg-clip-text text-transparent">
                       {game.icon}
@@ -278,12 +252,11 @@ function Games() {
                       <circle cx="30" cy="70" r="1.2" fill="#FFD700" />
                     </svg>
                   </div>
-                    </div>
-                  </Link>
+                </div>
+              </Link>
                 )}
               </div>
-            );
-            })}
+            ))}
           </div>
           {/* Regular grid for the rest */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-10">

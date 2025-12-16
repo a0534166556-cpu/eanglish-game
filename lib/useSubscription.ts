@@ -24,6 +24,27 @@ export function useSubscription() {
     const loadSubscription = async () => {
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
+          // בדיקה ראשונית - אם יש subscription שמור ב-localStorage, נבדוק אותו
+          const savedSubscription = localStorage.getItem('subscription');
+          if (savedSubscription) {
+            try {
+              const parsed = JSON.parse(savedSubscription);
+              // אם זה admin subscription, נשתמש בו מיד
+              if (parsed.paymentMethod === 'admin' && parsed.status === 'active') {
+                const now = new Date();
+                const endDate = new Date(parsed.endDate);
+                if (endDate > now) {
+                  setSubscription(parsed);
+                  setIsLoading(false);
+                  console.log('✅ [useSubscription] Using saved admin subscription from localStorage');
+                  return;
+                }
+              }
+            } catch (e) {
+              // אם יש שגיאה, נמשיך לבדיקה הרגילה
+            }
+          }
+          
           // בדיקה אם המשתמש הוא מנהל
           const userData = localStorage.getItem('user');
           let isAdminUser = false;
@@ -31,16 +52,33 @@ export function useSubscription() {
           
           if (userData) {
             const user = JSON.parse(userData);
-            isAdminUser = user.email === 'a0534166556@gmail.com';
+            // נורמליזציה של האימייל (לשונות באותיות גדולות/רווחים)
+            const email = (user.email || '').toLowerCase().trim();
+            // משתמשים אלה ייחשבו תמיד כמנויים (מפתח / בעלים)
+            const ownerEmails = [
+              'a0534166556@gmail.com',
+              'a0534166566@gmail.com',
+              'a0534166566@gmail', // בלי ‎.com למקרה שהוזן כך
+              'a0534166566@gmail.com ', // עם רווח בסוף
+              ' a0534166566@gmail.com', // עם רווח בהתחלה
+            ];
+            isAdminUser = ownerEmails.includes(email);
             currentUserId = user.id;
             setIsAdmin(isAdminUser);
+            
+            // לוגים לדיבוג
+            console.log('🔍 [useSubscription] Checking user:', {
+              email: email,
+              isAdmin: isAdminUser,
+              ownerEmails: ownerEmails
+            });
           }
           
           // אם המשתמש הוא מנהל, הוא תמיד נחשב מנוי
           if (isAdminUser) {
             const adminSubscription: Subscription = {
               id: 'admin-sub',
-              userId: 'admin',
+              userId: currentUserId || 'admin',
               plan: 'premium',
               status: 'active',
               startDate: new Date().toISOString(),
@@ -50,7 +88,11 @@ export function useSubscription() {
               amount: 0,
               currency: 'ILS'
             };
+            // שמירה ב-localStorage כדי שהזיהוי יעבוד מיד
+            localStorage.setItem('subscription', JSON.stringify(adminSubscription));
             setSubscription(adminSubscription);
+            console.log('✅ [useSubscription] Admin user detected - subscription set:', adminSubscription);
+            setIsLoading(false);
             return;
           }
           
@@ -122,15 +164,43 @@ export function useSubscription() {
 
     // הוספת listener לשינויים ב-localStorage
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'subscription') {
+      if (e.key === 'subscription' || e.key === 'user') {
         loadSubscription();
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
     
+    // בדיקה תקופתית של שינויים ב-localStorage (למקרה שהמשתמש מתחבר באותו tab)
+    const checkInterval = setInterval(() => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          const email = (user.email || '').toLowerCase().trim();
+          const ownerEmails = [
+            'a0534166556@gmail.com',
+            'a0534166566@gmail.com',
+            'a0534166566@gmail', // בלי ‎.com למקרה שהוזן כך
+            'a0534166566@gmail.com ', // עם רווח בסוף
+            ' a0534166566@gmail.com', // עם רווח בהתחלה
+          ];
+          if (ownerEmails.includes(email)) {
+            const savedSubscription = localStorage.getItem('subscription');
+            if (!savedSubscription || !savedSubscription.includes('admin-premium')) {
+              // אם המשתמש הוא admin אבל אין subscription שמור, נטען אותו מחדש
+              loadSubscription();
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }, 2000); // בדיקה כל 2 שניות
+    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      clearInterval(checkInterval);
     };
   }, []);
 

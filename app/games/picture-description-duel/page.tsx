@@ -567,7 +567,7 @@ const Page = () => {
     if (idx === questions[current].answer) {
       setCurrentPlayerObj(prev => ({
         ...prev,
-        score: prev.score + 3, // 3 נקודות לתשובה נכונה
+        score: prev.score + 10,
         correct: prev.correct + 1
       }));
       setFeedback('correct');
@@ -737,31 +737,30 @@ const Page = () => {
       if (userStr) {
         const user = JSON.parse(userStr);
         
-        // הגבל את הניקוד המקסימלי למשחק - מקסימום 1000 נקודות
-        const maxScorePerGame = 1000;
-        const cappedScore = Math.min(player1.score, maxScorePerGame);
-        
-        // עדכון ניקוד במסד נתונים דרך update-stats API (יש הגבלה שם)
+        // עדכון ניקוד במסד נתונים
         fetch('/api/games/update-stats', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId: user.id,
             gameName: 'picture-description-duel',
-            score: cappedScore,
-            won: true,
-            correctAnswers: player1.score > 0 ? 1 : 0,
-            totalQuestions: 1
+            score: player1.score,
+            won: true
           })
-        }).then(async (response) => {
-          if (response.ok) {
-            const data = await response.json();
-            // עדכון localStorage עם הנתונים המעודכנים מהשרת (לא ישירות!)
-            if (data.user) {
-              localStorage.setItem('user', JSON.stringify(data.user));
-            }
-          }
+        }).then(() => {
+          // עדכון רמה
+          fetch('/api/user/update-rank', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id })
+          });
         }).catch(err => console.error('Error updating stats:', err));
+        
+        // עדכון localStorage
+        user.points += player1.score;
+        user.gamesPlayed += 1;
+        user.gamesWon += 1;
+        localStorage.setItem('user', JSON.stringify(user));
       }
     }
   }, [finished, gameMode, player1.score, player2.score]);

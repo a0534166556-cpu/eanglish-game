@@ -5,20 +5,24 @@ const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   try {
-    const { title, description, unit, level, teacherName } = await request.json();
+    const { title, description, unit, level, teacherName, teacherId } = await request.json();
 
     if (!title || !unit || !level) {
       return NextResponse.json({ error: 'Missing title, unit, or level' }, { status: 400 });
     }
 
-    // צור משחק כיתה חדש
+    if (!teacherId) {
+      return NextResponse.json({ error: 'Missing teacherId. User must be logged in.' }, { status: 400 });
+    }
+
+    // צור משחק כיתה חדש - קשר למשתמש המחובר
     const session = await prisma.classroomSession.create({
       data: {
         title: title,
         description: description || '',
         unit: unit,
         level: level,
-        teacherId: 'teacher_' + Date.now(), // מזהה ייחודי זמני
+        teacherId: teacherId, // מזהה המשתמש המחובר
         teacherName: teacherName || '',
         isActive: true,
         duration: 120

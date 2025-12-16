@@ -57,16 +57,9 @@ export default function WordClashGame() {
       return;
     }
 
-    // אם יש כרטיס מפרסומת ולא מנוי, נשתמש בו
-    if (!isSubscribed && hasPremiumPass) {
-      if (!usePremiumPass()) {
-        setError('אין לך כרטיס כניסה זמין. רכוש כרטיס חדש בחנות!');
-        return;
-      }
-    }
-
-    if (!user) {
-      setError('נא להתחבר כדי ליצור משחק');
+    // בדיקה אם המשתמש מחובר
+    if (!user || !user.id) {
+      setError('יש להתחבר כדי ליצור משחק');
       return;
     }
 
@@ -79,7 +72,7 @@ export default function WordClashGame() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'create',
-          playerId: user.id || `user_${Date.now()}`,
+          playerId: user.id,
           playerName: user.name || user.email || 'Player 1',
           difficulty: 'easy'
         })
@@ -87,11 +80,20 @@ export default function WordClashGame() {
 
       const data = await response.json();
       
-      if (response.ok && data.gameId) {
+      if (response.ok) {
+        // רק אחרי שהמשחק נוצר בהצלחה - נשתמש בכרטיס
+        if (!isSubscribed && hasPremiumPass) {
+          if (!usePremiumPass()) {
+            setError('אין לך כרטיס כניסה זמין. רכוש כרטיס חדש בחנות!');
+            setIsCreating(false);
+            return;
+          }
+        }
+        
         setGameId(data.gameId);
         setGameData(data.game);
-        // Use window.location for more reliable navigation
-        window.location.href = `/game?gameId=${data.gameId}`;
+        // העבר פרמטר creator=true כדי שהמשתמש יצטרף אוטומטית למשחק שהוא יצר
+        router.push(`/game?gameId=${data.gameId}&creator=true`);
       } else {
         setError(data.error || 'שגיאה ביצירת המשחק');
       }
@@ -114,16 +116,9 @@ export default function WordClashGame() {
       return;
     }
 
-    // אם יש כרטיס מפרסומת ולא מנוי, נשתמש בו
-    if (!isSubscribed && hasPremiumPass) {
-      if (!usePremiumPass()) {
-        setError('אין לך כרטיס כניסה זמין. רכוש כרטיס חדש בחנות!');
-        return;
-      }
-    }
-
-    if (!user) {
-      setError('נא להתחבר כדי להצטרף למשחק');
+    // בדיקה אם המשתמש מחובר
+    if (!user || !user.id) {
+      setError('יש להתחבר כדי להצטרף למשחק');
       return;
     }
 
@@ -137,7 +132,7 @@ export default function WordClashGame() {
         body: JSON.stringify({
           action: 'join',
           gameId: gameId.trim(),
-          playerId: user.id || `user_${Date.now()}`,
+          playerId: user.id,
           playerName: user.name || user.email || 'Player 2',
           difficulty: 'easy'
         })
@@ -145,10 +140,19 @@ export default function WordClashGame() {
 
       const data = await response.json();
       
-      if (response.ok && data.game) {
+      if (response.ok) {
+        // רק אחרי שהמשחק נמצא וההצטרפות הצליחה - נשתמש בכרטיס
+        if (!isSubscribed && hasPremiumPass) {
+          if (!usePremiumPass()) {
+            setError('אין לך כרטיס כניסה זמין. רכוש כרטיס חדש בחנות!');
+            setIsJoining(false);
+            return;
+          }
+        }
+        
         setGameData(data.game);
-        // Use window.location for more reliable navigation
-        window.location.href = `/game?gameId=${gameId.trim()}&joined=true`;
+        // מעבר ישיר למשחק עם הקוד שכבר הוזן
+        router.push(`/game?gameId=${gameId.trim()}&joined=true`);
       } else {
         setError(data.error || 'שגיאה בהצטרפות למשחק');
       }

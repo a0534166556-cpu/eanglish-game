@@ -105,14 +105,23 @@ export async function POST(request: NextRequest) {
       totalPoints += reward.points;
     }
 
+    // הגבל את הנקודות מהישגים - מקסימום 20 נקודות למשחק מהישגים
+    // זה מונע ניקוד גבוה מדי מהישגים
+    const maxPointsFromRewards = 20;
+    const cappedPointsFromRewards = Math.min(totalPoints, maxPointsFromRewards);
+    
+    if (totalPoints > maxPointsFromRewards) {
+      console.warn(`⚠️ [achievements] Points from rewards capped from ${totalPoints} to ${maxPointsFromRewards} for user ${userId}, game ${gameName}`);
+    }
+
     // עדכון המשתמש
-    if (totalDiamonds > 0 || totalCoins > 0 || totalPoints > 0) {
+    if (totalDiamonds > 0 || totalCoins > 0 || cappedPointsFromRewards > 0) {
       await prisma.user.update({
         where: { id: userId },
         data: {
           diamonds: { increment: totalDiamonds },
           coins: { increment: totalCoins },
-          points: { increment: totalPoints }
+          points: { increment: cappedPointsFromRewards }
         }
       });
     }
@@ -159,21 +168,6 @@ async function updateAchievements(userId: string, gameName: string, action: stri
       
       const achievementName = achievement.name.toLowerCase();
       const achievementDesc = achievement.description.toLowerCase();
-      
-      // דלג על הישגים מורכבים שדורשים בדיקה מיוחדת
-      const isComplexAchievement = (
-        achievementDesc.includes('כל סוג') || 
-        achievementDesc.includes('כל סוג משחק') ||
-        achievementDesc.includes('בכל סוג') ||
-        achievementName.includes('מומחה כולל') ||
-        achievementName.includes('רב-תחומי')
-      );
-      
-      if (isComplexAchievement) {
-        // הישגים מורכבים לא מתעדכנים כאן - הם דורשים בדיקה מיוחדת של כל המשחקים
-        console.log(`   ⚠️  Skipping complex achievement: ${achievement.name} - requires special check`);
-        continue;
-      }
       
       // הישגים של משחקים (complete) - בדוק לפי description
       if (action === 'complete') {
@@ -358,22 +352,8 @@ async function syncUserAchievements(userId: string): Promise<void> {
       const achievementName = achievement.name.toLowerCase();
       const achievementDesc = achievement.description.toLowerCase();
       
-      // הישגים מורכבים שדורשים בדיקה מיוחדת - לא נבדקים כאן
-      const isComplexAchievement = (
-        achievementDesc.includes('כל סוג') || 
-        achievementDesc.includes('כל סוג משחק') ||
-        achievementDesc.includes('בכל סוג') ||
-        achievementName.includes('מומחה כולל') ||
-        achievementName.includes('רב-תחומי')
-      );
-      
-      if (isComplexAchievement) {
-        // הישגים מורכבים לא מתעדכנים אוטומטית - הם דורשים בדיקה מיוחדת
-        // נשאיר את ההתקדמות הקיימת
-        correctProgress = currentProgress;
-        console.log(`   ⚠️  Skipping complex achievement: ${achievement.name} - requires special check`);
-      } else if (achievement.category === 'games') {
-        // הישגי משחקים פשוטים
+      if (achievement.category === 'games') {
+        // הישגי משחקים
         if (achievementDesc.includes('שחק') || achievementDesc.includes('משחק') || 
             achievementName.includes('משחק') || achievementName.includes('שחקן') ||
             achievementName.includes('צעדים') || achievementName.includes('מתחיל') ||
@@ -387,13 +367,11 @@ async function syncUserAchievements(userId: string): Promise<void> {
           }
         }
         
-        // הישגי ניצחונות פשוטים
+        // הישגי ניצחונות
         if (achievementDesc.includes('נצח') || achievementName.includes('ניצחון') ||
             achievementName.includes('מנצח') || achievementName.includes('אלוף') ||
             achievementName.includes('אגדה')) {
-          if (!achievementDesc.includes('כל סוג') && !achievementDesc.includes('בכל סוג')) {
-            correctProgress = Math.min(user.gamesWon, achievement.requirement);
-          }
+          correctProgress = Math.min(user.gamesWon, achievement.requirement);
         }
       } else if (achievement.category === 'level') {
         // הישגי רמה
@@ -474,44 +452,27 @@ async function claimAchievement(userId: string, achievementId: string): Promise<
 
     // סמן כהושלם ותן פרס
     const xpReward = achievement.xpReward || 0;
-    const diamondReward = achievement.reward || 0;
-    
-    console.log(`🎁 Claiming achievement: ${achievement.name}`);
-    console.log(`   Reward: ${diamondReward} diamonds, ${xpReward} XP`);
-    
-    // עדכן את ההישג כהושלם
-    await prisma.userAchievement.update({
+        await prisma.userAchievement.update({
       where: {
         userId_achievementId: {
           userId,
           achievementId
         }
       },
-      data: {
-        isCompleted: true,
-        completedAt: new Date()
+          data: {
+            isCompleted: true,
+            completedAt: new Date()
+          }
+        });
+
+    // מתן פרס למשתמש
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+        diamonds: { increment: achievement.reward },
+        points: { increment: xpReward }
       }
     });
-
-    // קבל את המשתמש הנוכחי כדי לראות את הערכים הקיימים
-    const currentUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { diamonds: true, points: true }
-    });
-    
-    console.log(`   Current user stats: ${currentUser?.diamonds} diamonds, ${currentUser?.points} points`);
-    
-    // מתן פרס למשתמש
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        diamonds: { increment: diamondReward },
-        points: { increment: xpReward }
-      },
-      select: { diamonds: true, points: true }
-    });
-    
-    console.log(`   Updated user stats: ${updatedUser.diamonds} diamonds, ${updatedUser.points} points`);
 
     // עדכון רמת המשתמש אחרי קבלת הישג
     try {
@@ -526,10 +487,8 @@ async function claimAchievement(userId: string, achievementId: string): Promise<
 
     return NextResponse.json({
       success: true,
-      reward: diamondReward,
-      xpReward: xpReward,
-      newDiamonds: updatedUser.diamonds,
-      newPoints: updatedUser.points
+      reward: achievement.reward,
+      xpReward: xpReward
     });
   } catch (error) {
     console.error('Error claiming achievement:', error);

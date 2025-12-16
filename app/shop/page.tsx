@@ -806,18 +806,14 @@ export default function ShopPage() {
             <div className="mb-6">
               <RewardedAd
                 onReward={(reward: any) => {
-                  console.log('🎬 RewardedAd onReward called:', reward);
-                  
                   // אחרי שצפה בפרסומת, תן לו כרטיס למשחק
-                  try {
+                  const userStr = localStorage.getItem('user');
+                  if (userStr) {
+                    const user = JSON.parse(userStr);
                     // שמור את הכרטיס למשחק
                     const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
-                    const currentPasses = premiumPasses['word-clash'] || 0;
-                    premiumPasses['word-clash'] = currentPasses + 1;
+                    premiumPasses['word-clash'] = (premiumPasses['word-clash'] || 0) + 1;
                     localStorage.setItem('premium-passes', JSON.stringify(premiumPasses));
-                    
-                    console.log('✅ Premium pass saved:', premiumPasses);
-                    console.log('✅ Word Clash passes:', premiumPasses['word-clash']);
                     
                     // עדכון מיידי של כל הטאבים והדפים
                     window.dispatchEvent(new StorageEvent('storage', {
@@ -830,18 +826,13 @@ export default function ShopPage() {
                       detail: { game: 'word-clash', passes: premiumPasses['word-clash'] }
                     }));
                     
-                    console.log('✅ Events dispatched');
-                    
                     // הודעה יפה יותר
                     setTimeout(() => {
-                      const passesCount = premiumPasses['word-clash'];
-                      alert(`🎉 מעולה! קיבלת כניסה אחת למשחק וורד קלאש!\n\nיש לך כעת ${passesCount} כרטיס${passesCount > 1 ? 'ים' : ''} זמין${passesCount > 1 ? 'ים' : ''}.\n\nעכשיו תוכל לשחק במשחק Word Clash!`);
+                      alert(`🎉 מעולה! קיבלת כניסה אחת למשחק וורד קלאש!\n\nיש לך כעת ${premiumPasses['word-clash']} כרטיס${premiumPasses['word-clash'] > 1 ? 'ים' : ''} זמין${premiumPasses['word-clash'] > 1 ? 'ים' : ''}.\n\nעכשיו תוכל לשחק במשחק Word Clash!`);
                       setShowAdReward(false);
                       setAdRewardItem(null);
                     }, 500);
-                  } catch (error) {
-                    console.error('❌ Error saving premium pass:', error);
-                    alert('שגיאה בשמירת הכרטיס. נסה שוב.');
+                  } else {
                     setShowAdReward(false);
                     setAdRewardItem(null);
                   }

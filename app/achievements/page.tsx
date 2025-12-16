@@ -333,42 +333,30 @@ export default function AchievementsPage() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId: user?.id, achievementId: achievement.id })
                       });
-                      
                       if (response.ok) {
-                        const result = await response.json();
-                        console.log('Achievement claimed:', result);
-                        
-                        // עדכן את המשתמש עם הנתונים החדשים מה-API
+                        loadAchievements();
+                        // עדכן את המשתמש
                         const userStr = localStorage.getItem('user');
-                        if (userStr && result.newDiamonds !== undefined && result.newPoints !== undefined) {
+                        if (userStr) {
                           const userData = JSON.parse(userStr);
-                          const updatedUser = {
-                            ...userData,
-                            diamonds: result.newDiamonds,
-                            points: result.newPoints
-                          };
-                          
-                          setUser(updatedUser);
-                          localStorage.setItem('user', JSON.stringify(updatedUser));
-                          console.log('User updated:', updatedUser);
-                        } else {
-                          // Fallback: טען את המשתמש מחדש מה-API
-                          const updatedResponse = await fetch(`/api/user/${user?.id}`);
+                          const updatedResponse = await fetch(`/api/user/${userData.id}`);
                           if (updatedResponse.ok) {
                             const updatedData = await updatedResponse.json();
                             const updatedUser = updatedData.user || updatedData;
-                            setUser(updatedUser);
-                            localStorage.setItem('user', JSON.stringify(updatedUser));
-                            console.log('User reloaded from API:', updatedUser);
+                            setUser({
+                              ...user,
+                              diamonds: updatedUser.diamonds,
+                              coins: updatedUser.coins,
+                              points: updatedUser.points
+                            });
+                            localStorage.setItem('user', JSON.stringify({
+                              ...user,
+                              diamonds: updatedUser.diamonds,
+                              coins: updatedUser.coins,
+                              points: updatedUser.points
+                            }));
                           }
                         }
-                        
-                        // רענן את רשימת ההישגים
-                        loadAchievements();
-                      } else {
-                        const error = await response.json();
-                        console.error('Failed to claim achievement:', error);
-                        alert(`שגיאה בקבלת ההישג: ${error.error || 'שגיאה לא ידועה'}`);
                       }
                     } catch (error) {
                       console.error('Error claiming achievement:', error);

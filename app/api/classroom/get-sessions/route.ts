@@ -3,12 +3,21 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const dynamic = 'force-dynamic';
-
 export async function GET(request: NextRequest) {
   try {
-    // קבל את כל משחקי הכיתה
+    // קבל את ה-teacherId מה-query parameters
+    const { searchParams } = new URL(request.url);
+    const teacherId = searchParams.get('teacherId');
+
+    if (!teacherId) {
+      return NextResponse.json({ error: 'Missing teacherId. User must be logged in.' }, { status: 400 });
+    }
+
+    // קבל רק את משחקי הכיתה של המשתמש המחובר
     const sessions = await prisma.classroomSession.findMany({
+      where: {
+        teacherId: teacherId
+      },
       orderBy: { createdAt: 'desc' },
       include: {
         results: {
