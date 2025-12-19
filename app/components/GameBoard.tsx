@@ -19,8 +19,12 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
   const [revealError, setRevealError] = useState<string | null>(null);
   const [skipError, setSkipError] = useState<string | null>(null);
   const [skipSuccess, setSkipSuccess] = useState<boolean>(false);
-  const [timeLeft, setTimeLeft] = useState<number>(15);
+  const [timeLeft, setTimeLeft] = useState<number>(20);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error' | 'info', text: string, showScore?: boolean, myScore?: number, opponentScore?: number } | null>(null);
+  const [lastQuestionId, setLastQuestionId] = useState<string | null>(null);
+  const [questionStartTime, setQuestionStartTime] = useState<number | null>(null);
+  const [hasAnswered, setHasAnswered] = useState<boolean>(false);
   
   // מערכת אימוג'ים
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -81,11 +85,78 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
             // Start timer when game becomes active (only once)
             setIsTimerActive(prev => {
               if (!prev) {
-                setTimeLeft(15);
+                setTimeLeft(20);
                 return true;
               }
               return prev;
             });
+          }
+          
+          // Reset timer when question changes (only if it's actually a new question)
+          const currentQuestionId = data.game.currentQuestion?.text || data.game.currentWord?.word || '';
+          const currentRound = data.game.currentRound || 0;
+          const questionKey = `${currentRound}_${currentQuestionId}`;
+          const lastQuestionKey = lastQuestionId ? `${game?.currentRound || 0}_${lastQuestionId}` : null;
+          
+          // Check if both players answered (by checking lastMove for both players)
+          const player1Answered = data.game.lastMove && 
+            (data.game.lastMove.player === 'player1' || 
+             (data.game.playerStates?.player1?.hasAnswered === true));
+          const player2Answered = data.game.lastMove && 
+            (data.game.lastMove.player === 'player2' || 
+             (data.game.playerStates?.player2?.hasAnswered === true));
+          const bothPlayersAnswered = player1Answered && player2Answered;
+          const timerExpired = timeLeft === 0 && hasAnswered;
+          const canAdvanceToNextQuestion = timerExpired || bothPlayersAnswered;
+          
+          // Only reset timer if it's truly a new question (different round or different question text)
+          if (questionKey && questionKey !== lastQuestionKey) {
+            // Only allow question change if timer expired or both players answered, or if it's the first question
+            if (canAdvanceToNextQuestion || lastQuestionKey === null) {
+              console.log('🔄 New question detected:', { questionKey, lastQuestionKey, currentRound, currentQuestionId, canAdvanceToNextQuestion, timerExpired, bothPlayersAnswered });
+              setLastQuestionId(currentQuestionId);
+              setTimeLeft(20);
+              setIsTimerActive(true);
+              setQuestionStartTime(Date.now());
+              setHasAnswered(false);
+              // Don't clear feedback immediately - let it show for at least 3 seconds
+              // Only clear if it's been showing for more than 3 seconds
+              if (feedbackMessage) {
+                setTimeout(() => {
+                  setFeedbackMessage(null);
+                }, 3000);
+              }
+            } else {
+              // Question changed but timer hasn't expired and both players haven't answered
+              // This shouldn't happen, but if it does, ignore the change and keep the old question
+              console.warn('⚠️ Question changed prematurely! Ignoring change:', { 
+                questionKey, 
+                lastQuestionKey, 
+                timeLeft, 
+                hasAnswered, 
+                bothPlayersAnswered,
+                timerExpired,
+                player1Answered,
+                player2Answered
+              });
+              // Don't update the question - keep the old one by not updating lastQuestionId
+              // The game state will remain with the old question
+            }
+          } else if (questionKey === lastQuestionKey && questionStartTime && !hasAnswered) {
+            // If it's the same question, don't reset timer - keep it running
+            // Only update if timer is still active
+            if (isTimerActive && timeLeft > 0) {
+              // Timer is already running, don't reset it
+              console.log('⏱️ Same question, timer continues:', { timeLeft, isTimerActive });
+            }
+          }
+          
+          // Check if both players answered - only then allow moving to next question
+          // But don't reset timer if question hasn't changed
+          const currentLastMove = data.game.lastMove;
+          if (currentLastMove && currentLastMove.player !== currentPlayerSymbol) {
+            // Opponent answered, but we should wait for timer or both to answer
+            // Don't auto-advance unless timer expired
           }
         } else {
           const errorText = await response.text();
@@ -113,25 +184,37 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
     }
   }, [gameId]); // Removed isTimerActive from dependencies to prevent infinite loop
 
-  // Timer effect
+  // Timer effect - only countdown if timer is active and question hasn't been answered yet
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (isTimerActive && timeLeft > 0) {
+    if (isTimerActive && timeLeft > 0 && !hasAnswered) {
       timer = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
+        setTimeLeft(prev => {
+          const newTime = prev - 1;
+          // If time reaches 0, mark as answered and stop timer
+          if (newTime <= 0) {
+            setIsTimerActive(false);
+            setHasAnswered(true);
+            return 0;
+          }
+          return newTime;
+        });
       }, 1000);
-    } else if (timeLeft === 0) {
-      // Time's up!
+    } else if (timeLeft === 0 && !hasAnswered && isTimerActive) {
+      // Time's up! Only show message if user hasn't answered yet
       setIsTimerActive(false);
-      alert('הזמן נגמר! עוברים לשאלה הבאה...');
-      // Reset timer for next question
-      setTimeLeft(15);
+      setHasAnswered(true);
+      // Don't auto-advance - wait for API to handle it
     }
     return () => clearTimeout(timer);
-  }, [isTimerActive, timeLeft]);
+  }, [isTimerActive, timeLeft, hasAnswered]);
 
   const handleAnswer = async (type: 'definition' | 'sentence', index: number) => {
-    if (!game) return;
+    if (!game || hasAnswered) return;
+
+    // Stop timer when user answers
+    setIsTimerActive(false);
+    setHasAnswered(true);
 
     try {
       const response = await fetch('/api/games/word-clash', {
@@ -148,21 +231,49 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
 
       if (response.ok) {
         const data = await response.json();
-        setGame(data.game);
+        const updatedGame = data.game;
+        setGame(updatedGame);
         setError(null);
 
-        // Show feedback
-        if (data.game.lastMove?.isCorrect) {
-          alert('נכון! +10 נקודות! 🎉');
-        } else {
-          alert('לא נכון! 😔');
+        // Get updated scores
+        const myUpdatedScore = updatedGame.playerStates[currentPlayerSymbol]?.score || 0;
+        const opponentUpdatedScore = updatedGame.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1']?.score || 0;
+
+        // Show feedback with scores - only if this is our answer
+        if (updatedGame.lastMove?.player === currentPlayerSymbol) {
+          if (updatedGame.lastMove?.isCorrect) {
+            setFeedbackMessage({
+              type: 'success',
+              text: `נכון! קיבלת +10 נקודות! 🎉`,
+              myScore: myUpdatedScore,
+              opponentScore: opponentUpdatedScore
+            });
+          } else {
+            setFeedbackMessage({
+              type: 'error',
+              text: `לא נכון! 😔`,
+              myScore: myUpdatedScore,
+              opponentScore: opponentUpdatedScore
+            });
+          }
+
+          // Auto-hide feedback after 8 seconds (longer to see the message)
+          setTimeout(() => {
+            setFeedbackMessage(null);
+          }, 8000);
         }
       } else {
         setError('Failed to submit answer');
+        // Re-enable timer if answer failed
+        setIsTimerActive(true);
+        setHasAnswered(false);
       }
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      // Re-enable timer if answer failed
+      setIsTimerActive(true);
+      setHasAnswered(false);
     }
   };
 
@@ -323,7 +434,29 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
                 <div className={`text-2xl font-bold ${timeLeft <= 5 ? 'text-red-500 animate-pulse' : timeLeft <= 10 ? 'text-orange-500' : 'text-green-500'}`}>
                   ⏰ {timeLeft} שניות
                 </div>
+                {hasAnswered && (
+                  <div className="text-sm text-gray-600 mt-2">ענית! מחכים ליריב או לסיום הזמן...</div>
+                )}
               </div>
+              
+              {/* Feedback Message */}
+              {feedbackMessage && (
+                <div className={`mb-4 p-4 rounded-lg border-2 ${
+                  feedbackMessage.type === 'success' 
+                    ? 'bg-green-50 border-green-400 text-green-800' 
+                    : feedbackMessage.type === 'error'
+                    ? 'bg-red-50 border-red-400 text-red-800'
+                    : 'bg-blue-50 border-blue-400 text-blue-800'
+                }`}>
+                  <div className="text-xl font-bold mb-2">{feedbackMessage.text}</div>
+                  {feedbackMessage.myScore !== undefined && feedbackMessage.opponentScore !== undefined && (
+                    <div className="text-lg mt-2">
+                      <div>הניקוד שלך: <span className="font-bold">{feedbackMessage.myScore}</span></div>
+                      <div>ניקוד היריב: <span className="font-bold">{feedbackMessage.opponentScore}</span></div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div className="bg-blue-100 p-4 rounded-lg mb-4">
                 <h3 className="font-bold text-lg mb-2">הסבר:</h3>
@@ -344,10 +477,10 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
                     <button
                       key={index}
                       onClick={() => handleAnswer('definition', index)}
-                      disabled={game.lastMove?.player === currentPlayerSymbol || !isTimerActive}
+                      disabled={hasAnswered || game.lastMove?.player === currentPlayerSymbol || !isTimerActive}
                       className={`
                         w-full p-3 text-left rounded transition-all duration-200
-                        ${game.lastMove?.player === currentPlayerSymbol || !isTimerActive ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
+                        ${hasAnswered || game.lastMove?.player === currentPlayerSymbol || !isTimerActive ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
                         ${game.lastMove?.answer === 'definition' && game.lastMove.selectedIndex === index
                           ? game.lastMove.isCorrect ? 'border-2 border-green-500 bg-green-50 animate-pulse' : 'border-2 border-red-500 bg-red-50 animate-shake'
                           : 'border border-gray-200'}
@@ -366,10 +499,10 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
                     <button
                       key={index}
                       onClick={() => handleAnswer('sentence', index)}
-                      disabled={game.lastMove?.player === currentPlayerSymbol || !isTimerActive}
+                      disabled={hasAnswered || game.lastMove?.player === currentPlayerSymbol || !isTimerActive}
                       className={`
                         w-full p-3 text-left rounded transition-all duration-200
-                        ${game.lastMove?.player === currentPlayerSymbol || !isTimerActive ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
+                        ${hasAnswered || game.lastMove?.player === currentPlayerSymbol || !isTimerActive ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
                         ${game.lastMove?.answer === 'sentence' && game.lastMove.selectedIndex === index
                           ? game.lastMove.isCorrect ? 'border-2 border-green-500 bg-green-50 animate-pulse' : 'border-2 border-red-500 bg-red-50 animate-shake'
                           : 'border border-gray-200'}

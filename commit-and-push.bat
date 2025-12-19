@@ -15,7 +15,7 @@ git add .
 echo.
 echo ========================================
 echo Committing changes...
-git commit -m "Fix word-clash game creator join, update subscription for a0534166566@gmail.com, fix classroom sessions filtering by user"
+git commit -m "Fix Word Clash: prevent questions from advancing before 20 seconds, ensure feedback messages always appear"
 if %errorlevel% neq 0 (
     echo.
     echo WARNING: Commit failed. Maybe no changes to commit?
