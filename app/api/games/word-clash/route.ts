@@ -250,7 +250,105 @@ const WORD_CLASH_QUESTIONS = {
   ]
 };
 
-// Helper function to get random question by difficulty
+// Word Clash word challenges with definitions and sentences
+const WORD_CLASH_CHALLENGES = {
+  easy: [
+    {
+      word: "APPLE",
+      definitions: [
+        "A red or green fruit that grows on trees",
+        "A technology company founded by Steve Jobs",
+        "A type of computer operating system",
+        "A round object used in sports"
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        "I eat an apple every day for breakfast",
+        "Apple Inc. makes iPhones and MacBooks",
+        "The new Apple operating system is very fast",
+        "He threw the apple across the field"
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: "BANK",
+      definitions: [
+        "A place where people keep their money",
+        "The side of a river or stream",
+        "A row of keys on a piano",
+        "A place to store information"
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        "I went to the bank to deposit money",
+        "We sat on the bank of the river",
+        "She played all the keys on the bank",
+        "The computer has a memory bank"
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: "BAT",
+      definitions: [
+        "A flying mammal that comes out at night",
+        "A wooden stick used in baseball",
+        "To hit something",
+        "A small animal that lives in caves"
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        "The bat flew out of the cave at sunset",
+        "He swung the bat and hit the ball",
+        "She will bat the ball with her hand",
+        "A bat is a nocturnal animal"
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: "BOW",
+      definitions: [
+        "To bend forward as a sign of respect",
+        "A weapon that shoots arrows",
+        "A ribbon tied in a loop",
+        "The front of a ship"
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        "The actor will bow to the audience",
+        "The archer pulled back the bow",
+        "She tied a bow in her hair",
+        "The ship's bow cut through the waves"
+      ],
+      correctSentenceIndex: 0
+    },
+    {
+      word: "FAIR",
+      definitions: [
+        "Just and equal treatment",
+        "A place with rides and games",
+        "Light in color or complexion",
+        "Good weather conditions"
+      ],
+      correctDefinitionIndex: 0,
+      sentences: [
+        "The judge made a fair decision",
+        "We went to the county fair",
+        "She has fair skin and blonde hair",
+        "The weather is fair today"
+      ],
+      correctSentenceIndex: 0
+    }
+  ]
+};
+
+// Helper function to get random word challenge by difficulty
+function getRandomWordChallenge(difficulty: string) {
+  const challenges = WORD_CLASH_CHALLENGES[difficulty as keyof typeof WORD_CLASH_CHALLENGES] || WORD_CLASH_CHALLENGES.easy;
+  const randomIndex = Math.floor(Math.random() * challenges.length);
+  return challenges[randomIndex];
+}
+
+// Helper function to get random question by difficulty (legacy support)
 function getRandomQuestion(difficulty: string) {
   const questions = WORD_CLASH_QUESTIONS[difficulty as keyof typeof WORD_CLASH_QUESTIONS] || WORD_CLASH_QUESTIONS.easy;
   const randomIndex = Math.floor(Math.random() * questions.length);
@@ -265,13 +363,24 @@ async function loadGames() {
     const gamesMap: { [key: string]: any } = {};
     for (const game of games) {
       try {
-        // Try to parse currentWord as JSON (if it's a full question object), otherwise use as text
+        // Try to parse currentWord as JSON (if it's a full question object or WordChallenge), otherwise use as text
         let currentQuestion;
+        let currentWord;
         try {
-          currentQuestion = JSON.parse(game.currentWord);
+          const parsed = JSON.parse(game.currentWord);
+          // Check if it's a WordChallenge (has word, definitions, sentences)
+          if (parsed.word && parsed.definitions && parsed.sentences) {
+            currentWord = parsed;
+            currentQuestion = null; // Use currentWord instead
+          } else {
+            // It's a simple question object
+            currentQuestion = parsed;
+            currentWord = null;
+          }
         } catch {
           // If parsing fails, it's just text, create a simple question object
           currentQuestion = { text: game.currentWord || '', answer: '', explanation: '' };
+          currentWord = null;
         }
         
         // Parse JSON fields with error handling
@@ -324,6 +433,7 @@ async function loadGames() {
           maxRounds: game.maxRounds,
           difficulty: 'easy', // Default, can be extended
           currentQuestion: currentQuestion,
+          currentWord: currentWord, // Add currentWord if it exists
           players: players,
           playerStates: playerStates,
           lastMove: lastMove,
@@ -352,10 +462,12 @@ async function saveGame(gameId: string, gameData: any) {
       where: { gameId }
     });
 
-    // Save currentQuestion as JSON string in currentWord field
-    const currentQuestionStr = gameData.currentQuestion 
-      ? JSON.stringify(gameData.currentQuestion)
-      : (gameData.currentWord || '');
+    // Save currentQuestion or currentWord as JSON string in currentWord field
+    const currentQuestionStr = gameData.currentWord
+      ? JSON.stringify(gameData.currentWord)
+      : (gameData.currentQuestion 
+          ? JSON.stringify(gameData.currentQuestion)
+          : '');
     
     const gameRecord = {
       gameId: gameData.id || gameId,
@@ -424,8 +536,8 @@ export async function POST(req: NextRequest) {
     switch (action) {
       case 'create':
         const newGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        // Get random question based on difficulty
-        const randomQuestion = getRandomQuestion(difficulty);
+        // Get random word challenge based on difficulty
+        const randomWordChallenge = getRandomWordChallenge(difficulty);
         
         const newGame = {
           id: newGameId,
@@ -433,7 +545,8 @@ export async function POST(req: NextRequest) {
           currentRound: 0,
           maxRounds: 5,
           difficulty: difficulty,
-          currentQuestion: randomQuestion,
+          currentWord: randomWordChallenge,
+          currentQuestion: null, // Use currentWord instead
           players: {
             player1: sanitizedPlayerId,
             player2: null
@@ -557,11 +670,34 @@ export async function POST(req: NextRequest) {
         const currentGame = moveGames[gameId];
         const { answer, selectedIndex } = await req.json();
         
-        // Check if answer is correct
-        const isCorrect = currentGame.currentQuestion?.answer === answer;
+        // Check if answer is correct based on currentWord structure
+        let isCorrect = false;
+        if (currentGame.currentWord) {
+          // currentWord has correctDefinitionIndex and correctSentenceIndex
+          if (answer === 'definition') {
+            isCorrect = currentGame.currentWord.correctDefinitionIndex === selectedIndex;
+          } else if (answer === 'sentence') {
+            isCorrect = currentGame.currentWord.correctSentenceIndex === selectedIndex;
+          }
+        } else if (currentGame.currentQuestion) {
+          // Fallback for old format (shouldn't happen but handle it)
+          isCorrect = currentGame.currentQuestion?.answer === answer;
+        }
 
         // Update game state
         const playerSymbol = currentGame.players.player1 === playerId ? 'player1' : 'player2';
+        
+        // Mark player as answered in playerStates
+        if (!currentGame.playerStates[playerSymbol]) {
+          currentGame.playerStates[playerSymbol] = {
+            score: 0,
+            isReady: true,
+            powerUps: { revealLetter: 3, skipWord: 2, freezeOpponent: 1 },
+            hasAnswered: false
+          };
+        }
+        currentGame.playerStates[playerSymbol].hasAnswered = true;
+        
         currentGame.lastMove = {
           player: playerSymbol,
           answer: answer,
@@ -572,6 +708,47 @@ export async function POST(req: NextRequest) {
 
         if (isCorrect) {
           currentGame.playerStates[playerSymbol].score += 10;
+        }
+
+        // Check if both players answered - if so, move to next round
+        const player1Answered = currentGame.playerStates?.player1?.hasAnswered || false;
+        const player2Answered = currentGame.playerStates?.player2?.hasAnswered || false;
+        const bothPlayersAnswered = player1Answered && player2Answered;
+        
+        // Also check if timer expired (both players have answered or time is up)
+        // Move to next round if both answered
+        if (bothPlayersAnswered) {
+          // Reset hasAnswered for both players
+          currentGame.playerStates.player1.hasAnswered = false;
+          currentGame.playerStates.player2.hasAnswered = false;
+          
+          // Move to next round
+          currentGame.currentRound += 1;
+          
+          // Check if game is finished
+          if (currentGame.currentRound >= currentGame.maxRounds) {
+            // Game finished - determine winner
+            const player1Score = currentGame.playerStates.player1.score || 0;
+            const player2Score = currentGame.playerStates.player2.score || 0;
+            
+            if (player1Score > player2Score) {
+              currentGame.winner = 'player1';
+            } else if (player2Score > player1Score) {
+              currentGame.winner = 'player2';
+            } else {
+              currentGame.winner = 'draw';
+            }
+            
+            currentGame.status = 'finished';
+          } else {
+            // Generate new word challenge for next round
+            const newWordChallenge = getRandomWordChallenge(currentGame.difficulty || 'easy');
+            currentGame.currentWord = newWordChallenge;
+            currentGame.currentQuestion = null; // Use currentWord instead
+          }
+          
+          // Clear lastMove for new round
+          currentGame.lastMove = null;
         }
 
         currentGame.updatedAt = Date.now();

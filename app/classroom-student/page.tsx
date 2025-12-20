@@ -3598,25 +3598,36 @@ export default function ClassroomStudentPage() {
       recognition.lang = 'en-US';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
-      recognition.continuous = false;
+      recognition.continuous = true; // המשך להקשיב עד שהמשתמש עוצר ידנית
+
+      let hasResult = false; // עקוב אחרי אם כבר יש תוצאה
+      let finalTranscript = ''; // שמור את הטקסט הסופי
 
       recognition.onresult = (event: any) => {
-        if (event.results && event.results.length > 0 && event.results[0].length > 0) {
-          const transcript = event.results[0][0].transcript.trim();
-          setUserTranscript(transcript);
-          
-          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
+        // עם continuous=true, onresult נקרא מספר פעמים עם interim results
+        // אסוף את כל התוצאות הסופיות
+        let interimTranscript = '';
+        let finalTranscriptParts: string[] = [];
+        
+        for (let i = 0; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscriptParts.push(transcript);
+          } else {
+            interimTranscript += transcript;
           }
-          if (recognition) {
-            recognition.stop();
-          }
-          stream.getTracks().forEach(track => track.stop());
-          setIsRecording(false);
-          setIsChecking(true);
-          
-          // בדוק את התשובה
-          setTimeout(() => checkRepeatAnswer(transcript), 500);
+        }
+        
+        // עדכן את ה-transcript עם התוצאות הביניים
+        if (interimTranscript) {
+          setUserTranscript(interimTranscript);
+        }
+        
+        // אם יש תוצאות סופיות, שמור אותן
+        if (finalTranscriptParts.length > 0) {
+          finalTranscript = finalTranscriptParts.join(' ').trim();
+          setUserTranscript(finalTranscript);
+          hasResult = true;
         }
       };
 
@@ -3632,11 +3643,16 @@ export default function ClassroomStudentPage() {
       };
 
       recognition.onend = () => {
-        setIsRecording(false);
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-          mediaRecorder.stop();
+        // רק עצור את ההקלטה אם אין תוצאה (כי אם יש תוצאה, זה כבר טופל ב-onresult)
+        if (!hasResult && isRecording) {
+          setIsRecording(false);
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+          stream.getTracks().forEach(track => track.stop());
+          // אל תעבור לשאלה הבאה - תן למשתמש אפשרות לנסות שוב
+          console.log('Speech recognition ended without result. User can try again.');
         }
-        stream.getTracks().forEach(track => track.stop());
       };
 
       recognition.start();
@@ -3645,6 +3661,37 @@ export default function ClassroomStudentPage() {
       setIsRecording(false);
       alert('שגיאה בהתחלת ההקלטה. ודא שיש לך הרשאת מיקרופון.');
     }
+  };
+
+  // פונקציה לעצירת הקלטה ידנית
+  const stopRecording = () => {
+    if (!isRecording) return;
+    
+    setIsRecording(false);
+    
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    
+    // המתין קצת כדי שהתוצאות הסופיות יגיעו
+    setTimeout(() => {
+      // אם יש transcript, בדוק את התשובה
+      if (userTranscript && userTranscript.trim()) {
+        setIsChecking(true);
+        setTimeout(() => checkRepeatAnswer(userTranscript.trim()), 500);
+      } else {
+        setIsChecking(false);
+        alert('לא זוהה דיבור. נסה שוב.');
+      }
+    }, 300);
   };
 
   // פונקציה לבדיקת תשובה בשאלות חזרה
@@ -4362,35 +4409,40 @@ export default function ClassroomStudentPage() {
 
             {/* כפתור הקלטה */}
             <div className="flex flex-col items-center gap-4">
-              <button
-                onClick={startRecording}
-                disabled={isRecording || isChecking || selectedAnswer !== null}
-                className={`px-8 py-6 rounded-2xl font-bold text-2xl transition-all duration-300 transform shadow-2xl ${
-                  isRecording
-                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white animate-pulse'
-                    : isChecking
-                    ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white'
-                    : selectedAnswer !== null
-                    ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
-                    : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:scale-105'
-                }`}
-              >
-                {isRecording ? (
+              {!isRecording ? (
+                <button
+                  onClick={startRecording}
+                  disabled={isChecking || selectedAnswer !== null}
+                  className={`px-8 py-6 rounded-2xl font-bold text-2xl transition-all duration-300 transform shadow-2xl ${
+                    isChecking
+                      ? 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white'
+                      : selectedAnswer !== null
+                      ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:scale-105'
+                  }`}
+                >
+                  {isChecking ? (
+                    <span className="flex items-center gap-3">
+                      <span className="animate-spin">⏳</span> בודק...
+                    </span>
+                  ) : selectedAnswer !== null ? (
+                    <span>✓ הושלם</span>
+                  ) : (
+                    <span className="flex items-center gap-3">
+                      🎤 הקלט את עצמך
+                    </span>
+                  )}
+                </button>
+              ) : (
+                <button
+                  onClick={stopRecording}
+                  className="px-8 py-6 rounded-2xl font-bold text-2xl transition-all duration-300 transform shadow-2xl bg-gradient-to-r from-red-500 to-red-600 text-white animate-pulse hover:from-red-600 hover:to-red-700 hover:scale-105"
+                >
                   <span className="flex items-center gap-3">
-                    <span className="animate-pulse">🔴</span> מקליט...
+                    <span className="animate-pulse">⏹️</span> עצור הקלטה
                   </span>
-                ) : isChecking ? (
-                  <span className="flex items-center gap-3">
-                    <span className="animate-spin">⏳</span> בודק...
-                  </span>
-                ) : selectedAnswer !== null ? (
-                  <span>✓ הושלם</span>
-                ) : (
-                  <span className="flex items-center gap-3">
-                    🎤 הקלט את עצמך
-                  </span>
-                )}
-              </button>
+                </button>
+              )}
 
               {/* הצג תמלול */}
               {userTranscript && (

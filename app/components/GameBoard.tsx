@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Game, Player } from '../../types/game';
 // import { subscribeToGame, makeMove, sendChatMessage, useRevealLetter, useSkipWord } from '../../lib/game';
 
@@ -25,6 +25,7 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
   const [lastQuestionId, setLastQuestionId] = useState<string | null>(null);
   const [questionStartTime, setQuestionStartTime] = useState<number | null>(null);
   const [hasAnswered, setHasAnswered] = useState<boolean>(false);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // מערכת אימוג'ים
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -76,21 +77,16 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
           console.log('Game data:', data.game);
           console.log('Game status:', data.game.status);
           console.log('Players:', data.game.players);
+          
+          // Only update game state if game is fully loaded
+          const isGameFullyLoaded = data.game.status === 'active' && 
+                                   data.game.currentWord && 
+                                   data.game.currentWord.definitions && 
+                                   data.game.currentWord.sentences &&
+                                   data.game.players.player2;
+          
           setGame(data.game);
           setError(null);
-          
-          // If game status changed to active, show success message
-          if (data.game.status === 'active' && data.game.players.player2) {
-            console.log('Game is now active with two players!');
-            // Start timer when game becomes active (only once)
-            setIsTimerActive(prev => {
-              if (!prev) {
-                setTimeLeft(20);
-                return true;
-              }
-              return prev;
-            });
-          }
           
           // Reset timer when question changes (only if it's actually a new question)
           const currentQuestionId = data.game.currentQuestion?.text || data.game.currentWord?.word || '';
@@ -98,13 +94,9 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
           const questionKey = `${currentRound}_${currentQuestionId}`;
           const lastQuestionKey = lastQuestionId ? `${game?.currentRound || 0}_${lastQuestionId}` : null;
           
-          // Check if both players answered (by checking lastMove for both players)
-          const player1Answered = data.game.lastMove && 
-            (data.game.lastMove.player === 'player1' || 
-             (data.game.playerStates?.player1?.hasAnswered === true));
-          const player2Answered = data.game.lastMove && 
-            (data.game.lastMove.player === 'player2' || 
-             (data.game.playerStates?.player2?.hasAnswered === true));
+          // Check if both players answered (by checking playerStates.hasAnswered)
+          const player1Answered = data.game.playerStates?.player1?.hasAnswered === true;
+          const player2Answered = data.game.playerStates?.player2?.hasAnswered === true;
           const bothPlayersAnswered = player1Answered && player2Answered;
           const timerExpired = timeLeft === 0 && hasAnswered;
           const canAdvanceToNextQuestion = timerExpired || bothPlayersAnswered;
@@ -112,15 +104,41 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
           // Only reset timer if it's truly a new question (different round or different question text)
           if (questionKey && questionKey !== lastQuestionKey) {
             // Only allow question change if timer expired or both players answered, or if it's the first question
-            if (canAdvanceToNextQuestion || lastQuestionKey === null) {
-              console.log('🔄 New question detected:', { questionKey, lastQuestionKey, currentRound, currentQuestionId, canAdvanceToNextQuestion, timerExpired, bothPlayersAnswered });
+            // But don't reset timer if it's the first question AND timer is already running
+            const isFirstQuestion = lastQuestionKey === null;
+            const shouldResetTimer = !isFirstQuestion || (isFirstQuestion && !isTimerActive);
+            
+            if (canAdvanceToNextQuestion || (isFirstQuestion && shouldResetTimer)) {
+              console.log('🔄 New question detected:', { questionKey, lastQuestionKey, currentRound, currentQuestionId, canAdvanceToNextQuestion, timerExpired, bothPlayersAnswered, isFirstQuestion, shouldResetTimer });
               setLastQuestionId(currentQuestionId);
-              setTimeLeft(20);
-              setIsTimerActive(true);
-              setQuestionStartTime(Date.now());
-              setHasAnswered(false);
-              // Don't clear feedback immediately - let it show for at least 3 seconds
-              // Only clear if it's been showing for more than 3 seconds
+              
+              // Always reset timer for new question - make sure game is fully loaded
+              const isGameReady = data.game.status === 'active' && 
+                                 data.game.currentWord && 
+                                 data.game.currentWord.definitions && 
+                                 data.game.currentWord.sentences &&
+                                 data.game.players.player2;
+              
+              if (isGameReady) {
+                // Stop any existing timer first
+                if (timerIntervalRef.current) {
+                  clearInterval(timerIntervalRef.current);
+                  timerIntervalRef.current = null;
+                }
+                
+                // Reset timer to 20 seconds for new question - start fresh
+                setTimeLeft(20);
+                setIsTimerActive(true);
+                setQuestionStartTime(Date.now());
+                setHasAnswered(false); // Reset hasAnswered for new question
+                console.log('⏱️ Timer reset to 20 for new question');
+              }
+              
+              // Reset hasAnswered based on playerStates from server
+              const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
+              setHasAnswered(playerHasAnswered);
+              
+              // Clear feedback message when new question starts (after 3 seconds delay)
               if (feedbackMessage) {
                 setTimeout(() => {
                   setFeedbackMessage(null);
@@ -142,18 +160,110 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
               // Don't update the question - keep the old one by not updating lastQuestionId
               // The game state will remain with the old question
             }
-          } else if (questionKey === lastQuestionKey && questionStartTime && !hasAnswered) {
+          } else if (questionKey === lastQuestionKey) {
             // If it's the same question, don't reset timer - keep it running
-            // Only update if timer is still active
-            if (isTimerActive && timeLeft > 0) {
-              // Timer is already running, don't reset it
+            // Only start timer if game is fully loaded and ready
+            const isGameReady = data.game.status === 'active' && 
+                               data.game.players.player2 && 
+                               data.game.currentWord && 
+                               data.game.currentWord.definitions && 
+                               data.game.currentWord.sentences;
+            
+            if (isGameReady && !isTimerActive && !hasAnswered && lastQuestionId === null) {
+              // First time seeing this question - start the timer with full 20 seconds
+              // Make sure timer starts fresh, not counting time from loading
+              if (timerIntervalRef.current) {
+                clearInterval(timerIntervalRef.current);
+                timerIntervalRef.current = null;
+              }
+              setTimeLeft(20);
+              setIsTimerActive(true);
+              setQuestionStartTime(Date.now());
+              console.log('⏱️ Starting timer for first question:', { timeLeft: 20, isTimerActive: true });
+            } else if (isTimerActive && timeLeft > 0 && !hasAnswered) {
+              // Timer is already running, don't reset it - just let it continue
+              // Don't touch anything - the timer effect will handle the countdown
+              // This prevents the timer from being reset every time the game updates
               console.log('⏱️ Same question, timer continues:', { timeLeft, isTimerActive });
+            } else if (!isTimerActive && isGameReady && lastQuestionId !== null && !hasAnswered) {
+              // Timer should be running but isn't - start it (but don't reset timeLeft if it's already counting down)
+              if (timeLeft > 0) {
+                setIsTimerActive(true);
+                if (!questionStartTime) {
+                  setQuestionStartTime(Date.now());
+                }
+                console.log('⏱️ Resuming timer:', { timeLeft, isTimerActive });
+              }
+            } else if (isTimerActive && !isGameReady) {
+              // Game is not ready - stop the timer
+              setIsTimerActive(false);
+              if (timerIntervalRef.current) {
+                clearInterval(timerIntervalRef.current);
+                timerIntervalRef.current = null;
+              }
+              console.log('⏱️ Stopping timer - game not ready');
             }
+          }
+          
+          // Update hasAnswered based on playerStates from server
+          const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
+          if (playerHasAnswered !== hasAnswered) {
+            setHasAnswered(playerHasAnswered);
           }
           
           // Check if both players answered - only then allow moving to next question
           // But don't reset timer if question hasn't changed
           const currentLastMove = data.game.lastMove;
+          
+          // Update feedback message if it's our move
+          // Always show feedback for our latest move
+          if (currentLastMove && currentLastMove.player === currentPlayerSymbol) {
+            const myUpdatedScore = data.game.playerStates[currentPlayerSymbol]?.score || 0;
+            const opponentUpdatedScore = data.game.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1']?.score || 0;
+            
+            // Stop timer when showing feedback
+            if (isTimerActive) {
+              setIsTimerActive(false);
+            }
+            
+            // Show feedback based on whether answer is correct
+            if (currentLastMove.isCorrect) {
+              setFeedbackMessage({
+                type: 'success',
+                text: `נכון! קיבלת +10 נקודות! 🎉`,
+                myScore: myUpdatedScore,
+                opponentScore: opponentUpdatedScore
+              });
+              
+              // Auto-hide feedback after 8 seconds, then resume timer if needed
+              setTimeout(() => {
+                setFeedbackMessage(null);
+                // Don't resume timer here - it will resume when new question starts
+              }, 8000);
+            } else {
+              setFeedbackMessage({
+                type: 'error',
+                text: `לא נכון! 😔`,
+                myScore: myUpdatedScore,
+                opponentScore: opponentUpdatedScore
+              });
+              
+              // Auto-hide feedback after 8 seconds
+              setTimeout(() => {
+                setFeedbackMessage(null);
+                // Don't resume timer here - it will resume when new question starts
+              }, 8000);
+            }
+          } else if (!currentLastMove || currentLastMove.player !== currentPlayerSymbol) {
+            // Clear feedback if it's not our move or if there's no move
+            // But only clear if it's been showing for a while (to avoid flickering)
+            if (feedbackMessage) {
+              setTimeout(() => {
+                setFeedbackMessage(null);
+              }, 3000);
+            }
+          }
+          
           if (currentLastMove && currentLastMove.player !== currentPlayerSymbol) {
             // Opponent answered, but we should wait for timer or both to answer
             // Don't auto-advance unless timer expired
@@ -186,33 +296,47 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
 
   // Timer effect - only countdown if timer is active and question hasn't been answered yet
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isTimerActive && timeLeft > 0 && !hasAnswered) {
-      timer = setTimeout(() => {
+    // Clear any existing interval first
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    
+    // Only start interval if timer is active and we haven't answered
+    if (isTimerActive && !hasAnswered) {
+      timerIntervalRef.current = setInterval(() => {
         setTimeLeft(prev => {
-          const newTime = prev - 1;
-          // If time reaches 0, mark as answered and stop timer
-          if (newTime <= 0) {
+          // Double-check conditions before decrementing
+          if (prev <= 0) {
             setIsTimerActive(false);
             setHasAnswered(true);
+            if (timerIntervalRef.current) {
+              clearInterval(timerIntervalRef.current);
+              timerIntervalRef.current = null;
+            }
             return 0;
           }
-          return newTime;
+          return prev - 1;
         });
       }, 1000);
-    } else if (timeLeft === 0 && !hasAnswered && isTimerActive) {
-      // Time's up! Only show message if user hasn't answered yet
-      setIsTimerActive(false);
-      setHasAnswered(true);
-      // Don't auto-advance - wait for API to handle it
     }
-    return () => clearTimeout(timer);
-  }, [isTimerActive, timeLeft, hasAnswered]);
+    
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+    };
+  }, [isTimerActive, hasAnswered]); // Only depend on isTimerActive and hasAnswered
 
   const handleAnswer = async (type: 'definition' | 'sentence', index: number) => {
     if (!game || hasAnswered) return;
 
-    // Stop timer when user answers
+    // Stop timer IMMEDIATELY when user clicks answer (before sending to server)
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
     setIsTimerActive(false);
     setHasAnswered(true);
 
@@ -234,34 +358,13 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
         const updatedGame = data.game;
         setGame(updatedGame);
         setError(null);
-
-        // Get updated scores
-        const myUpdatedScore = updatedGame.playerStates[currentPlayerSymbol]?.score || 0;
-        const opponentUpdatedScore = updatedGame.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1']?.score || 0;
-
-        // Show feedback with scores - only if this is our answer
-        if (updatedGame.lastMove?.player === currentPlayerSymbol) {
-          if (updatedGame.lastMove?.isCorrect) {
-            setFeedbackMessage({
-              type: 'success',
-              text: `נכון! קיבלת +10 נקודות! 🎉`,
-              myScore: myUpdatedScore,
-              opponentScore: opponentUpdatedScore
-            });
-          } else {
-            setFeedbackMessage({
-              type: 'error',
-              text: `לא נכון! 😔`,
-              myScore: myUpdatedScore,
-              opponentScore: opponentUpdatedScore
-            });
-          }
-
-          // Auto-hide feedback after 8 seconds (longer to see the message)
-          setTimeout(() => {
-            setFeedbackMessage(null);
-          }, 8000);
-        }
+        
+        // Update hasAnswered based on server state
+        const playerHasAnswered = updatedGame.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
+        setHasAnswered(playerHasAnswered);
+        
+        // Feedback will be shown by the useEffect that watches for game updates
+        // This prevents duplicate messages
       } else {
         setError('Failed to submit answer');
         // Re-enable timer if answer failed
@@ -292,7 +395,30 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
   const playerState = game.playerStates[currentPlayerSymbol];
   const opponentState = game.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1'];
 
-  const bothAnswered = game.lastMove && game.lastMove.player !== currentPlayerSymbol;
+  // Check if both players answered
+  const bothAnswered = game.playerStates?.player1?.hasAnswered === true && 
+                       game.playerStates?.player2?.hasAnswered === true;
+  
+  // Validate currentWord structure
+  if (game.status === 'active' && !currentWord) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="text-red-500 bg-red-100 p-4 rounded">
+          שגיאה: לא נמצאה שאלה. המשחק לא מוכן.
+        </div>
+      </div>
+    );
+  }
+  
+  if (game.status === 'active' && currentWord && (!currentWord.definitions || !currentWord.sentences)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="text-red-500 bg-red-100 p-4 rounded">
+          שגיאה: מבנה השאלה לא תקין. אנא צור משחק חדש.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-6 p-4">

@@ -14,6 +14,7 @@ export interface PlayerState {
   score: number;
   lastAnswerTime?: number;
   isReady: boolean;
+  hasAnswered?: boolean; // Track if player has answered current question
   powerUps: {
     revealLetter: number;
     skipWord: number;
