@@ -26,6 +26,8 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
   const [questionStartTime, setQuestionStartTime] = useState<number | null>(null);
   const [hasAnswered, setHasAnswered] = useState<boolean>(false);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const gameLoadedRef = useRef<boolean>(false); // Track if game is fully loaded
+  const lastMoveTimeRef = useRef<number>(0); // Track last move time to prevent duplicate feedback
   
   // מערכת אימוג'ים
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -85,6 +87,12 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
                                    data.game.currentWord.sentences &&
                                    data.game.players.player2;
           
+          // Mark game as loaded only when it's fully ready
+          if (isGameFullyLoaded && !gameLoadedRef.current) {
+            gameLoadedRef.current = true;
+            console.log('✅ Game fully loaded, timer can start');
+          }
+          
           setGame(data.game);
           setError(null);
           
@@ -119,24 +127,34 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
                                  data.game.currentWord.sentences &&
                                  data.game.players.player2;
               
-              if (isGameReady) {
+              if (isGameReady && gameLoadedRef.current) {
                 // Stop any existing timer first
                 if (timerIntervalRef.current) {
                   clearInterval(timerIntervalRef.current);
                   timerIntervalRef.current = null;
                 }
                 
-                // Reset timer to 20 seconds for new question - start fresh
-                setTimeLeft(20);
-                setIsTimerActive(true);
-                setQuestionStartTime(Date.now());
-                setHasAnswered(false); // Reset hasAnswered for new question
-                console.log('⏱️ Timer reset to 20 for new question');
+                // Reset hasAnswered based on playerStates from server FIRST
+                const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
+                setHasAnswered(playerHasAnswered);
+                
+                // Only reset timer if player hasn't answered yet
+                if (!playerHasAnswered) {
+                  // Reset timer to 20 seconds for new question - start fresh
+                  setTimeLeft(20);
+                  setIsTimerActive(true);
+                  setQuestionStartTime(Date.now());
+                  console.log('⏱️ Timer reset to 20 for new question');
+                } else {
+                  // Player already answered, don't start timer
+                  setIsTimerActive(false);
+                  console.log('⏱️ Player already answered, timer not started');
+                }
+              } else {
+                // Reset hasAnswered based on playerStates from server
+                const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
+                setHasAnswered(playerHasAnswered);
               }
-              
-              // Reset hasAnswered based on playerStates from server
-              const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
-              setHasAnswered(playerHasAnswered);
               
               // Clear feedback message when new question starts (after 3 seconds delay)
               if (feedbackMessage) {
@@ -169,7 +187,11 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
                                data.game.currentWord.definitions && 
                                data.game.currentWord.sentences;
             
-            if (isGameReady && !isTimerActive && !hasAnswered && lastQuestionId === null) {
+            // Check if player has already answered
+            const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
+            
+            // Only start timer if game is fully loaded
+            if (isGameReady && gameLoadedRef.current && !isTimerActive && !playerHasAnswered && lastQuestionId === null) {
               // First time seeing this question - start the timer with full 20 seconds
               // Make sure timer starts fresh, not counting time from loading
               if (timerIntervalRef.current) {
@@ -179,8 +201,9 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
               setTimeLeft(20);
               setIsTimerActive(true);
               setQuestionStartTime(Date.now());
+              setHasAnswered(false);
               console.log('⏱️ Starting timer for first question:', { timeLeft: 20, isTimerActive: true });
-            } else if (isTimerActive && timeLeft > 0 && !hasAnswered) {
+            } else if (isTimerActive && timeLeft > 0 && !hasAnswered && !playerHasAnswered) {
               // Timer is already running, don't reset it - just let it continue
               // Don't touch anything - the timer effect will handle the countdown
               // This prevents the timer from being reset every time the game updates
@@ -221,38 +244,49 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
             const myUpdatedScore = data.game.playerStates[currentPlayerSymbol]?.score || 0;
             const opponentUpdatedScore = data.game.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1']?.score || 0;
             
-            // Stop timer when showing feedback
+            // Stop timer when showing feedback (already stopped in handleAnswer, but ensure it's stopped)
             if (isTimerActive) {
               setIsTimerActive(false);
+              if (timerIntervalRef.current) {
+                clearInterval(timerIntervalRef.current);
+                timerIntervalRef.current = null;
+              }
             }
             
-            // Show feedback based on whether answer is correct
-            if (currentLastMove.isCorrect) {
-              setFeedbackMessage({
-                type: 'success',
-                text: `נכון! קיבלת +10 נקודות! 🎉`,
-                myScore: myUpdatedScore,
-                opponentScore: opponentUpdatedScore
-              });
+            // Only show feedback if this is a NEW move (not already shown in handleAnswer)
+            // Check by comparing move time - if it's different from last shown move, show feedback
+            const isNewMove = currentLastMove.time && currentLastMove.time !== lastMoveTimeRef.current;
+            
+            if (isNewMove) {
+              // Update last move time to prevent duplicate feedback
+              lastMoveTimeRef.current = currentLastMove.time;
               
-              // Auto-hide feedback after 8 seconds, then resume timer if needed
-              setTimeout(() => {
-                setFeedbackMessage(null);
-                // Don't resume timer here - it will resume when new question starts
-              }, 8000);
-            } else {
-              setFeedbackMessage({
-                type: 'error',
-                text: `לא נכון! 😔`,
-                myScore: myUpdatedScore,
-                opponentScore: opponentUpdatedScore
-              });
-              
-              // Auto-hide feedback after 8 seconds
-              setTimeout(() => {
-                setFeedbackMessage(null);
-                // Don't resume timer here - it will resume when new question starts
-              }, 8000);
+              // Show feedback based on whether answer is correct
+              if (currentLastMove.isCorrect) {
+                setFeedbackMessage({
+                  type: 'success',
+                  text: `נכון! קיבלת +10 נקודות! 🎉`,
+                  myScore: myUpdatedScore,
+                  opponentScore: opponentUpdatedScore
+                });
+                
+                // Auto-hide feedback after 8 seconds
+                setTimeout(() => {
+                  setFeedbackMessage(null);
+                }, 8000);
+              } else {
+                setFeedbackMessage({
+                  type: 'error',
+                  text: `לא נכון! 😔`,
+                  myScore: myUpdatedScore,
+                  opponentScore: opponentUpdatedScore
+                });
+                
+                // Auto-hide feedback after 8 seconds
+                setTimeout(() => {
+                  setFeedbackMessage(null);
+                }, 8000);
+              }
             }
           } else if (!currentLastMove || currentLastMove.player !== currentPlayerSymbol) {
             // Clear feedback if it's not our move or if there's no move
@@ -309,7 +343,13 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
           // Double-check conditions before decrementing
           if (prev <= 0) {
             setIsTimerActive(false);
-            setHasAnswered(true);
+            // If timer expired and player hasn't answered, mark as answered (timeout)
+            if (!hasAnswered) {
+              setHasAnswered(true);
+              // Optionally: submit a timeout answer to server
+              // For now, just mark as answered locally
+              console.log('⏰ Timer expired - player did not answer');
+            }
             if (timerIntervalRef.current) {
               clearInterval(timerIntervalRef.current);
               timerIntervalRef.current = null;
@@ -330,7 +370,48 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
   }, [isTimerActive, hasAnswered]); // Only depend on isTimerActive and hasAnswered
 
   const handleAnswer = async (type: 'definition' | 'sentence', index: number) => {
-    if (!game || hasAnswered) return;
+    if (!game || hasAnswered) {
+      console.log('Cannot answer: game not loaded or already answered');
+      return;
+    }
+    
+    // Check if game is still active
+    if (game.status !== 'active') {
+      setError('המשחק לא פעיל');
+      return;
+    }
+    
+    // Check if timer is still active
+    if (!isTimerActive && timeLeft > 0) {
+      console.log('Timer not active but time left, allowing answer');
+    }
+    
+    // Validate answer type and index
+    if (type !== 'definition' && type !== 'sentence') {
+      setError('סוג תשובה לא תקין');
+      return;
+    }
+    
+    if (typeof index !== 'number' || index < 0) {
+      setError('אינדקס תשובה לא תקין');
+      return;
+    }
+    
+    // Check if currentWord exists and has valid options
+    if (!game.currentWord) {
+      setError('שאלה לא זמינה');
+      return;
+    }
+    
+    if (type === 'definition' && (!game.currentWord.definitions || index >= game.currentWord.definitions.length)) {
+      setError('אינדקס הגדרה לא תקין');
+      return;
+    }
+    
+    if (type === 'sentence' && (!game.currentWord.sentences || index >= game.currentWord.sentences.length)) {
+      setError('אינדקס משפט לא תקין');
+      return;
+    }
 
     // Stop timer IMMEDIATELY when user clicks answer (before sending to server)
     if (timerIntervalRef.current) {
@@ -363,20 +444,61 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
         const playerHasAnswered = updatedGame.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
         setHasAnswered(playerHasAnswered);
         
-        // Feedback will be shown by the useEffect that watches for game updates
-        // This prevents duplicate messages
+        // Show feedback immediately after answer is submitted (optimistic update)
+        // This provides instant feedback while waiting for server response
+        if (updatedGame.lastMove && updatedGame.lastMove.player === currentPlayerSymbol) {
+          const myScore = updatedGame.playerStates[currentPlayerSymbol]?.score || 0;
+          const opponentScore = updatedGame.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1']?.score || 0;
+          
+          // Only show if this is a new move (different time)
+          if (updatedGame.lastMove.time && updatedGame.lastMove.time !== lastMoveTimeRef.current) {
+            lastMoveTimeRef.current = updatedGame.lastMove.time;
+            
+            if (updatedGame.lastMove.isCorrect) {
+              setFeedbackMessage({
+                type: 'success',
+                text: `נכון! קיבלת +10 נקודות! 🎉`,
+                myScore: myScore,
+                opponentScore: opponentScore
+              });
+              
+              setTimeout(() => {
+                setFeedbackMessage(null);
+              }, 8000);
+            } else {
+              setFeedbackMessage({
+                type: 'error',
+                text: `לא נכון! 😔`,
+                myScore: myScore,
+                opponentScore: opponentScore
+              });
+              
+              setTimeout(() => {
+                setFeedbackMessage(null);
+              }, 8000);
+            }
+          }
+        }
       } else {
-        setError('Failed to submit answer');
-        // Re-enable timer if answer failed
-        setIsTimerActive(true);
-        setHasAnswered(false);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        setError(errorData.error || 'Failed to submit answer');
+        
+        // Re-enable timer if answer failed (but only if timer hasn't expired)
+        if (timeLeft > 0) {
+          setIsTimerActive(true);
+          setHasAnswered(false);
+        }
       }
 
     } catch (err) {
+      console.error('Error submitting answer:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
-      // Re-enable timer if answer failed
-      setIsTimerActive(true);
-      setHasAnswered(false);
+      
+      // Re-enable timer if answer failed (but only if timer hasn't expired)
+      if (timeLeft > 0) {
+        setIsTimerActive(true);
+        setHasAnswered(false);
+      }
     }
   };
 
@@ -603,10 +725,10 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
                     <button
                       key={index}
                       onClick={() => handleAnswer('definition', index)}
-                      disabled={hasAnswered || game.lastMove?.player === currentPlayerSymbol || !isTimerActive}
+                      disabled={hasAnswered || !isTimerActive || game.status !== 'active' || timeLeft === 0}
                       className={`
                         w-full p-3 text-left rounded transition-all duration-200
-                        ${hasAnswered || game.lastMove?.player === currentPlayerSymbol || !isTimerActive ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
+                        ${hasAnswered || !isTimerActive || game.status !== 'active' || timeLeft === 0 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
                         ${game.lastMove?.answer === 'definition' && game.lastMove.selectedIndex === index
                           ? game.lastMove.isCorrect ? 'border-2 border-green-500 bg-green-50 animate-pulse' : 'border-2 border-red-500 bg-red-50 animate-shake'
                           : 'border border-gray-200'}
@@ -625,10 +747,10 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
                     <button
                       key={index}
                       onClick={() => handleAnswer('sentence', index)}
-                      disabled={hasAnswered || game.lastMove?.player === currentPlayerSymbol || !isTimerActive}
+                      disabled={hasAnswered || !isTimerActive || game.status !== 'active' || timeLeft === 0}
                       className={`
                         w-full p-3 text-left rounded transition-all duration-200
-                        ${hasAnswered || game.lastMove?.player === currentPlayerSymbol || !isTimerActive ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
+                        ${hasAnswered || !isTimerActive || game.status !== 'active' || timeLeft === 0 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
                         ${game.lastMove?.answer === 'sentence' && game.lastMove.selectedIndex === index
                           ? game.lastMove.isCorrect ? 'border-2 border-green-500 bg-green-50 animate-pulse' : 'border-2 border-red-500 bg-red-50 animate-shake'
                           : 'border border-gray-200'}
@@ -641,11 +763,11 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
               </div>
             </div>
 
-            {game.lastMove?.player === currentPlayerSymbol && !bothAnswered && (
+            {hasAnswered && !bothAnswered && (
               <div className="text-lg text-blue-700 font-bold animate-pulse mt-4">ענית! מחכים לתשובת היריב...</div>
             )}
             {bothAnswered && (
-              <div className="text-lg text-green-700 font-bold animate-bounce mt-4">היריב ענה! מחכים לסיבוב הבא...</div>
+              <div className="text-lg text-green-700 font-bold animate-bounce mt-4">שני השחקנים ענו! מחכים לסיבוב הבא...</div>
             )}
 
             <div className="mt-6 flex justify-center">
@@ -670,12 +792,32 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
       )}
 
       {game.status === 'finished' && (
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">
-            {game.winner === 'draw' ? "It's a draw!" : 
-             game.winner === currentPlayerSymbol ? 'You won!' : 'You lost!'}
+        <div className="text-center bg-gradient-to-br from-purple-100 to-blue-100 p-8 rounded-2xl shadow-xl max-w-2xl mx-auto">
+          <h2 className="text-4xl font-bold mb-4">
+            {game.winner === 'draw' ? "תיקו! 🤝" : 
+             game.winner === currentPlayerSymbol ? 'ניצחת! 🎉' : 'הפסדת! 😔'}
           </h2>
-          <p className="text-xl">Final Score: {playerState.score} - {opponentState.score}</p>
+          <div className="text-2xl mb-4">
+            <p className="font-bold text-gray-800">ניקוד סופי:</p>
+            <div className="flex justify-center gap-8 mt-2">
+              <div>
+                <span className="text-blue-600">אתה: </span>
+                <span className="font-bold text-3xl">{playerState?.score || 0}</span>
+              </div>
+              <div>
+                <span className="text-red-600">יריב: </span>
+                <span className="font-bold text-3xl">{opponentState?.score || 0}</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6">
+            <button
+              onClick={() => window.location.href = '/games/word-clash'}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-600 transition"
+            >
+              חזרה למשחקים
+            </button>
+          </div>
         </div>
       )}
 

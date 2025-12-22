@@ -555,6 +555,7 @@ export async function POST(req: NextRequest) {
             player1: {
               score: 0,
               isReady: true,
+              hasAnswered: false,
               powerUps: {
                 revealLetter: 3,
                 skipWord: 2,
@@ -564,6 +565,7 @@ export async function POST(req: NextRequest) {
             player2: {
               score: 0,
               isReady: false,
+              hasAnswered: false,
               powerUps: {
                 revealLetter: 3,
                 skipWord: 2,
@@ -621,6 +623,19 @@ export async function POST(req: NextRequest) {
         }
 
         const existingGame = joinGames[gameId];
+        
+        // Check if game is already finished
+        if (existingGame.status === 'finished') {
+          console.log(`[POST join] Game is finished: ${gameId}`);
+          return NextResponse.json({ error: 'Game is finished' }, { status: 400 });
+        }
+        
+        // Check if player is already in the game
+        if (existingGame.players.player1 === sanitizedPlayerId || existingGame.players.player2 === sanitizedPlayerId) {
+          console.log(`[POST join] Player already in game: ${gameId}, player: ${sanitizedPlayerId}`);
+          return NextResponse.json({ game: existingGame }); // Return game state
+        }
+        
         if (existingGame.players.player2) {
           console.log(`[POST join] Game is full: ${gameId}`);
           return NextResponse.json({ error: 'Game is full' }, { status: 400 });
@@ -630,6 +645,28 @@ export async function POST(req: NextRequest) {
         existingGame.players.player2 = sanitizedPlayerId;
         existingGame.status = 'active';
         existingGame.updatedAt = Date.now();
+        
+        // Initialize player2 state if not exists
+        if (!existingGame.playerStates.player2) {
+          existingGame.playerStates.player2 = {
+            score: 0,
+            isReady: true,
+            hasAnswered: false,
+            powerUps: {
+              revealLetter: 3,
+              skipWord: 2,
+              freezeOpponent: 1
+            }
+          };
+        } else {
+          // Ensure hasAnswered is set
+          existingGame.playerStates.player2.hasAnswered = false;
+        }
+        
+        // Ensure player1 has hasAnswered set
+        if (existingGame.playerStates.player1) {
+          existingGame.playerStates.player1.hasAnswered = false;
+        }
         
         // Save updated game to database
         try {
@@ -668,7 +705,27 @@ export async function POST(req: NextRequest) {
         }
 
         const currentGame = moveGames[gameId];
+        
+        // Check if game is still active
+        if (currentGame.status !== 'active') {
+          return NextResponse.json({ error: 'Game is not active' }, { status: 400 });
+        }
+        
+        // Check if game is finished
+        if (currentGame.status === 'finished') {
+          return NextResponse.json({ error: 'Game is finished' }, { status: 400 });
+        }
+        
         const { answer, selectedIndex } = await req.json();
+        
+        // Validate answer and selectedIndex
+        if (!answer || (answer !== 'definition' && answer !== 'sentence')) {
+          return NextResponse.json({ error: 'Invalid answer type' }, { status: 400 });
+        }
+        
+        if (typeof selectedIndex !== 'number' || selectedIndex < 0) {
+          return NextResponse.json({ error: 'Invalid selected index' }, { status: 400 });
+        }
         
         // Check if answer is correct based on currentWord structure
         let isCorrect = false;
@@ -686,6 +743,17 @@ export async function POST(req: NextRequest) {
 
         // Update game state
         const playerSymbol = currentGame.players.player1 === playerId ? 'player1' : 'player2';
+        
+        // Check if player is in the game
+        if (!playerSymbol || (playerSymbol !== 'player1' && playerSymbol !== 'player2')) {
+          return NextResponse.json({ error: 'Player not in game' }, { status: 400 });
+        }
+        
+        // Check if player already answered (prevent double submission)
+        if (currentGame.playerStates[playerSymbol]?.hasAnswered === true) {
+          console.log(`[POST move] Player ${playerSymbol} already answered, ignoring duplicate submission`);
+          return NextResponse.json({ game: currentGame }); // Return current game state
+        }
         
         // Mark player as answered in playerStates
         if (!currentGame.playerStates[playerSymbol]) {
@@ -711,16 +779,19 @@ export async function POST(req: NextRequest) {
         }
 
         // Check if both players answered - if so, move to next round
-        const player1Answered = currentGame.playerStates?.player1?.hasAnswered || false;
-        const player2Answered = currentGame.playerStates?.player2?.hasAnswered || false;
+        const player1Answered = currentGame.playerStates?.player1?.hasAnswered === true;
+        const player2Answered = currentGame.playerStates?.player2?.hasAnswered === true;
         const bothPlayersAnswered = player1Answered && player2Answered;
         
-        // Also check if timer expired (both players have answered or time is up)
         // Move to next round if both answered
         if (bothPlayersAnswered) {
           // Reset hasAnswered for both players
-          currentGame.playerStates.player1.hasAnswered = false;
-          currentGame.playerStates.player2.hasAnswered = false;
+          if (currentGame.playerStates.player1) {
+            currentGame.playerStates.player1.hasAnswered = false;
+          }
+          if (currentGame.playerStates.player2) {
+            currentGame.playerStates.player2.hasAnswered = false;
+          }
           
           // Move to next round
           currentGame.currentRound += 1;
@@ -728,8 +799,8 @@ export async function POST(req: NextRequest) {
           // Check if game is finished
           if (currentGame.currentRound >= currentGame.maxRounds) {
             // Game finished - determine winner
-            const player1Score = currentGame.playerStates.player1.score || 0;
-            const player2Score = currentGame.playerStates.player2.score || 0;
+            const player1Score = currentGame.playerStates?.player1?.score || 0;
+            const player2Score = currentGame.playerStates?.player2?.score || 0;
             
             if (player1Score > player2Score) {
               currentGame.winner = 'player1';
@@ -740,6 +811,7 @@ export async function POST(req: NextRequest) {
             }
             
             currentGame.status = 'finished';
+            currentGame.currentWord = null; // Clear current word when game is finished
           } else {
             // Generate new word challenge for next round
             const newWordChallenge = getRandomWordChallenge(currentGame.difficulty || 'easy');
