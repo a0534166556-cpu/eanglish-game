@@ -447,6 +447,10 @@ function RecordListen() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [savedRecordings, setSavedRecordings] = useState<string[]>([]);
+  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const stopRecordingRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!started) return;
@@ -494,7 +498,9 @@ function RecordListen() {
     let mediaRecorder: MediaRecorder;
     let chunks: BlobPart[] = [];
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      streamRef.current = stream;
       mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.ondataavailable = e => chunks.push(e.data);
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/webm' });
@@ -512,29 +518,230 @@ function RecordListen() {
       mediaRecorder.start();
       // SpeechRecognition
       const recognition = new SpeechRecognition();
+      recognitionRef.current = recognition;
       recognition.lang = lang === 'he' ? 'he-IL' : 'en-US';
-      recognition.interimResults = false;
+      recognition.continuous = true; // המשך להקשיב גם אחרי תוצאה ראשונה
+      recognition.interimResults = true; // קבל תוצאות חלקיות כדי לדעת מתי המשתמש מסיים
       recognition.maxAlternatives = 1;
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        setUserTranscript(transcript);
+      
+      let silenceTimeout: NodeJS.Timeout | null = null;
+      let maxTimeout: NodeJS.Timeout | null = null;
+      let lastResultTime = Date.now();
+      let finalTranscript = '';
+      let isStopped = false;
+      const SILENCE_DURATION = 3000; // חכה 3 שניות של שתיקה לפני עצירה (הגדלנו את הזמן)
+      const MIN_RECORDING_TIME = 2000; // זמן מינימלי של הקלטה - לפחות 2 שניות
+      const recordingStartTime = Date.now();
+      
+      const stopRecordingAndCheck = () => {
+        if (isStopped) return;
+        isStopped = true;
+        
+        if (silenceTimeout) {
+          clearTimeout(silenceTimeout);
+          silenceTimeout = null;
+        }
+        if (maxTimeout) {
+          clearTimeout(maxTimeout);
+          maxTimeout = null;
+        }
+        
+        try {
+          recognition.stop();
+        } catch (e) {
+          console.log('Error stopping recognition:', e);
+        }
         setRecording(false);
         setChecking(true);
-        setTimeout(() => checkAnswer(transcript), 500);
-        mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
+        
+        // חכה קצת כדי לוודא שקיבלנו את כל התוצאות
+        setTimeout(() => {
+          const transcriptToCheck = finalTranscript.trim();
+          if (transcriptToCheck) {
+            checkAnswer(transcriptToCheck);
+          } else {
+            setFeedback('לא זוהה דיבור - נסה שוב');
+            setChecking(false);
+          }
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+          }
+        }, 300);
       };
-      recognition.onerror = () => {
-        setFeedback('שגיאה בהקלטה');
-        setRecording(false);
-        mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
+      
+      // שמור את פונקציית העצירה ב-ref כדי שנוכל לקרוא לה מחוץ
+      stopRecordingRef.current = stopRecordingAndCheck;
+      
+      recognition.onresult = (event: any) => {
+        if (isStopped) return;
+        
+        let interimTranscript = '';
+        let final = '';
+        let hasNewFinal = false;
+        let hasInterim = false;
+        
+        // עבור על כל התוצאות מהאינדקס האחרון
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final += transcript + ' ';
+            hasNewFinal = true;
+            lastResultTime = Date.now(); // עדכן זמן של תוצאה אחרונה
+          } else {
+            interimTranscript += transcript;
+            hasInterim = true;
+            lastResultTime = Date.now(); // גם תוצאות חלקיות מעדכנות את הזמן
+          }
+        }
+        
+        // עדכן את הטקסט הסופי אם יש תוצאות סופיות
+        if (hasNewFinal) {
+          finalTranscript += final;
+        }
+        
+        // הצג את הטקסט (סופי + חלקי)
+        const displayText = finalTranscript.trim() + (interimTranscript ? ' ' + interimTranscript : '');
+        setUserTranscript(displayText);
+        
+        // בטל את ה-timeout הקודם בכל פעם שיש תוצאה חדשה (סופית או חלקית)
+        if (silenceTimeout) {
+          clearTimeout(silenceTimeout);
+          silenceTimeout = null;
+        }
+        
+        // אם יש תוצאה חלקית, המשתמש עדיין מדבר - אל תעצור ולא תתחיל לספור שתיקה
+        if (hasInterim) {
+          // המשתמש עדיין מדבר, רק עדכן את התצוגה
+          return;
+        }
+        
+        // אם יש תוצאה סופית חדשה ולא יש תוצאות חלקיות, זה אומר שהמשתמש הפסיק לדבר
+        // אבל חכה קצת לפני שתספור שתיקה - אולי הוא רק עושה הפסקה קצרה
+        if (hasNewFinal && !hasInterim && finalTranscript.trim()) {
+          // בדוק שהזמן המינימלי עבר לפני שנתחיל לספור שתיקה
+          const elapsed = Date.now() - recordingStartTime;
+          if (elapsed < MIN_RECORDING_TIME) {
+            // זמן מינימלי לא עבר, חכה עוד קצת לפני שתספור שתיקה
+            return;
+          }
+          
+          // התחל timeout חדש לשתיקה - רק אחרי שיש תוצאה סופית ולא יש תוצאות חלקיות
+          // וזה אומר שהמשתמש הפסיק לדבר (או עשה הפסקה קצרה)
+          silenceTimeout = setTimeout(() => {
+            // בדוק שוב שאין תוצאות חלקיות - אם יש, אל תעצור
+            if (!isStopped && finalTranscript.trim()) {
+              // בדוק שהזמן האחרון של תוצאה עדיין ישן מספיק
+              const timeSinceLastResult = Date.now() - lastResultTime;
+              if (timeSinceLastResult >= SILENCE_DURATION) {
+                stopRecordingAndCheck();
+              }
+            }
+          }, SILENCE_DURATION);
+        }
       };
+      
+      recognition.onerror = (event: any) => {
+        if (isStopped) return;
+        
+        const errorType = event.error || 'unknown';
+        console.log('Speech recognition error:', errorType);
+        
+        // התעלם משגיאות 'no-speech' ו-'aborted' - הן לא אמיתיות
+        // 'no-speech' יכול לקרות גם כשהמשתמש רק מתחיל לדבר
+        // 'aborted' יכול לקרות כשהמערכת עוצרת וצריכה להתחיל מחדש
+        if (errorType === 'no-speech' || errorType === 'aborted') {
+          // אל תעשה כלום - תן למערכת להמשיך להקשיב
+          // מנגנון השתיקה או timeout מקסימלי יטפלו בעצירה
+          return;
+        }
+        
+        // אם זו שגיאה רצינית אחרת (לא 'no-speech' או 'aborted')
+        if (errorType !== 'no-speech' && errorType !== 'aborted') {
+          // רק עבור שגיאות רציניות - עצור את ההקלטה
+          console.error('Serious speech recognition error:', errorType);
+          setFeedback('שגיאה בהקלטה');
+          if (silenceTimeout) clearTimeout(silenceTimeout);
+          if (maxTimeout) clearTimeout(maxTimeout);
+          isStopped = true;
+          setRecording(false);
+          try {
+            recognition.stop();
+          } catch (e) {
+            console.log('Error stopping recognition:', e);
+          }
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+          }
+        }
+      };
+      
+      // Timeout מקסימלי של 30 שניות
+      maxTimeout = setTimeout(() => {
+        if (!isStopped && finalTranscript.trim()) {
+          stopRecordingAndCheck();
+        } else if (!isStopped) {
+          setFeedback('זמן ההקלטה הסתיים - נסה שוב');
+          isStopped = true;
+          if (silenceTimeout) clearTimeout(silenceTimeout);
+          setRecording(false);
+          recognition.stop();
+          if (mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+          stream.getTracks().forEach(track => track.stop());
+        }
+      }, 30000);
+      
       recognition.onend = () => {
-        setRecording(false);
-        if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-        stream.getTracks().forEach(track => track.stop());
+        if (isStopped) return;
+        
+        // אל תעשה כלום ב-onend - רק נסה להמשיך להקשיב
+        // העצירה תתבצע רק דרך מנגנון השתיקה או timeout מקסימלי או כפתור ידני
+        const elapsed = Date.now() - recordingStartTime;
+        
+        // אם עברו יותר מ-30 שניות, אל תנסה להתחיל מחדש
+        if (elapsed >= 30000) {
+          return;
+        }
+        
+        // תמיד נסה להמשיך להקשיב - גם אם יש תוצאה חלקית
+        // מנגנון השתיקה יטפל בעצירה כשיש תוצאה סופית
+        if (!isStopped) {
+          try {
+            // נסה להתחיל מחדש את ההכרה אחרי זמן קצר
+            setTimeout(() => {
+              if (!isStopped && recognition && recognition.state !== 'listening') {
+                try {
+                  recognition.start();
+                } catch (e) {
+                  // אם לא הצלחנו להתחיל מחדש, זה בסדר - נסה שוב אחרי זמן
+                  console.log('Could not restart recognition, will retry:', e);
+                  setTimeout(() => {
+                    if (!isStopped && recognition && recognition.state !== 'listening') {
+                      try {
+                        recognition.start();
+                      } catch (e2) {
+                        console.log('Retry failed, this is ok:', e2);
+                      }
+                    }
+                  }, 500);
+                }
+              }
+            }, 100);
+          } catch (e) {
+            console.log('Error in onend (this is ok):', e);
+          }
+        }
       };
+      
       recognition.start();
     }).catch(() => {
       setFeedback('אין הרשאת מיקרופון');
@@ -611,6 +818,29 @@ function RecordListen() {
     setUserTranscript('');
   };
 
+  const stopRecordingManually = () => {
+    if (stopRecordingRef.current) {
+      stopRecordingRef.current();
+    } else {
+      // אם אין פונקציית עצירה, נסה לעצור ידנית
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          console.log('Error stopping recognition:', e);
+        }
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      setRecording(false);
+    }
+  };
+
   const isRTL = lang === 'he';
   const progress = questions.length > 0 ? ((current + 1) / questions.length) * 100 : 0;
 
@@ -668,14 +898,24 @@ function RecordListen() {
                 )}
               </div>
               <div className="flex flex-col items-center gap-4 mb-4">
-                <button
-                  onClick={startRecording}
-                  disabled={recording || listening || checking}
-                  className={`px-10 py-4 rounded-full font-bold text-2xl shadow transition-all duration-200 flex items-center gap-2
-                    ${recording ? 'bg-yellow-400 text-white animate-pulse' : 'bg-purple-100 text-purple-700 hover:bg-purple-200 hover:scale-105'}`}
-                >
-                  <span className="text-2xl">🎙️</span> {recording ? 'מקליט...' : 'הקלט' }
-                </button>
+                <div className="flex gap-4 items-center">
+                  <button
+                    onClick={startRecording}
+                    disabled={recording || listening || checking}
+                    className={`px-10 py-4 rounded-full font-bold text-2xl shadow transition-all duration-200 flex items-center gap-2
+                      ${recording ? 'bg-yellow-400 text-white animate-pulse' : 'bg-purple-100 text-purple-700 hover:bg-purple-200 hover:scale-105'}`}
+                  >
+                    <span className="text-2xl">🎙️</span> {recording ? 'מקליט...' : 'הקלט' }
+                  </button>
+                  {recording && (
+                    <button
+                      onClick={stopRecordingManually}
+                      className="px-8 py-4 rounded-full font-bold text-xl shadow transition-all duration-200 flex items-center gap-2 bg-red-500 text-white hover:bg-red-600 hover:scale-105"
+                    >
+                      <span className="text-2xl">⏹️</span> עצור
+                    </button>
+                  )}
+                </div>
                 {userTranscript && (
                   <div className="text-center text-lg font-bold text-blue-700 bg-blue-50 rounded-xl px-4 py-2 shadow">
                     הקלטה שלך: {userTranscript}
