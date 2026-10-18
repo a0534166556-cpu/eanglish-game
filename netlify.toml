@@ -4,6 +4,8 @@
 
 [build.environment]
   NODE_VERSION = "18.18.0"
+  # Site env may set NPM_FLAGS=--omit=dev; keep build tools (typescript, etc.)
+  NPM_FLAGS = "--include=dev"
 
 # Next.js plugin handles all routing automatically
 [[plugins]]
