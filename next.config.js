@@ -25,6 +25,13 @@ const nextConfig = {
   
   // הגדרות Webpack
   webpack: (config, { isServer }) => {
+    const path = require('path');
+    // Ensure @/ alias resolves on Linux/Netlify even if tsconfig paths are flaky
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
+    };
+
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
