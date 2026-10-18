@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import path from 'path';
+import { createRequire } from 'module';
 import { rateLimit } from '../../../../lib/rateLimiter';
 import { prisma } from '@/lib/prisma';
+
+const requireFromRoot = createRequire(path.join(process.cwd(), 'package.json'));
+const wordClashEngine = requireFromRoot('./lib/wordClashEngine.js');
 
 // Word Clash questions organized by difficulty
 const WORD_CLASH_QUESTIONS = {
@@ -372,6 +377,8 @@ function getRandomWordChallenge(difficulty: string, round: number = 0) {
     correctSentenceIndex: sents.correctIndex,
     // Alternate: definition rounds and sentence rounds so UI is clear
     questionType: (round % 2 === 0 ? 'definition' : 'sentence') as 'definition' | 'sentence',
+    // Shared countdown for both players — client must sync from this
+    startedAt: Date.now(),
   };
 }
 
@@ -594,73 +601,55 @@ function mapDbRowToGame(game: any) {
 }
 
 const ALLOWED_EMOJIS = ['😊', '😢', '😠', '😍', '🤔', '😴', '🎉', '😱', '🤯', '😎', '👍', '👎', '❤️', '🔥', '😂'];
-const STALE_ANSWER_MS = 22000; // if one player answered and the other stalls, auto-timeout
 
 function advanceRoundIfReady(currentGame: any): boolean {
-  const bothPlayersAnswered =
-    currentGame.playerStates?.player1?.hasAnswered === true &&
-    currentGame.playerStates?.player2?.hasAnswered === true &&
-    currentGame.players?.player2 !== null;
-
-  if (!bothPlayersAnswered) return false;
-
-  currentGame.playerStates.player1.hasAnswered = false;
-  currentGame.playerStates.player2.hasAnswered = false;
-  if (currentGame.playerStates.player1.lastAnswerTime) currentGame.playerStates.player1.lastAnswerTime = undefined;
-  if (currentGame.playerStates.player2.lastAnswerTime) currentGame.playerStates.player2.lastAnswerTime = undefined;
-  currentGame.currentRound += 1;
-
-  if (currentGame.currentRound >= currentGame.maxRounds) {
-    const player1Score = currentGame.playerStates?.player1?.score || 0;
-    const player2Score = currentGame.playerStates?.player2?.score || 0;
-    if (player1Score > player2Score) currentGame.winner = 'player1';
-    else if (player2Score > player1Score) currentGame.winner = 'player2';
-    else currentGame.winner = 'draw';
-    currentGame.status = 'finished';
-    currentGame.currentWord = null;
-  } else {
-    const newWordChallenge = getRandomWordChallenge(currentGame.difficulty || 'easy', currentGame.currentRound);
-    if (!newWordChallenge) {
-      currentGame.status = 'finished';
-      currentGame.currentWord = null;
-    } else {
-      currentGame.currentWord = newWordChallenge;
-      currentGame.currentQuestion = null;
-    }
-  }
-  return true;
+  return wordClashEngine.advanceRoundIfReady(currentGame, {
+    getNextWord: (difficulty: string, round: number) => getRandomWordChallenge(difficulty, round),
+  });
 }
 
-/** If one player answered and the other is idle too long, force a timeout and advance. */
-async function forceStaleOpponentTimeout(gameId: string, game: any) {
-  if (!game || game.status !== 'active' || !game.players?.player2) return game;
-  const p1 = game.playerStates?.player1;
-  const p2 = game.playerStates?.player2;
-  if (!p1 || !p2) return game;
+function applyQuestionDeadline(currentGame: any): boolean {
+  return wordClashEngine.applyQuestionDeadline(currentGame, {
+    getNextWord: (difficulty: string, round: number) => getRandomWordChallenge(difficulty, round),
+  });
+}
 
-  const p1a = p1.hasAnswered === true;
-  const p2a = p2.hasAnswered === true;
-  if (p1a === p2a) return game;
+async function syncGameClock(gameId: string, game: any) {
+  if (!game) return game;
+  // Serialize clock resolution so two polling clients can't double-advance
+  return prisma.$transaction(async (tx) => {
+    const row = await tx.wordClashGame.findUnique({ where: { gameId } });
+    if (!row) return game;
+    const fresh = mapDbRowToGame(row);
+    const changed = applyQuestionDeadline(fresh);
+    if (!changed) return fresh;
 
-  const answeredAt = p1a
-    ? (p1.lastAnswerTime || game.lastMove?.time || 0)
-    : (p2.lastAnswerTime || game.lastMove?.time || 0);
-  if (!answeredAt || Date.now() - answeredAt < STALE_ANSWER_MS) return game;
+    fresh.updatedAt = Date.now();
+    let currentQuestionStr = '';
+    if (fresh.currentWord) currentQuestionStr = JSON.stringify(fresh.currentWord);
+    else if (fresh.currentQuestion) currentQuestionStr = JSON.stringify(fresh.currentQuestion);
 
-  const lagging: 'player1' | 'player2' = p1a ? 'player2' : 'player1';
-  game.playerStates[lagging].hasAnswered = true;
-  game.playerStates[lagging].lastAnswerTime = Date.now();
-  game.lastMove = {
-    player: lagging,
-    answer: 'timeout',
-    isCorrect: false,
-    time: Date.now(),
-    selectedIndex: -1,
-  };
-  advanceRoundIfReady(game);
-  game.updatedAt = Date.now();
-  await saveGame(gameId, game);
-  return game;
+    await tx.wordClashGame.update({
+      where: { gameId },
+      data: {
+        status: fresh.status || 'waiting',
+        currentRound: fresh.currentRound || 0,
+        maxRounds: fresh.maxRounds || 5,
+        currentWord: currentQuestionStr,
+        players: JSON.stringify(fresh.players || {}),
+        playerStates: JSON.stringify(fresh.playerStates || {}),
+        lastMove: fresh.lastMove ? JSON.stringify(fresh.lastMove) : null,
+        winner: fresh.winner || null,
+        chatMessages: fresh.chatMessages ? JSON.stringify(fresh.chatMessages) : null,
+        revealedLetters: JSON.stringify({
+          player1: fresh.revealedLetters?.player1 || [],
+          player2: fresh.revealedLetters?.player2 || [],
+          ...(fresh.lastEmoji ? { lastEmoji: fresh.lastEmoji } : {}),
+        }),
+      },
+    });
+    return fresh;
+  });
 }
 
 async function loadGameById(gameId: string) {
@@ -908,6 +897,12 @@ export async function POST(req: NextRequest) {
           if (existingGame.playerStates.player1) {
             existingGame.playerStates.player1.hasAnswered = false;
           }
+          // Start the shared 20s clock when the match actually begins
+          if (existingGame.currentWord) {
+            existingGame.currentWord.startedAt = Date.now();
+          } else {
+            existingGame.currentWord = getRandomWordChallenge(existingGame.difficulty || 'easy', existingGame.currentRound || 0);
+          }
 
           let currentQuestionStr = '';
           if (existingGame.currentWord) currentQuestionStr = JSON.stringify(existingGame.currentWord);
@@ -990,6 +985,9 @@ export async function POST(req: NextRequest) {
             return { error: 'invalid' as const };
           }
 
+          // Expire shared clock first (may advance the round)
+          applyQuestionDeadline(currentGame);
+
           let playerSymbol: 'player1' | 'player2' | null = null;
           if (currentGame.players.player1 === movePlayerIdSanitized) playerSymbol = 'player1';
           else if (currentGame.players.player2 === movePlayerIdSanitized) playerSymbol = 'player2';
@@ -1005,6 +1003,15 @@ export async function POST(req: NextRequest) {
             currentGame.playerStates[playerSymbol] = {
               score: 0, isReady: true, powerUps: { revealLetter: 3, skipWord: 2, freezeOpponent: 1 }, hasAnswered: false,
             };
+          }
+
+          // Ignore stale answers from a previous question (main cause of skipping rounds)
+          const clientRound = typeof body.round === 'number' ? body.round : null;
+          if (clientRound !== null && clientRound !== currentGame.currentRound) {
+            return { game: currentGame };
+          }
+          if (currentGame.status !== 'active') {
+            return { game: currentGame };
           }
 
           if (currentGame.playerStates[playerSymbol].hasAnswered === true) {
@@ -1233,7 +1240,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Game not found' }, { status: 404 });
     }
     
-    const synced = await forceStaleOpponentTimeout(gameId, game);
+    const synced = await syncGameClock(gameId, game);
     console.log(`[GET endpoint] Returning game ${gameId}`);
     return NextResponse.json({ game: synced });
   } catch (error) {

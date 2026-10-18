@@ -19,7 +19,8 @@
     "test:security": "node scripts/security-test.js",
     "test:scalability": "node scripts/scalability-test.js",
     "test:all": "node scripts/run-all-tests.js",
-    "test:pre-production": "npm run test:all"
+    "test:pre-production": "npm run test:all",
+    "test:word-clash": "node scripts/test-word-clash.js && node scripts/test-word-clash-full.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

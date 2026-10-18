@@ -10,6 +10,8 @@ export interface WordChallenge {
   correctSentenceIndex: number;
   /** Which question the players answer this round */
   questionType?: 'definition' | 'sentence';
+  /** Server timestamp when this question started (shared timer) */
+  startedAt?: number;
 }
 
 export interface PlayerState {
