@@ -42,6 +42,5 @@ next-env.d.ts
 
 /lib/generated/prisma
 
-# Accidental nested OneDrive/Desktop copy — never commit
-ùåìçï äòáåãä/
-
+# Accidental nested OneDrive/Desktop copy - never commit
+×©×•×œ×—×Ÿ ×”×¢×‘×•×“×”/
