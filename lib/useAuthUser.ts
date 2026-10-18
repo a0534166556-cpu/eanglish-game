@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-export default function useAuthUser() {
+export function useAuthUser() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,4 +68,6 @@ export default function useAuthUser() {
   }, []);
 
   return { user, loading, updateUser };
-} 
+}
+
+export default useAuthUser; 

@@ -14,7 +14,6 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
   // Skip trailing slash redirect
   skipTrailingSlashRedirect: true,
   
@@ -46,7 +45,9 @@ const nextConfig = {
   // שיפור ביצועים - experimental features
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
-    // מניעת יצירת קישורים סימבוליים שעלולים לגרום לבעיות עם נתיבים בעברית
+    // Avoid hard-failing the whole deploy on CSR bailout edge cases
+    missingSuspenseWithCSRBailout: false,
+    // מניעת יצירת קישורים סימבוליים שעלולים לגרום לבעיות עם נתיבים עבריים
     serverActions: {
       bodySizeLimit: '2mb',
     },

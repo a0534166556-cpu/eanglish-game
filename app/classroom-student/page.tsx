@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import confetti from 'canvas-confetti';
 
@@ -3220,7 +3220,7 @@ const QUESTIONS_BY_UNIT_LEVEL: { [key: string]: { [key: string]: Question[] } } 
 };
 
 
-export default function ClassroomStudentPage() {
+function ClassroomStudentPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams?.get('session');
   const unit = searchParams?.get('unit') || '1';
@@ -4621,5 +4621,13 @@ export default function ClassroomStudentPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ClassroomStudentPageWrapper() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <ClassroomStudentPage />
+    </Suspense>
   );
 }

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import { createRequire } from 'module';
 import { rateLimit } from '../../../../lib/rateLimiter';
 import { prisma } from '@/lib/prisma';
-
-const requireFromRoot = createRequire(path.join(process.cwd(), 'package.json'));
-const wordClashEngine = requireFromRoot('./lib/wordClashEngine.js');
+import {
+  advanceRoundIfReady as engineAdvanceRoundIfReady,
+  applyQuestionDeadline as engineApplyQuestionDeadline,
+} from '@/lib/wordClashEngine';
 
 // Word Clash questions organized by difficulty
 const WORD_CLASH_QUESTIONS = {
@@ -603,13 +602,13 @@ function mapDbRowToGame(game: any) {
 const ALLOWED_EMOJIS = ['😊', '😢', '😠', '😍', '🤔', '😴', '🎉', '😱', '🤯', '😎', '👍', '👎', '❤️', '🔥', '😂'];
 
 function advanceRoundIfReady(currentGame: any): boolean {
-  return wordClashEngine.advanceRoundIfReady(currentGame, {
+  return engineAdvanceRoundIfReady(currentGame, {
     getNextWord: (difficulty: string, round: number) => getRandomWordChallenge(difficulty, round),
   });
 }
 
 function applyQuestionDeadline(currentGame: any): boolean {
-  return wordClashEngine.applyQuestionDeadline(currentGame, {
+  return engineApplyQuestionDeadline(currentGame, {
     getNextWord: (difficulty: string, round: number) => getRandomWordChallenge(difficulty, round),
   });
 }
