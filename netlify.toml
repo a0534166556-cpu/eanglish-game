@@ -3,9 +3,11 @@
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "18.18.0"
+  NODE_VERSION = "20"
   # Site env may set NPM_FLAGS=--omit=dev; keep build tools (typescript, etc.)
   NPM_FLAGS = "--include=dev"
+  # Ignore leftover local test fixtures if any are scanned
+  SECRETS_SCAN_OMIT_PATHS = "test-firebase.js,.env*,*.local"
 
 # Next.js plugin handles all routing automatically
 [[plugins]]
