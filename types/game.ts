@@ -8,6 +8,8 @@ export interface WordChallenge {
   correctDefinitionIndex: number;
   sentences: string[];
   correctSentenceIndex: number;
+  /** Which question the players answer this round */
+  questionType?: 'definition' | 'sentence';
 }
 
 export interface PlayerState {
@@ -26,6 +28,13 @@ export interface ChatMessage {
   sender: string;
   text: string;
   timestamp: number;
+  type?: 'text' | 'emoji';
+}
+
+export interface LastEmoji {
+  sender: string;
+  emoji: string;
+  time: number;
 }
 
 export interface Game {
@@ -45,14 +54,16 @@ export interface Game {
   winner: GameResult;
   lastMove: {
     player: Player;
-    answer: 'definition' | 'sentence';
+    answer: 'definition' | 'sentence' | 'timeout';
     isCorrect: boolean;
     time: number;
     selectedIndex: number;
   } | null;
+  difficulty?: string;
   createdAt: number;
   updatedAt: number;
   chatMessages: ChatMessage[];
+  lastEmoji?: LastEmoji | null;
   revealedLetters?: {
     [key in Player]?: string[];
   };

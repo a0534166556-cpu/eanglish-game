@@ -168,6 +168,37 @@ export default function VirtualHouse() {
     }
   };
 
+  const loadHouses = async () => {
+    if (!user) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/house/houses?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        const housesList = data.houses || [];
+        setHouses(housesList);
+        
+        // אם אין בית נוכחי, הגדר את הבית הראשון (ברירת מחדל)
+        if (!currentHouseId && housesList.length > 0) {
+          const defaultHouse = housesList.find((h: House) => h.isDefault) || housesList[0];
+          setCurrentHouseId(defaultHouse.id);
+        }
+      } else {
+        console.error('Failed to load houses:', response.status);
+        setHouses([]);
+      }
+    } catch (error) {
+      console.error('Failed to load houses:', error);
+      setHouses([]);
+    }
+  };
+
+  const switchHouse = (houseId: string) => {
+    setCurrentHouseId(houseId);
+  };
+
   const loadHouseItems = async () => {
     if (!user) {
       setIsLoading(false);
@@ -175,9 +206,16 @@ export default function VirtualHouse() {
     }
     
     try {
-      const response = await fetch(`/api/house/items?userId=${user.id}`);
+      // טען פריטים מהבית הנוכחי, אם קיים
+      let url = `/api/house/items?userId=${user.id}`;
+      if (currentHouseId) {
+        url += `&houseId=${currentHouseId}`;
+      }
+      
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Loaded house items:', data.houseItems?.length || 0, 'items');
         setHouseItems(data.houseItems || []);
       } else {
         console.error('Failed to load house items:', response.status);
@@ -221,7 +259,8 @@ export default function VirtualHouse() {
         },
         body: JSON.stringify({
           userId: user.id,
-          itemId: item.id
+          itemId: item.id,
+          houseId: currentHouseId || undefined // שלח את houseId הנוכחי אם קיים
         }),
       });
 
@@ -232,11 +271,15 @@ export default function VirtualHouse() {
       if (response.ok) {
         const data = JSON.parse(responseText);
         
+        console.log('✅ Purchase successful:', data);
+        
         // Reload user data from database to get fresh diamonds/coins
         await loadUserData();
         
-        // Load house items to show new purchase
+        // Load house items to show new purchase (with currentHouseId if available)
         await loadHouseItems();
+        
+        console.log('✅ House items reloaded after purchase');
         
         alert('הפריט נרכש בהצלחה! ✨');
       } else {

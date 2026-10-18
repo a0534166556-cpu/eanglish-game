@@ -73,10 +73,19 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Check subscription error:', error);
+    // Return a more user-friendly error response
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        subscription: null,
+        error: error instanceof Error ? error.message : 'Internal server error' 
+      },
       { status: 500 }
     );
+  } finally {
+    // Ensure Prisma connection is closed
+    await prisma.$disconnect().catch(() => {
+      // Ignore disconnect errors
+    });
   }
 }
 

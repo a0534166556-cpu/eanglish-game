@@ -527,10 +527,13 @@ function RecordListen() {
       let silenceTimeout: NodeJS.Timeout | null = null;
       let maxTimeout: NodeJS.Timeout | null = null;
       let lastResultTime = Date.now();
+      let lastInterimTime = Date.now();
       let finalTranscript = '';
       let isStopped = false;
-      const SILENCE_DURATION = 3000; // חכה 3 שניות של שתיקה לפני עצירה (הגדלנו את הזמן)
-      const MIN_RECORDING_TIME = 2000; // זמן מינימלי של הקלטה - לפחות 2 שניות
+      let onEndCallCount = 0;
+      const SILENCE_DURATION = 3500; // חכה 3.5 שניות של שתיקה לפני עצירה
+      const MIN_RECORDING_TIME = 3000; // זמן מינימלי של הקלטה - לפחות 3 שניות
+      const MIN_WORDS_COUNT = 3; // מינימום מילים לפני שנתחיל לספור שתיקה
       const recordingStartTime = Date.now();
       
       const stopRecordingAndCheck = () => {
@@ -615,7 +618,13 @@ function RecordListen() {
         
         // אם יש תוצאה חלקית, המשתמש עדיין מדבר - אל תעצור ולא תתחיל לספור שתיקה
         if (hasInterim) {
-          // המשתמש עדיין מדבר, רק עדכן את התצוגה
+          // המשתמש עדיין מדבר, עדכן את הזמן של תוצאה חלקית אחרונה
+          lastInterimTime = Date.now();
+          // בטל את כל ה-timeouts של שתיקה
+          if (silenceTimeout) {
+            clearTimeout(silenceTimeout);
+            silenceTimeout = null;
+          }
           return;
         }
         
@@ -629,6 +638,21 @@ function RecordListen() {
             return;
           }
           
+          // בדוק שיש לפחות כמה מילים לפני שנתחיל לספור שתיקה
+          // זה מבטיח שהמשתמש לא רק התחיל לדבר אלא באמת אמר משהו
+          const wordCount = finalTranscript.trim().split(/\s+/).length;
+          if (wordCount < MIN_WORDS_COUNT) {
+            // עדיין לא מספיק מילים, המשך להקשיב
+            return;
+          }
+          
+          // בדוק שלא הייתה תוצאה חלקית לאחרונה (כלומר המשתמש באמת סיים לדבר)
+          const timeSinceLastInterim = Date.now() - lastInterimTime;
+          if (timeSinceLastInterim < 2000) {
+            // הייתה תוצאה חלקית לאחרונה, המשך להקשיב
+            return;
+          }
+          
           // התחל timeout חדש לשתיקה - רק אחרי שיש תוצאה סופית ולא יש תוצאות חלקיות
           // וזה אומר שהמשתמש הפסיק לדבר (או עשה הפסקה קצרה)
           silenceTimeout = setTimeout(() => {
@@ -636,7 +660,9 @@ function RecordListen() {
             if (!isStopped && finalTranscript.trim()) {
               // בדוק שהזמן האחרון של תוצאה עדיין ישן מספיק
               const timeSinceLastResult = Date.now() - lastResultTime;
-              if (timeSinceLastResult >= SILENCE_DURATION) {
+              const timeSinceLastInterimNow = Date.now() - lastInterimTime;
+              // רק עצור אם לא הייתה תוצאה חלקית או סופית במשך זמן מספיק
+              if (timeSinceLastResult >= SILENCE_DURATION && timeSinceLastInterimNow >= SILENCE_DURATION) {
                 stopRecordingAndCheck();
               }
             }
@@ -703,14 +729,28 @@ function RecordListen() {
       recognition.onend = () => {
         if (isStopped) return;
         
-        // אל תעשה כלום ב-onend - רק נסה להמשיך להקשיב
-        // העצירה תתבצע רק דרך מנגנון השתיקה או timeout מקסימלי או כפתור ידני
+        onEndCallCount++;
         const elapsed = Date.now() - recordingStartTime;
+        const timeSinceLastInterim = Date.now() - lastInterimTime;
         
         // אם עברו יותר מ-30 שניות, אל תנסה להתחיל מחדש
         if (elapsed >= 30000) {
           return;
         }
+        
+        // אם יש תוצאה והזמן המינימלי עבר, בדוק אם צריך לעצור דרך מנגנון השתיקה
+        if (finalTranscript.trim() && elapsed >= MIN_RECORDING_TIME) {
+          const wordCount = finalTranscript.trim().split(/\s+/).length;
+          // אם יש מספיק מילים ולא הייתה תוצאה חלקית לאחרונה, מנגנון השתיקה יטפל
+          if (wordCount >= MIN_WORDS_COUNT && timeSinceLastInterim >= 3000) {
+            // יש מספיק מילים וזמן מספיק עבר, מנגנון השתיקה יטפל - אל תעשה כלום
+            return;
+          }
+        }
+        
+        // אם onend נקרא הרבה פעמים בקצרה, זה אומר שהמשתמש עדיין מדבר
+        // חכה קצת לפני שתנסה להתחיל מחדש
+        const delay = onEndCallCount < 5 ? 200 : 1000;
         
         // תמיד נסה להמשיך להקשיב - גם אם יש תוצאה חלקית
         // מנגנון השתיקה יטפל בעצירה כשיש תוצאה סופית
@@ -718,14 +758,14 @@ function RecordListen() {
           try {
             // נסה להתחיל מחדש את ההכרה אחרי זמן קצר
             setTimeout(() => {
-              if (!isStopped && recognition && recognition.state !== 'listening') {
+              if (!isStopped && recognition && recognition.state !== 'listening' && recognition.state !== 'starting') {
                 try {
                   recognition.start();
                 } catch (e) {
                   // אם לא הצלחנו להתחיל מחדש, זה בסדר - נסה שוב אחרי זמן
                   console.log('Could not restart recognition, will retry:', e);
                   setTimeout(() => {
-                    if (!isStopped && recognition && recognition.state !== 'listening') {
+                    if (!isStopped && recognition && recognition.state !== 'listening' && recognition.state !== 'starting') {
                       try {
                         recognition.start();
                       } catch (e2) {
@@ -735,7 +775,7 @@ function RecordListen() {
                   }, 500);
                 }
               }
-            }, 100);
+            }, delay);
           } catch (e) {
             console.log('Error in onend (this is ok):', e);
           }

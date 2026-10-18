@@ -221,7 +221,7 @@ export default function MatchingPairsGame() {
     <div className="min-h-screen bg-gradient-to-b from-blue-500 to-blue-700 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-white">אמת מילים - {difficulty === 'easy' ? 'קל' : difficulty === 'medium' ? 'בינוני' : 'קשה'}</h1>
+          <h1 className="text-4xl font-bold text-white">משחק הזיכרון בקובייה - {difficulty === 'easy' ? 'קל' : difficulty === 'medium' ? 'בינוני' : 'קשה'}</h1>
           <div className="flex gap-4">
             <div className="bg-white rounded-lg px-6 py-3 shadow-lg">
               <span className="text-xl font-semibold">מהלכים: {moves}</span>

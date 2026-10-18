@@ -328,3 +328,42 @@ model BugReport {
   @@index([priority])
   @@index([createdAt])
 }
+
+model StudyContent {
+  id          String            @id @default(cuid())
+  creatorId   String
+  creatorName String?
+  title       String
+  description String?           @db.Text
+  type        String
+  difficulty  String
+  subject     String            @default("mixed")
+  questions   String            @db.LongText
+  totalPoints Int               @default(100)
+  timeLimit   Int?
+  isPublished Boolean           @default(true)
+  dueDate     DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  submissions StudySubmission[]
+
+  @@index([creatorId])
+  @@index([difficulty])
+  @@index([type])
+}
+
+model StudySubmission {
+  id          String       @id @default(cuid())
+  contentId   String
+  studentName String
+  studentId   String?
+  score       Int
+  maxScore    Int
+  answers     String       @db.LongText
+  timeSpent   Int          @default(0)
+  submittedAt DateTime     @default(now())
+  content     StudyContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@unique([contentId, studentName])
+  @@index([contentId])
+}

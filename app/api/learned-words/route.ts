@@ -128,7 +128,7 @@ function getGameDisplayName(gameName: string): string {
     'FillInTheBlanks': 'השלמת מילים',
     'MultipleChoice': 'בחירה מרובה',
     'SentenceScramble': 'סידור משפטים',
-    'MatchingPairs': 'משחק הזיכרון',
+    'MatchingPairs': 'משחק הזיכרון בקובייה',
     'picture-description-duel': 'תיאור תמונה - דו-קרב',
     'WordClash': 'קרב זוגי - מילים',
     'Listening': 'האזנה',

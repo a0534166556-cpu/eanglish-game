@@ -17,16 +17,27 @@ export default function RewardedAd({
   className = '',
   testMode = false
 }: RewardedAdProps) {
-  const [showAd, setShowAd] = useState(true); // התחל ישר עם הפרסומת
+  const [showAd, setShowAd] = useState(false); // לא מתחיל אוטומטית - צריך לחיצה
   const [adWatched, setAdWatched] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [adProgress, setAdProgress] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false); // מצב הצלחה זמני
+
+  // בדיקה שהקומפוננטה נטענה
+  useEffect(() => {
+    console.log('RewardedAd component loaded', { rewardType, rewardAmount, onReward: !!onReward });
+  }, []);
+
+  // פונקציה שמתחילה את הפרסומת כשלוחצים על הכפתור
+  const handleWatchAd = () => {
+    setShowAd(true);
+    setIsLoading(true);
+    setAdProgress(0);
+  };
 
   useEffect(() => {
-    // התחל את הפרסומת אוטומטית
-    if (showAd && !adWatched) {
-      setIsLoading(true);
-      
+    // התחל את הפרסומת רק אחרי שהמשתמש לחץ על הכפתור
+    if (showAd && !adWatched && isLoading) {
       // Simulate ad watching (in real implementation, this would be handled by AdSense)
       // נדמה פרסומת של 5 שניות
       const duration = 5000; // 5 שניות
@@ -43,8 +54,9 @@ export default function RewardedAd({
           setAdWatched(true);
           setShowAd(false);
           setIsLoading(false);
+          setShowSuccess(true);
           
-          // Give reward
+          // Give reward רק אחרי שהמשתמש באמת צפה בפרסומת
           const reward = {
             type: rewardType,
             amount: rewardAmount
@@ -55,13 +67,20 @@ export default function RewardedAd({
           }
           
           console.log(`Reward given: ${rewardAmount} ${rewardType}`);
+          
+          // אחרי 3 שניות, אפס הכל כדי לאפשר לחיצה נוספת
+          setTimeout(() => {
+            setShowSuccess(false);
+            setAdWatched(false);
+            setAdProgress(0);
+            // הכפתור יהיה זמין שוב!
+          }, 3000);
         }
       }, interval);
       
       return () => clearInterval(progressInterval);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showAd, adWatched]);
+  }, [showAd, adWatched, isLoading, rewardType, rewardAmount, onReward]);
 
   if (showAd && !adWatched) {
     return (
@@ -105,29 +124,56 @@ export default function RewardedAd({
     );
   }
 
-  if (adWatched) {
+  // הצג הודעת הצלחה זמנית (3 שניות) ואז חזור לכפתור
+  if (showSuccess) {
     return (
-      <div className={`reward-success ${className}`}>
+      <div className={`reward-success ${className}`} style={{ 
+        background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+        borderRadius: '15px',
+        padding: '25px',
+        textAlign: 'center',
+        color: 'white',
+        margin: '20px 0',
+        animation: 'bounceIn 0.6s ease'
+      }}>
         <div className="success-content">
-          <h3>🎉 כל הכבוד!</h3>
-          <p>קיבלת {rewardAmount} {rewardType === 'diamonds' ? 'יהלומים' : rewardType === 'coins' ? 'מטבעות' : 'נקודות'}!</p>
-          <div className="reward-icon">
+          <h3 style={{ fontSize: '1.8rem', marginBottom: '15px' }}>🎉 כל הכבוד!</h3>
+          <p style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
+            קיבלת {rewardAmount} {rewardType === 'diamonds' ? 'יהלומים' : rewardType === 'coins' ? 'מטבעות' : 'נקודות'}!
+          </p>
+          <div className="reward-icon" style={{ fontSize: '4rem', marginBottom: '15px' }}>
             {rewardType === 'diamonds' ? '💎' : rewardType === 'coins' ? '🪙' : '⭐'}
           </div>
+          <p style={{ fontSize: '1rem', opacity: 0.9 }}>הכפתור יהיה זמין שוב בעוד רגע...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`rewarded-ad-trigger ${className}`}>
+    <div className={`rewarded-ad-trigger ${className}`} style={{ display: 'block', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
       <div className="ad-prompt">
-        <h3>🎬 צפו במודעה וקבלו פרס!</h3>
-        <p>קבלו {rewardAmount} {rewardType === 'diamonds' ? 'יהלומים' : rewardType === 'coins' ? 'מטבעות' : 'נקודות'} בחינם!</p>
+        <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '15px' }}>🎬 צפו במודעה וקבלו פרס!</h3>
+        <p style={{ fontSize: '1.1rem', marginBottom: '25px' }}>קבלו {rewardAmount} {rewardType === 'diamonds' ? 'יהלומים' : rewardType === 'coins' ? 'מטבעות' : 'נקודות'} בחינם!</p>
         <button
           onClick={handleWatchAd}
           disabled={isLoading}
           className="watch-ad-button"
+          style={{
+            background: 'linear-gradient(45deg, #FF6B6B, #4ECDC4)',
+            color: 'white',
+            border: 'none',
+            padding: '15px 40px',
+            borderRadius: '30px',
+            fontSize: '1.2rem',
+            fontWeight: 'bold',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+            opacity: isLoading ? 0.6 : 1,
+            display: 'inline-block',
+            minWidth: '200px'
+          }}
         >
           {isLoading ? 'טוען...' : '🎥 צפו במודעה'}
         </button>

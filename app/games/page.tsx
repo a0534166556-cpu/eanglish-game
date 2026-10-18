@@ -42,7 +42,7 @@ const games = [
   },
   {
     id: 'matching-pairs',
-    name: 'משחק הזיכרון',
+    name: 'משחק הזיכרון בקובייה',
     description: 'התאם בין מילים באנגלית לתרגום או תמונה',
     icon: '🔤',
     color: 'from-pink-400 to-pink-600',
@@ -275,6 +275,30 @@ function Games() {
                 </div>
               </Link>
             ))}
+          </div>
+
+          {/* Leaderboard Section */}
+          <div className="mt-16 mb-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                🏆 לוח דירוג שחקנים
+              </h2>
+              <p className="text-lg text-gray-600">
+                ראה מי ברמה הגבוהה ביותר — דרגה, רמה וסטטיסטיקות
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <Link href="/leaderboard" className="group">
+                <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white px-8 py-4 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 flex items-center gap-4">
+                  <div className="text-4xl">🏆</div>
+                  <div className="text-right">
+                    <h3 className="text-xl font-bold">לוח דירוג</h3>
+                    <p className="text-amber-100">דירוג לפי רמה ודרגה</p>
+                  </div>
+                  <div className="text-2xl group-hover:-translate-x-2 transition-transform duration-300">→</div>
+                </div>
+              </Link>
+            </div>
           </div>
 
           {/* Learned Words Section */}

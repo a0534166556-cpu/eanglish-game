@@ -137,9 +137,12 @@ export default function ArticlesPage() {
               </div>
               <h3 className="text-3xl font-bold mb-4">{featuredArticle.title}</h3>
               <p className="text-xl opacity-90 mb-6">{featuredArticle.excerpt}</p>
-              <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors">
+              <Link 
+                href={`/articles/${featuredArticle.id}`}
+                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition-colors inline-block"
+              >
                 קראו עכשיו
-              </button>
+              </Link>
             </div>
           </div>
         )}
@@ -197,9 +200,12 @@ export default function ArticlesPage() {
                 <span className="text-sm text-gray-500">
                   {new Date(article.publishedAt).toLocaleDateString('he-IL')}
                 </span>
-                <button className="text-blue-600 font-semibold hover:text-blue-800 transition-colors">
+                <Link 
+                  href={`/articles/${article.id}`}
+                  className="text-blue-600 font-semibold hover:text-blue-800 transition-colors"
+                >
                   קראו עוד →
-                </button>
+                </Link>
               </div>
             </div>
           ))}

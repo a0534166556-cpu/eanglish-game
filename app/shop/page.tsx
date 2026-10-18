@@ -231,14 +231,6 @@ const SHOP_ITEMS: ShopItem[] = [
     requireAd: true // דגל מיוחד שמציין שצריך לצפות בפרסומת
   },
   {
-    id: 'show_solution',
-    name: 'הצג פתרון',
-    description: 'הצג את כל הקלפים פתוחים למשך 5 שניות',
-    icon: '🎯',
-    price: 150,
-    currency: 'coins'
-  },
-  {
     id: 'opponent_freeze',
     name: 'הקפה יריב',
     description: 'עצור את היריב למשך 10 שניות',
@@ -667,6 +659,14 @@ export default function ShopPage() {
       console.log('Buy item, new inventory:', newInv);
       return newInv;
     });
+
+    // אם זה גלגל מזל, פתח את דף הגלגל
+    if (item.id === 'lucky_wheel') {
+      alert('🎰 גלגל המזל נוסף למלאי שלך!\n\nמעבר לדף הגלגל...');
+      setTimeout(() => {
+        router.push('/wheel');
+      }, 500);
+    }
   }
 
   return (

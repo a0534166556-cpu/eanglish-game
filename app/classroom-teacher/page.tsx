@@ -342,6 +342,7 @@ interface GameSession {
 }
 
 export default function ClassroomTeacherPage() {
+  const { user, loading } = useAuthUser();
   const [gameSessions, setGameSessions] = useState<GameSession[]>([]);
   const [currentSession, setCurrentSession] = useState<GameSession | null>(null);
   const [newSessionTitle, setNewSessionTitle] = useState('');

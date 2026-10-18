@@ -129,7 +129,7 @@ export default function LearnedWords() {
       trueFalse: 'נכון/לא נכון',
       pictureDescription: 'תיאור תמונה',
       sentenceBuilder: 'בניית משפטים',
-      matchingPairs: 'זוגות תואמים',
+      matchingPairs: 'משחק הזיכרון בקובייה',
       listening: 'האזנה',
       pronunciation: 'הגייה',
       mixedQuiz: 'חידון מעורב'

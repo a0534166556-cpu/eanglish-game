@@ -7,3 +7,7 @@ ALTER TABLE `WordClashGame` MODIFY `chatMessages` LONGTEXT NULL;
 ALTER TABLE `WordClashGame` MODIFY `revealedLetters` LONGTEXT NULL;
 
 
+
+
+
+

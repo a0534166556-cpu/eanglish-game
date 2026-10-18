@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, itemId } = await request.json();
+    const { userId, itemId, houseId } = await request.json();
 
     if (!userId || !itemId) {
       return NextResponse.json(
@@ -87,15 +87,19 @@ export async function POST(request: NextRequest) {
     else if (shopItem.name.includes('ארון')) defaultScale = 2.0;
     else if (shopItem.name.includes('כיסא')) defaultScale = 1.8;
     
-    // מצא את הבית הנוכחי של המשתמש (ברירת מחדל או הראשון)
-    const currentHouse = await prisma.house.findFirst({
-      where: { userId },
-      orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }]
-    });
+    // קבע את houseId - אם נשלח houseId, השתמש בו; אחרת מצא את הבית ברירת המחדל
+    let finalHouseId = houseId;
+    if (!finalHouseId) {
+      // מצא את הבית הנוכחי של המשתמש (ברירת מחדל או הראשון)
+      const currentHouse = await prisma.house.findFirst({
+        where: { userId },
+        orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }]
+      });
+      finalHouseId = currentHouse?.id;
+    }
 
     // אם אין בית, צור בית ברירת מחדל
-    let houseId = currentHouse?.id;
-    if (!houseId) {
+    if (!finalHouseId) {
       const newHouse = await prisma.house.create({
         data: {
           userId,
@@ -103,14 +107,14 @@ export async function POST(request: NextRequest) {
           isDefault: true
         }
       });
-      houseId = newHouse.id;
+      finalHouseId = newHouse.id;
     }
 
     // רכישת הפריט
     const houseItem = await prisma.houseItem.create({
       data: {
         userId,
-        houseId: houseId,
+        houseId: finalHouseId,
         shopItemId: itemId,
         positionX: 0,
         positionY: 0,

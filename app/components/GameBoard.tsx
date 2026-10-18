@@ -10,29 +10,44 @@ interface GameBoardProps {
   currentPlayerSymbol: Player;
 }
 
-export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol }: GameBoardProps) {
+export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol: initialSymbol }: GameBoardProps) {
   const [game, setGame] = useState<Game | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [chatInput, setChatInput] = useState('');
-  const [revealedLetter, setRevealedLetter] = useState<string | null>(null);
-  const [revealError, setRevealError] = useState<string | null>(null);
-  const [skipError, setSkipError] = useState<string | null>(null);
-  const [skipSuccess, setSkipSuccess] = useState<boolean>(false);
   const [timeLeft, setTimeLeft] = useState<number>(20);
   const [isTimerActive, setIsTimerActive] = useState<boolean>(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error' | 'info', text: string, showScore?: boolean, myScore?: number, opponentScore?: number } | null>(null);
-  const [lastQuestionId, setLastQuestionId] = useState<string | null>(null);
-  const [questionStartTime, setQuestionStartTime] = useState<number | null>(null);
+  const lastQuestionKeyRef = useRef<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState<boolean>(false);
+  const [mySelectedIndex, setMySelectedIndex] = useState<number | null>(null);
+  const [currentPlayerSymbol, setCurrentPlayerSymbol] = useState<Player>(initialSymbol);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const gameLoadedRef = useRef<boolean>(false); // Track if game is fully loaded
-  const lastMoveTimeRef = useRef<number>(0); // Track last move time to prevent duplicate feedback
+  const lastMoveTimeRef = useRef<number>(0);
+  const isSubmittingAnswerRef = useRef<boolean>(false);
+  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const statsUpdatedRef = useRef<boolean>(false);
+  const timeoutSentRef = useRef<boolean>(false);
+  const hasAnsweredRef = useRef<boolean>(false);
+  const questionTransitionRef = useRef<NodeJS.Timeout | null>(null);
+  const transitioningRef = useRef<boolean>(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const pendingGameRef = useRef<Game | null>(null);
   
-  // מערכת אימוג'ים
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [currentEmoji, setCurrentEmoji] = useState<string | null>(null);
-  const [emojiHistory, setEmojiHistory] = useState<string[]>([]);
+  const [displayEmoji, setDisplayEmoji] = useState<{ emoji: string; fromMe: boolean } | null>(null);
+  const [emojiSending, setEmojiSending] = useState(false);
+  const lastSeenEmojiTimeRef = useRef<number>(0);
+  const emojiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const emojiCooldownRef = useRef<number>(0);
+
+  useEffect(() => {
+    setCurrentPlayerSymbol(initialSymbol);
+  }, [initialSymbol]);
+
+  useEffect(() => {
+    hasAnsweredRef.current = hasAnswered;
+  }, [hasAnswered]);
 
   const EMOJI_REACTIONS = [
     { emoji: '😊', name: 'שמח', color: 'bg-yellow-100 hover:bg-yellow-200' },
@@ -45,311 +60,421 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
     { emoji: '😱', name: 'מפוחד', color: 'bg-orange-100 hover:bg-orange-200' },
     { emoji: '🤯', name: 'מופתע', color: 'bg-indigo-100 hover:bg-indigo-200' },
     { emoji: '😎', name: 'מגניב', color: 'bg-cyan-100 hover:bg-cyan-200' },
+    { emoji: '👍', name: 'כל הכבוד', color: 'bg-green-100 hover:bg-green-200' },
+    { emoji: '😂', name: 'מצחיק', color: 'bg-yellow-100 hover:bg-yellow-200' },
+    { emoji: '❤️', name: 'לב', color: 'bg-pink-100 hover:bg-pink-200' },
+    { emoji: '🔥', name: 'אש', color: 'bg-orange-100 hover:bg-orange-200' },
   ];
 
-  const sendEmoji = (emoji: string) => {
-    setCurrentEmoji(emoji);
-    setEmojiHistory(prev => [emoji, ...prev.slice(0, 2)]); // שמירת 3 אימוג'ים אחרונים
-    setShowEmojiPicker(false);
-    
-    // איפוס האימוג'י הנוכחי אחרי 3 שניות
-    setTimeout(() => {
-      setCurrentEmoji(null);
-    }, 3000);
+  const showEmojiBurst = (emoji: string, fromMe: boolean) => {
+    if (emojiTimeoutRef.current) {
+      clearTimeout(emojiTimeoutRef.current);
+      emojiTimeoutRef.current = null;
+    }
+    setDisplayEmoji({ emoji, fromMe });
+    emojiTimeoutRef.current = setTimeout(() => {
+      setDisplayEmoji(null);
+      emojiTimeoutRef.current = null;
+    }, 3500);
   };
 
-  // ניקוי אימוג'ים ישנים
+  const sendEmoji = async (emoji: string) => {
+    if (emojiSending) return;
+    const now = Date.now();
+    if (now - emojiCooldownRef.current < 800) return;
+    emojiCooldownRef.current = now;
+
+    setShowEmojiPicker(false);
+    showEmojiBurst(emoji, true);
+    setEmojiSending(true);
+
+    try {
+      const response = await fetch('/api/games/word-clash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'emoji',
+          gameId,
+          playerId: currentPlayerId,
+          emoji,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.game) {
+          setGame(data.game);
+          if (data.game.lastEmoji?.time) {
+            lastSeenEmojiTimeRef.current = data.game.lastEmoji.time;
+          }
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'שליחת האימוג׳י נכשלה' }));
+        setError(errorData.error || 'שליחת האימוג׳י נכשלה');
+      }
+    } catch (err) {
+      console.error('Error sending emoji:', err);
+      setError('שליחת האימוג׳י נכשלה');
+    } finally {
+      setEmojiSending(false);
+    }
+  };
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setEmojiHistory(prev => prev.slice(0, -1));
-    }, 1000);
-    
-    return () => clearInterval(interval);
+    return () => {
+      if (emojiTimeoutRef.current) {
+        clearTimeout(emojiTimeoutRef.current);
+        emojiTimeoutRef.current = null;
+      }
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+        feedbackTimeoutRef.current = null;
+      }
+      if (questionTransitionRef.current) {
+        clearTimeout(questionTransitionRef.current);
+        questionTransitionRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
+    const showFeedback = (move: any, g: Game, symbol: Player) => {
+      if (!move || move.player !== symbol || !move.time || move.time === lastMoveTimeRef.current) return;
+      lastMoveTimeRef.current = move.time;
+      const myScore = g.playerStates[symbol]?.score || 0;
+      const opp = g.playerStates[symbol === 'player1' ? 'player2' : 'player1']?.score || 0;
+      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+      if (move.answer === 'timeout') {
+        setFeedbackMessage({ type: 'info', text: 'נגמר הזמן ⏰', myScore, opponentScore: opp });
+      } else if (move.isCorrect) {
+        setFeedbackMessage({ type: 'success', text: 'נכון! +10 נקודות 🎉', myScore, opponentScore: opp });
+      } else {
+        setFeedbackMessage({ type: 'error', text: 'לא נכון 😔', myScore, opponentScore: opp });
+      }
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedbackMessage(null);
+        feedbackTimeoutRef.current = null;
+      }, 4000);
+    };
+
     const fetchGame = async () => {
       try {
-        console.log('Fetching game:', gameId);
         const response = await fetch(`/api/games/word-clash?gameId=${gameId}`);
-        console.log('Response status:', response.status);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Game data:', data.game);
-          console.log('Game status:', data.game.status);
-          console.log('Players:', data.game.players);
-          
-          // Only update game state if game is fully loaded
-          const isGameFullyLoaded = data.game.status === 'active' && 
-                                   data.game.currentWord && 
-                                   data.game.currentWord.definitions && 
-                                   data.game.currentWord.sentences &&
-                                   data.game.players.player2;
-          
-          // Mark game as loaded only when it's fully ready
-          if (isGameFullyLoaded && !gameLoadedRef.current) {
-            gameLoadedRef.current = true;
-            console.log('✅ Game fully loaded, timer can start');
+        if (!response.ok) {
+          setError(`לא ניתן לטעון את המשחק (${response.status})`);
+          return;
+        }
+        const data = await response.json();
+        const g: Game = data.game;
+        setError(null);
+
+        // Always derive who I am from server state
+        let symbol: Player = currentPlayerSymbol;
+        if (g.players?.player1 === currentPlayerId) symbol = 'player1';
+        else if (g.players?.player2 === currentPlayerId) symbol = 'player2';
+        if (symbol !== currentPlayerSymbol) setCurrentPlayerSymbol(symbol);
+
+        const word = g.currentWord?.word || '';
+        const questionKey = `${g.currentRound || 0}_${word}_${g.currentWord?.questionType || 'definition'}`;
+        const playerHasAnswered = g.playerStates?.[symbol]?.hasAnswered === true;
+
+        const applyNewQuestion = (target: Game = g) => {
+          const tw = target.currentWord?.word || '';
+          const tKey = `${target.currentRound || 0}_${tw}_${target.currentWord?.questionType || 'definition'}`;
+          const tAnswered = target.playerStates?.[symbol]?.hasAnswered === true;
+          lastQuestionKeyRef.current = tKey;
+          timeoutSentRef.current = false;
+          transitioningRef.current = false;
+          setIsTransitioning(false);
+          pendingGameRef.current = null;
+          setMySelectedIndex(null);
+          setHasAnswered(tAnswered);
+          hasAnsweredRef.current = tAnswered;
+          if (timerIntervalRef.current) {
+            clearInterval(timerIntervalRef.current);
+            timerIntervalRef.current = null;
           }
-          
-          setGame(data.game);
-          setError(null);
-          
-          // Reset timer when question changes (only if it's actually a new question)
-          const currentQuestionId = data.game.currentQuestion?.text || data.game.currentWord?.word || '';
-          const currentRound = data.game.currentRound || 0;
-          const questionKey = `${currentRound}_${currentQuestionId}`;
-          const lastQuestionKey = lastQuestionId ? `${game?.currentRound || 0}_${lastQuestionId}` : null;
-          
-          // Check if both players answered (by checking playerStates.hasAnswered)
-          const player1Answered = data.game.playerStates?.player1?.hasAnswered === true;
-          const player2Answered = data.game.playerStates?.player2?.hasAnswered === true;
-          const bothPlayersAnswered = player1Answered && player2Answered;
-          const timerExpired = timeLeft === 0 && hasAnswered;
-          const canAdvanceToNextQuestion = timerExpired || bothPlayersAnswered;
-          
-          // Only reset timer if it's truly a new question (different round or different question text)
-          if (questionKey && questionKey !== lastQuestionKey) {
-            // Only allow question change if timer expired or both players answered, or if it's the first question
-            // But don't reset timer if it's the first question AND timer is already running
-            const isFirstQuestion = lastQuestionKey === null;
-            const shouldResetTimer = !isFirstQuestion || (isFirstQuestion && !isTimerActive);
-            
-            if (canAdvanceToNextQuestion || (isFirstQuestion && shouldResetTimer)) {
-              console.log('🔄 New question detected:', { questionKey, lastQuestionKey, currentRound, currentQuestionId, canAdvanceToNextQuestion, timerExpired, bothPlayersAnswered, isFirstQuestion, shouldResetTimer });
-              setLastQuestionId(currentQuestionId);
-              
-              // Always reset timer for new question - make sure game is fully loaded
-              const isGameReady = data.game.status === 'active' && 
-                                 data.game.currentWord && 
-                                 data.game.currentWord.definitions && 
-                                 data.game.currentWord.sentences &&
-                                 data.game.players.player2;
-              
-              if (isGameReady && gameLoadedRef.current) {
-                // Stop any existing timer first
-                if (timerIntervalRef.current) {
-                  clearInterval(timerIntervalRef.current);
-                  timerIntervalRef.current = null;
+          if (!tAnswered && target.status === 'active') {
+            setTimeLeft(20);
+            setIsTimerActive(true);
+          } else {
+            setIsTimerActive(false);
+          }
+        };
+
+        const startQuestionTransition = (nextGame: Game) => {
+          if (transitioningRef.current) {
+            pendingGameRef.current = nextGame;
+            return;
+          }
+          transitioningRef.current = true;
+          setIsTransitioning(true);
+          setIsTimerActive(false);
+          pendingGameRef.current = nextGame;
+          setGame((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  playerStates: nextGame.playerStates,
+                  lastMove: nextGame.lastMove,
+                  // Keep 'active' during pause so the current question stays visible
+                  status: prev.currentWord ? 'active' : nextGame.status,
+                  winner: nextGame.winner,
+                  chatMessages: nextGame.chatMessages,
+                  lastEmoji: nextGame.lastEmoji,
                 }
-                
-                // Reset hasAnswered based on playerStates from server FIRST
-                const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
-                setHasAnswered(playerHasAnswered);
-                
-                // Only reset timer if player hasn't answered yet
-                if (!playerHasAnswered) {
-                  // Reset timer to 20 seconds for new question - start fresh
-                  setTimeLeft(20);
-                  setIsTimerActive(true);
-                  setQuestionStartTime(Date.now());
-                  console.log('⏱️ Timer reset to 20 for new question');
-                } else {
-                  // Player already answered, don't start timer
-                  setIsTimerActive(false);
-                  console.log('⏱️ Player already answered, timer not started');
-                }
-              } else {
-                // Reset hasAnswered based on playerStates from server
-                const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
-                setHasAnswered(playerHasAnswered);
-              }
-              
-              // Clear feedback message when new question starts (after 3 seconds delay)
-              if (feedbackMessage) {
-                setTimeout(() => {
-                  setFeedbackMessage(null);
-                }, 3000);
-              }
-            } else {
-              // Question changed but timer hasn't expired and both players haven't answered
-              // This shouldn't happen, but if it does, ignore the change and keep the old question
-              console.warn('⚠️ Question changed prematurely! Ignoring change:', { 
-                questionKey, 
-                lastQuestionKey, 
-                timeLeft, 
-                hasAnswered, 
-                bothPlayersAnswered,
-                timerExpired,
-                player1Answered,
-                player2Answered
-              });
-              // Don't update the question - keep the old one by not updating lastQuestionId
-              // The game state will remain with the old question
-            }
-          } else if (questionKey === lastQuestionKey) {
-            // If it's the same question, don't reset timer - keep it running
-            // Only start timer if game is fully loaded and ready
-            const isGameReady = data.game.status === 'active' && 
-                               data.game.players.player2 && 
-                               data.game.currentWord && 
-                               data.game.currentWord.definitions && 
-                               data.game.currentWord.sentences;
-            
-            // Check if player has already answered
-            const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
-            
-            // Only start timer if game is fully loaded
-            if (isGameReady && gameLoadedRef.current && !isTimerActive && !playerHasAnswered && lastQuestionId === null) {
-              // First time seeing this question - start the timer with full 20 seconds
-              // Make sure timer starts fresh, not counting time from loading
-              if (timerIntervalRef.current) {
-                clearInterval(timerIntervalRef.current);
-                timerIntervalRef.current = null;
-              }
-              setTimeLeft(20);
-              setIsTimerActive(true);
-              setQuestionStartTime(Date.now());
-              setHasAnswered(false);
-              console.log('⏱️ Starting timer for first question:', { timeLeft: 20, isTimerActive: true });
-            } else if (isTimerActive && timeLeft > 0 && !hasAnswered && !playerHasAnswered) {
-              // Timer is already running, don't reset it - just let it continue
-              // Don't touch anything - the timer effect will handle the countdown
-              // This prevents the timer from being reset every time the game updates
-              console.log('⏱️ Same question, timer continues:', { timeLeft, isTimerActive });
-            } else if (!isTimerActive && isGameReady && lastQuestionId !== null && !hasAnswered) {
-              // Timer should be running but isn't - start it (but don't reset timeLeft if it's already counting down)
-              if (timeLeft > 0) {
-                setIsTimerActive(true);
-                if (!questionStartTime) {
-                  setQuestionStartTime(Date.now());
-                }
-                console.log('⏱️ Resuming timer:', { timeLeft, isTimerActive });
-              }
-            } else if (isTimerActive && !isGameReady) {
-              // Game is not ready - stop the timer
-              setIsTimerActive(false);
-              if (timerIntervalRef.current) {
-                clearInterval(timerIntervalRef.current);
-                timerIntervalRef.current = null;
-              }
-              console.log('⏱️ Stopping timer - game not ready');
-            }
+              : nextGame
+          );
+          if (questionTransitionRef.current) clearTimeout(questionTransitionRef.current);
+          questionTransitionRef.current = setTimeout(() => {
+            questionTransitionRef.current = null;
+            const finalGame = pendingGameRef.current || nextGame;
+            applyNewQuestion(finalGame);
+            setGame(finalGame);
+          }, 1600);
+        };
+
+        // Show opponent emoji reactions synced from server
+        const incoming = g.lastEmoji;
+        if (
+          incoming?.emoji &&
+          incoming.time &&
+          incoming.time !== lastSeenEmojiTimeRef.current &&
+          Date.now() - incoming.time < 8000
+        ) {
+          lastSeenEmojiTimeRef.current = incoming.time;
+          if (incoming.sender !== currentPlayerId) {
+            showEmojiBurst(incoming.emoji, false);
           }
-          
-          // Update hasAnswered based on playerStates from server
-          const playerHasAnswered = data.game.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
-          if (playerHasAnswered !== hasAnswered) {
-            setHasAnswered(playerHasAnswered);
-          }
-          
-          // Check if both players answered - only then allow moving to next question
-          // But don't reset timer if question hasn't changed
-          const currentLastMove = data.game.lastMove;
-          
-          // Update feedback message if it's our move
-          // Always show feedback for our latest move
-          if (currentLastMove && currentLastMove.player === currentPlayerSymbol) {
-            const myUpdatedScore = data.game.playerStates[currentPlayerSymbol]?.score || 0;
-            const opponentUpdatedScore = data.game.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1']?.score || 0;
-            
-            // Stop timer when showing feedback (already stopped in handleAnswer, but ensure it's stopped)
-            if (isTimerActive) {
-              setIsTimerActive(false);
-              if (timerIntervalRef.current) {
-                clearInterval(timerIntervalRef.current);
-                timerIntervalRef.current = null;
+        }
+
+        const syncSideState = (prev: Game | null): Game =>
+          prev
+            ? {
+                ...prev,
+                playerStates: g.playerStates,
+                lastMove: g.lastMove,
+                // Don't flip to finished mid-transition while old question is still on screen
+                status: transitioningRef.current && prev.currentWord ? 'active' : g.status,
+                winner: g.winner,
+                chatMessages: g.chatMessages,
+                lastEmoji: g.lastEmoji,
               }
+            : g;
+
+        // During feedback pause: keep showing previous question, refresh scores/chat/emoji
+        if (transitioningRef.current) {
+          pendingGameRef.current = g;
+          setGame(syncSideState);
+          if (g.status === 'finished') {
+            transitioningRef.current = false;
+            setIsTransitioning(false);
+            if (questionTransitionRef.current) {
+              clearTimeout(questionTransitionRef.current);
+              questionTransitionRef.current = null;
             }
-            
-            // Only show feedback if this is a NEW move (not already shown in handleAnswer)
-            // Check by comparing move time - if it's different from last shown move, show feedback
-            const isNewMove = currentLastMove.time && currentLastMove.time !== lastMoveTimeRef.current;
-            
-            if (isNewMove) {
-              // Update last move time to prevent duplicate feedback
-              lastMoveTimeRef.current = currentLastMove.time;
-              
-              // Show feedback based on whether answer is correct
-              if (currentLastMove.isCorrect) {
-                setFeedbackMessage({
-                  type: 'success',
-                  text: `נכון! קיבלת +10 נקודות! 🎉`,
-                  myScore: myUpdatedScore,
-                  opponentScore: opponentUpdatedScore
-                });
-                
-                // Auto-hide feedback after 8 seconds
-                setTimeout(() => {
-                  setFeedbackMessage(null);
-                }, 8000);
-              } else {
-                setFeedbackMessage({
-                  type: 'error',
-                  text: `לא נכון! 😔`,
-                  myScore: myUpdatedScore,
-                  opponentScore: opponentUpdatedScore
-                });
-                
-                // Auto-hide feedback after 8 seconds
-                setTimeout(() => {
-                  setFeedbackMessage(null);
-                }, 8000);
-              }
-            }
-          } else if (!currentLastMove || currentLastMove.player !== currentPlayerSymbol) {
-            // Clear feedback if it's not our move or if there's no move
-            // But only clear if it's been showing for a while (to avoid flickering)
-            if (feedbackMessage) {
-              setTimeout(() => {
-                setFeedbackMessage(null);
-              }, 3000);
-            }
+            setGame(g);
           }
-          
-          if (currentLastMove && currentLastMove.player !== currentPlayerSymbol) {
-            // Opponent answered, but we should wait for timer or both to answer
-            // Don't auto-advance unless timer expired
+          return;
+        }
+
+        if (
+          (g.status === 'active' && word && questionKey !== lastQuestionKeyRef.current) ||
+          (g.status === 'finished' && lastQuestionKeyRef.current !== null && hasAnsweredRef.current)
+        ) {
+          if (g.lastMove) showFeedback(g.lastMove, g, symbol);
+          const shouldPause = hasAnsweredRef.current && lastQuestionKeyRef.current !== null;
+          if (shouldPause) {
+            startQuestionTransition(g);
+          } else {
+            setGame(g);
+            applyNewQuestion(g);
           }
         } else {
-          const errorText = await response.text();
-          console.error('Failed to fetch game:', response.status, errorText);
-          setError(`Failed to load game: ${response.status}`);
+          setGame(g);
+          if (g.status === 'active') {
+            if (playerHasAnswered !== hasAnsweredRef.current) {
+              setHasAnswered(playerHasAnswered);
+              hasAnsweredRef.current = playerHasAnswered;
+              if (playerHasAnswered) setIsTimerActive(false);
+            }
+          }
+          if (g.lastMove) showFeedback(g.lastMove, g, symbol);
         }
       } catch (err) {
         console.error('Error fetching game:', err);
-        setError(`Failed to load game: ${err}`);
+        setError('שגיאה בטעינת המשחק');
       }
     };
 
-    if (gameId) {
-      console.log('Starting game fetch for:', gameId);
-      fetchGame();
-      // Poll for game updates every 2 seconds to reduce load
-      const interval = setInterval(() => {
-        console.log('Polling for game updates...');
-        fetchGame();
-      }, 2000);
-      return () => {
-        console.log('Clearing interval');
-        clearInterval(interval);
-      };
-    }
-  }, [gameId]); // Removed isTimerActive from dependencies to prevent infinite loop
+    if (!gameId) return;
+    fetchGame();
+    const interval = setInterval(fetchGame, 1500);
+    return () => clearInterval(interval);
+  }, [gameId, currentPlayerId, currentPlayerSymbol]);
 
-  // Timer effect - only countdown if timer is active and question hasn't been answered yet
+  // Update stats when game finishes
   useEffect(() => {
-    // Clear any existing interval first
+    if (game && game.status === 'finished' && !statsUpdatedRef.current && currentPlayerId) {
+      const playerState = game.playerStates?.[currentPlayerSymbol];
+      const opponentState = game.playerStates?.[currentPlayerSymbol === 'player1' ? 'player2' : 'player1'];
+      
+      if (playerState) {
+        const won = game.winner === currentPlayerSymbol;
+        const totalRounds = game.maxRounds || 5;
+        // Calculate correct answers: each correct answer gives 10 points, so score / 10
+        const correctAnswers = Math.floor((playerState.score || 0) / 10);
+        const totalQuestions = totalRounds; // one question per round (definition or sentence)
+        
+        // Update stats
+        fetch('/api/games/update-stats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentPlayerId,
+            gameName: 'word-clash', // Use lowercase with hyphen to match other games
+            score: playerState.score || 0,
+            won: won,
+            correctAnswers: correctAnswers,
+            totalQuestions: totalQuestions
+          })
+        })
+        .then(response => {
+          if (response.ok) {
+            console.log('✅ Stats updated successfully for Word Clash game');
+            statsUpdatedRef.current = true;
+          } else {
+            console.error('❌ Failed to update stats:', response.status);
+          }
+        })
+        .catch(error => {
+          console.error('❌ Error updating game stats:', error);
+        });
+      }
+    }
+  }, [game?.status, game?.winner, currentPlayerId, currentPlayerSymbol, game?.playerStates]);
+
+  const applyMoveResponse = (nextGame: Game) => {
+    const word = nextGame.currentWord?.word || '';
+    const nextKey = `${nextGame.currentRound || 0}_${word}_${nextGame.currentWord?.questionType || 'definition'}`;
+    const advanced =
+      (lastQuestionKeyRef.current && nextKey !== lastQuestionKeyRef.current) ||
+      nextGame.status === 'finished';
+
+    if (nextGame.lastMove && nextGame.lastMove.player === currentPlayerSymbol && nextGame.lastMove.time !== lastMoveTimeRef.current) {
+      lastMoveTimeRef.current = nextGame.lastMove.time;
+      const myScore = nextGame.playerStates[currentPlayerSymbol]?.score || 0;
+      const opp = nextGame.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1']?.score || 0;
+      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+      if (nextGame.lastMove.answer === 'timeout') {
+        setFeedbackMessage({ type: 'info', text: 'נגמר הזמן ⏰', myScore, opponentScore: opp });
+      } else {
+        setFeedbackMessage({
+          type: nextGame.lastMove.isCorrect ? 'success' : 'error',
+          text: nextGame.lastMove.isCorrect ? 'נכון! +10 נקודות 🎉' : 'לא נכון 😔',
+          myScore,
+          opponentScore: opp,
+        });
+      }
+      feedbackTimeoutRef.current = setTimeout(() => setFeedbackMessage(null), 4000);
+    }
+
+    if (advanced && lastQuestionKeyRef.current) {
+      transitioningRef.current = true;
+      setIsTransitioning(true);
+      setIsTimerActive(false);
+      pendingGameRef.current = nextGame;
+      setGame((prev) =>
+        prev
+          ? {
+              ...prev,
+              playerStates: nextGame.playerStates,
+              lastMove: nextGame.lastMove,
+              status: prev.currentWord ? 'active' : nextGame.status,
+              winner: nextGame.winner,
+              chatMessages: nextGame.chatMessages,
+              lastEmoji: nextGame.lastEmoji,
+            }
+          : nextGame
+      );
+      // Keep showing current question briefly; poll/timeout will flip to next
+      if (questionTransitionRef.current) clearTimeout(questionTransitionRef.current);
+      questionTransitionRef.current = setTimeout(() => {
+        questionTransitionRef.current = null;
+        const finalGame = pendingGameRef.current || nextGame;
+        lastQuestionKeyRef.current = nextKey;
+        timeoutSentRef.current = false;
+        transitioningRef.current = false;
+        setIsTransitioning(false);
+        pendingGameRef.current = null;
+        setMySelectedIndex(null);
+        const answered = finalGame.playerStates?.[currentPlayerSymbol]?.hasAnswered === true;
+        setHasAnswered(answered);
+        hasAnsweredRef.current = answered;
+        setGame(finalGame);
+        if (!answered && finalGame.status === 'active') {
+          setTimeLeft(20);
+          setIsTimerActive(true);
+        } else {
+          setIsTimerActive(false);
+        }
+      }, 1600);
+    } else {
+      setGame(nextGame);
+    }
+  };
+
+  const submitTimeout = async () => {
+    if (timeoutSentRef.current || isSubmittingAnswerRef.current) return;
+    timeoutSentRef.current = true;
+    isSubmittingAnswerRef.current = true;
+    setHasAnswered(true);
+    hasAnsweredRef.current = true;
+    setIsTimerActive(false);
+    try {
+      const response = await fetch('/api/games/word-clash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'move',
+          gameId,
+          playerId: currentPlayerId,
+          answer: 'timeout',
+          selectedIndex: -1,
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.game) applyMoveResponse(data.game);
+      } else {
+        // Allow retry if server rejected
+        timeoutSentRef.current = false;
+        setHasAnswered(false);
+        hasAnsweredRef.current = false;
+        if (timeLeft > 0) setIsTimerActive(true);
+      }
+    } catch (e) {
+      console.error('Timeout submit failed', e);
+      timeoutSentRef.current = false;
+      setHasAnswered(false);
+      hasAnsweredRef.current = false;
+      if (timeLeft > 0) setIsTimerActive(true);
+    } finally {
+      isSubmittingAnswerRef.current = false;
+    }
+  };
+
+  // Timer countdown
+  useEffect(() => {
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
-    
-    // Only start interval if timer is active and we haven't answered
     if (isTimerActive && !hasAnswered) {
       timerIntervalRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          // Double-check conditions before decrementing
-          if (prev <= 0) {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
             setIsTimerActive(false);
-            // If timer expired and player hasn't answered, mark as answered (timeout)
-            if (!hasAnswered) {
-              setHasAnswered(true);
-              // Optionally: submit a timeout answer to server
-              // For now, just mark as answered locally
-              console.log('⏰ Timer expired - player did not answer');
-            }
+            if (!hasAnsweredRef.current) submitTimeout();
             if (timerIntervalRef.current) {
               clearInterval(timerIntervalRef.current);
               timerIntervalRef.current = null;
@@ -360,66 +485,30 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
         });
       }, 1000);
     }
-    
     return () => {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
       }
     };
-  }, [isTimerActive, hasAnswered]); // Only depend on isTimerActive and hasAnswered
+  }, [isTimerActive, hasAnswered, gameId, currentPlayerId]);
 
   const handleAnswer = async (type: 'definition' | 'sentence', index: number) => {
-    if (!game || hasAnswered) {
-      console.log('Cannot answer: game not loaded or already answered');
-      return;
-    }
-    
-    // Check if game is still active
-    if (game.status !== 'active') {
-      setError('המשחק לא פעיל');
-      return;
-    }
-    
-    // Check if timer is still active
-    if (!isTimerActive && timeLeft > 0) {
-      console.log('Timer not active but time left, allowing answer');
-    }
-    
-    // Validate answer type and index
-    if (type !== 'definition' && type !== 'sentence') {
-      setError('סוג תשובה לא תקין');
-      return;
-    }
-    
-    if (typeof index !== 'number' || index < 0) {
-      setError('אינדקס תשובה לא תקין');
-      return;
-    }
-    
-    // Check if currentWord exists and has valid options
+    if (isSubmittingAnswerRef.current || !game || hasAnswered || game.status !== 'active') return;
     if (!game.currentWord) {
       setError('שאלה לא זמינה');
       return;
     }
-    
-    if (type === 'definition' && (!game.currentWord.definitions || index >= game.currentWord.definitions.length)) {
-      setError('אינדקס הגדרה לא תקין');
-      return;
-    }
-    
-    if (type === 'sentence' && (!game.currentWord.sentences || index >= game.currentWord.sentences.length)) {
-      setError('אינדקס משפט לא תקין');
-      return;
-    }
 
-    // Stop timer IMMEDIATELY when user clicks answer (before sending to server)
+    isSubmittingAnswerRef.current = true;
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
     }
     setIsTimerActive(false);
     setHasAnswered(true);
+    hasAnsweredRef.current = true;
+    setMySelectedIndex(index);
 
     try {
       const response = await fetch('/api/games/word-clash', {
@@ -427,78 +516,38 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'move',
-          gameId: gameId,
+          gameId,
           playerId: currentPlayerId,
           answer: type,
-          selectedIndex: index
-        })
+          selectedIndex: index,
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        const updatedGame = data.game;
-        setGame(updatedGame);
         setError(null);
-        
-        // Update hasAnswered based on server state
-        const playerHasAnswered = updatedGame.playerStates?.[currentPlayerSymbol]?.hasAnswered || false;
-        setHasAnswered(playerHasAnswered);
-        
-        // Show feedback immediately after answer is submitted (optimistic update)
-        // This provides instant feedback while waiting for server response
-        if (updatedGame.lastMove && updatedGame.lastMove.player === currentPlayerSymbol) {
-          const myScore = updatedGame.playerStates[currentPlayerSymbol]?.score || 0;
-          const opponentScore = updatedGame.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1']?.score || 0;
-          
-          // Only show if this is a new move (different time)
-          if (updatedGame.lastMove.time && updatedGame.lastMove.time !== lastMoveTimeRef.current) {
-            lastMoveTimeRef.current = updatedGame.lastMove.time;
-            
-            if (updatedGame.lastMove.isCorrect) {
-              setFeedbackMessage({
-                type: 'success',
-                text: `נכון! קיבלת +10 נקודות! 🎉`,
-                myScore: myScore,
-                opponentScore: opponentScore
-              });
-              
-              setTimeout(() => {
-                setFeedbackMessage(null);
-              }, 8000);
-            } else {
-              setFeedbackMessage({
-                type: 'error',
-                text: `לא נכון! 😔`,
-                myScore: myScore,
-                opponentScore: opponentScore
-              });
-              
-              setTimeout(() => {
-                setFeedbackMessage(null);
-              }, 8000);
-            }
-          }
-        }
+        if (data.game) applyMoveResponse(data.game);
       } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        setError(errorData.error || 'Failed to submit answer');
-        
-        // Re-enable timer if answer failed (but only if timer hasn't expired)
+        const errorData = await response.json().catch(() => ({ error: 'שגיאה' }));
+        setError(errorData.error || 'שליחת התשובה נכשלה');
         if (timeLeft > 0) {
           setIsTimerActive(true);
           setHasAnswered(false);
+          hasAnsweredRef.current = false;
+          setMySelectedIndex(null);
         }
       }
-
     } catch (err) {
       console.error('Error submitting answer:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      
-      // Re-enable timer if answer failed (but only if timer hasn't expired)
+      setError('שגיאה בשליחת התשובה');
       if (timeLeft > 0) {
         setIsTimerActive(true);
         setHasAnswered(false);
+        hasAnsweredRef.current = false;
+        setMySelectedIndex(null);
       }
+    } finally {
+      isSubmittingAnswerRef.current = false;
     }
   };
 
@@ -514,12 +563,27 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
   }
 
   const currentWord = game.currentWord;
-  const playerState = game.playerStates[currentPlayerSymbol];
-  const opponentState = game.playerStates[currentPlayerSymbol === 'player1' ? 'player2' : 'player1'];
+  const playerState = game.playerStates?.[currentPlayerSymbol];
+  const opponentState = game.playerStates?.[currentPlayerSymbol === 'player1' ? 'player2' : 'player1'];
+  
+  // Validate player states exist
+  if (!playerState) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <div className="text-red-500 bg-red-100 p-4 rounded">
+          שגיאה: מצב השחקן לא נמצא. המשחק לא מוכן.
+        </div>
+      </div>
+    );
+  }
 
-  // Check if both players answered
-  const bothAnswered = game.playerStates?.player1?.hasAnswered === true && 
-                       game.playerStates?.player2?.hasAnswered === true;
+  // Check if both players answered (or we're briefly transitioning to the next question)
+  const bothAnswered =
+    isTransitioning ||
+    (game.playerStates?.player1?.hasAnswered === true &&
+      game.playerStates?.player2?.hasAnswered === true &&
+      game.players?.player2 !== null &&
+      game.players?.player2 !== undefined);
   
   // Validate currentWord structure
   if (game.status === 'active' && !currentWord) {
@@ -550,18 +614,18 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
         </div>
       )}
 
-      <div className="flex justify-between w-full max-w-2xl">
+      <div className="flex justify-between w-full max-w-2xl" dir="rtl">
         <div className="text-center">
-          <h3 className="font-bold">Your Score</h3>
-          <p className="text-2xl">{playerState.score}</p>
+          <h3 className="font-bold text-blue-700">הניקוד שלך</h3>
+          <p className="text-2xl font-extrabold">{playerState?.score || 0}</p>
         </div>
         <div className="text-center">
-          <h3 className="font-bold">Round</h3>
-          <p className="text-2xl">{game.currentRound + 1}/{game.maxRounds}</p>
+          <h3 className="font-bold text-gray-700">סיבוב</h3>
+          <p className="text-2xl font-extrabold">{Math.min((game.currentRound || 0) + 1, game.maxRounds)}/{game.maxRounds}</p>
         </div>
         <div className="text-center">
-          <h3 className="font-bold">Opponent Score</h3>
-          <p className="text-2xl">{opponentState.score}</p>
+          <h3 className="font-bold text-red-700">ניקוד יריב</h3>
+          <p className="text-2xl font-extrabold">{opponentState?.score || 0}</p>
         </div>
       </div>
 
@@ -574,222 +638,106 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
         </div>
       )}
 
-      {game.status === 'active' && currentWord && (
-        <>
-          <div className="text-center mb-4">
-            <div className="text-xl font-bold text-green-600 mb-2">המשחק התחיל! 🎮</div>
-            <div className="text-sm text-gray-600">
-              {game.players.player2 ? 'שני שחקנים מחוברים' : 'מחכים לשחקן שני...'}
+      {game.status === 'active' && currentWord && (() => {
+        const questionType = currentWord.questionType || ((game.currentRound || 0) % 2 === 0 ? 'definition' : 'sentence');
+        const options = questionType === 'definition' ? currentWord.definitions : currentWord.sentences;
+        const canAnswer = !hasAnswered && game.status === 'active' && timeLeft > 0;
+        return (
+        <div className="w-full max-w-2xl space-y-6" dir="rtl">
+          <div className="text-center">
+            <div className="text-sm text-green-700 font-semibold mb-2">
+              שניכם עונים במקביל — בחרו תשובה אחת
             </div>
-          </div>
-          <div className="flex gap-2 my-4 justify-center">
-            <button
-              disabled={playerState.powerUps?.revealLetter <= 0}
-              onClick={async () => {
-                setRevealError(null);
-                setRevealedLetter(null);
-                try {
-                  if (game && game.currentWord) {
-                    const letters = game.currentWord.word.split('');
-                    const randomLetter = letters[Math.floor(Math.random() * letters.length)];
-                    setRevealedLetter(randomLetter);
-                    
-                    // Update power-ups
-                    const updatedGame = {
-                      ...game,
-                      playerStates: {
-                        ...game.playerStates,
-                        [currentPlayerSymbol]: {
-                          ...game.playerStates[currentPlayerSymbol],
-                          powerUps: {
-                            ...game.playerStates[currentPlayerSymbol].powerUps,
-                            revealLetter: game.playerStates[currentPlayerSymbol].powerUps.revealLetter - 1
-                          }
-                        }
-                      }
-                    };
-                    setGame(updatedGame);
-                  }
-                } catch (e: any) {
-                  setRevealError(e.message || 'שגיאה');
-                }
-              }}
-              className="bg-yellow-300 px-3 py-1 rounded font-bold disabled:bg-gray-300"
-            >
-              הצג אות ({playerState.powerUps?.revealLetter || 0})
-            </button>
-            <button
-              disabled={playerState.powerUps?.skipWord <= 0}
-              onClick={async () => {
-                setSkipError(null);
-                setSkipSuccess(false);
-                try {
-                  if (game) {
-                    // Update power-ups
-                    const updatedGame = {
-                      ...game,
-                      playerStates: {
-                        ...game.playerStates,
-                        [currentPlayerSymbol]: {
-                          ...game.playerStates[currentPlayerSymbol],
-                          powerUps: {
-                            ...game.playerStates[currentPlayerSymbol].powerUps,
-                            skipWord: game.playerStates[currentPlayerSymbol].powerUps.skipWord - 1
-                          }
-                        }
-                      }
-                    };
-                    setGame(updatedGame);
-                    setSkipSuccess(true);
-                    setTimeout(() => setSkipSuccess(false), 1500);
-                  }
-                } catch (e: any) {
-                  setSkipError(e.message || 'שגיאה');
-                }
-              }}
-              className="bg-blue-300 px-3 py-1 rounded font-bold disabled:bg-gray-300"
-            >
-              דלג ({playerState.powerUps?.skipWord || 0})
-            </button>
-            <button
-              disabled={playerState.powerUps?.freezeOpponent <= 0}
-              onClick={() => alert('הקפא יריב - בקרוב!')}
-              className="bg-purple-300 px-3 py-1 rounded font-bold"
-            >
-              הקפא יריב ({playerState.powerUps?.freezeOpponent || 0})
-            </button>
-          </div>
-          <div className="text-center mt-2">
-            {revealError && <div className="text-red-500">{revealError}</div>}
-            {game && game.revealedLetters && game.revealedLetters[currentPlayerSymbol] && game.revealedLetters[currentPlayerSymbol].length > 0 && (
-              <div className="text-lg font-mono text-blue-700">
-                אותיות שנחשפו: {game.revealedLetters[currentPlayerSymbol].join(', ')}
+            <h2 className="text-4xl font-extrabold mb-2 tracking-wide">{currentWord.word}</h2>
+            <p className="text-gray-700 mb-3 font-medium">
+              {questionType === 'definition' ? 'מה ההגדרה הנכונה למילה?' : 'איזה משפט משתמש במילה נכון?'}
+            </p>
+            <div className={`text-3xl font-bold ${timeLeft <= 5 ? 'text-red-500 animate-pulse' : timeLeft <= 10 ? 'text-orange-500' : 'text-green-600'}`}>
+              ⏰ {timeLeft}
+            </div>
+            {hasAnswered && !bothAnswered && !isTransitioning && (
+              <div className="text-sm text-blue-700 mt-2 font-bold animate-pulse">ענית! מחכים ליריב...</div>
+            )}
+            {(bothAnswered || isTransitioning) && (
+              <div className="text-sm text-green-700 mt-2 font-bold">
+                {isTransitioning ? 'עוברים לשאלה הבאה...' : 'שניכם עניתם — עוברים הלאה...'}
               </div>
             )}
-            {revealedLetter && (
-              <div className="text-green-700 font-bold animate-bounce">האות שנחשפה: {revealedLetter}</div>
-            )}
-            {skipError && <div className="text-red-500">{skipError}</div>}
-            {skipSuccess && <div className="text-green-700 font-bold animate-bounce">דילגת על המילה!</div>}
           </div>
-          <div className="w-full max-w-2xl space-y-8">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-2">{currentWord.word}</h2>
-              <p className="text-gray-600 mb-4">בחרו את ההגדרה והמשפט הנכונים</p>
-              
-              {/* Timer */}
-              <div className="mb-4">
-                <div className={`text-2xl font-bold ${timeLeft <= 5 ? 'text-red-500 animate-pulse' : timeLeft <= 10 ? 'text-orange-500' : 'text-green-500'}`}>
-                  ⏰ {timeLeft} שניות
-                </div>
-                {hasAnswered && (
-                  <div className="text-sm text-gray-600 mt-2">ענית! מחכים ליריב או לסיום הזמן...</div>
-                )}
-              </div>
-              
-              {/* Feedback Message */}
-              {feedbackMessage && (
-                <div className={`mb-4 p-4 rounded-lg border-2 ${
-                  feedbackMessage.type === 'success' 
-                    ? 'bg-green-50 border-green-400 text-green-800' 
-                    : feedbackMessage.type === 'error'
-                    ? 'bg-red-50 border-red-400 text-red-800'
-                    : 'bg-blue-50 border-blue-400 text-blue-800'
-                }`}>
-                  <div className="text-xl font-bold mb-2">{feedbackMessage.text}</div>
-                  {feedbackMessage.myScore !== undefined && feedbackMessage.opponentScore !== undefined && (
-                    <div className="text-lg mt-2">
-                      <div>הניקוד שלך: <span className="font-bold">{feedbackMessage.myScore}</span></div>
-                      <div>ניקוד היריב: <span className="font-bold">{feedbackMessage.opponentScore}</span></div>
-                    </div>
-                  )}
+
+          {feedbackMessage && (
+            <div className={`p-4 rounded-xl border-2 text-center ${
+              feedbackMessage.type === 'success'
+                ? 'bg-green-50 border-green-400 text-green-800'
+                : feedbackMessage.type === 'error'
+                  ? 'bg-red-50 border-red-400 text-red-800'
+                  : 'bg-blue-50 border-blue-400 text-blue-800'
+            }`}>
+              <div className="text-xl font-bold">{feedbackMessage.text}</div>
+              {feedbackMessage.myScore !== undefined && (
+                <div className="mt-2 text-sm">
+                  את/ה: {feedbackMessage.myScore} | יריב: {feedbackMessage.opponentScore}
                 </div>
               )}
-              
-              <div className="bg-blue-100 p-4 rounded-lg mb-4">
-                <h3 className="font-bold text-lg mb-2">הסבר:</h3>
-                <p className="text-gray-700">
-                  {currentWord.word === 'APPLE' ? 
-                    'תבחרו את ההגדרה הנכונה למילה "APPLE" ואת המשפט שמשתמש במילה בצורה נכונה. יש רק תשובה נכונה אחת לכל קטגוריה!' :
-                    'תבחרו את ההגדרה הנכונה למילה ואת המשפט שמשתמש במילה בצורה נכונה. יש רק תשובה נכונה אחת לכל קטגוריה!'
-                  }
-                </p>
-              </div>
             </div>
+          )}
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-bold mb-2">הגדרות:</h3>
-                <div className="space-y-2">
-                  {currentWord.definitions.map((def, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer('definition', index)}
-                      disabled={hasAnswered || !isTimerActive || game.status !== 'active' || timeLeft === 0}
-                      className={`
-                        w-full p-3 text-left rounded transition-all duration-200
-                        ${hasAnswered || !isTimerActive || game.status !== 'active' || timeLeft === 0 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
-                        ${game.lastMove?.answer === 'definition' && game.lastMove.selectedIndex === index
-                          ? game.lastMove.isCorrect ? 'border-2 border-green-500 bg-green-50 animate-pulse' : 'border-2 border-red-500 bg-red-50 animate-shake'
-                          : 'border border-gray-200'}
-                      `}
-                    >
-                      {def}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <div className="space-y-3">
+            {options.map((option, index) => {
+              const isMine = mySelectedIndex === index;
+              return (
+                <button
+                  key={`${questionType}-${index}`}
+                  onClick={() => handleAnswer(questionType, index)}
+                  disabled={!canAnswer}
+                  className={`
+                    w-full p-4 text-right rounded-xl transition-all duration-200 border-2 text-base sm:text-lg
+                    ${!canAnswer ? 'cursor-not-allowed opacity-80' : 'hover:bg-blue-50 hover:border-blue-400 cursor-pointer'}
+                    ${isMine
+                      ? (game.lastMove?.isCorrect && game.lastMove?.player === currentPlayerSymbol
+                          ? 'border-green-500 bg-green-50'
+                          : 'border-blue-500 bg-blue-50')
+                      : 'border-gray-200 bg-white'}
+                  `}
+                >
+                  <span className="font-bold text-blue-600 ml-2">{index + 1}.</span>
+                  {option}
+                </button>
+              );
+            })}
+          </div>
 
-              <div>
-                <h3 className="font-bold mb-2">משפטי דוגמה:</h3>
-                <div className="space-y-2">
-                  {currentWord.sentences.map((sentence, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer('sentence', index)}
-                      disabled={hasAnswered || !isTimerActive || game.status !== 'active' || timeLeft === 0}
-                      className={`
-                        w-full p-3 text-left rounded transition-all duration-200
-                        ${hasAnswered || !isTimerActive || game.status !== 'active' || timeLeft === 0 ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:bg-blue-50 cursor-pointer'}
-                        ${game.lastMove?.answer === 'sentence' && game.lastMove.selectedIndex === index
-                          ? game.lastMove.isCorrect ? 'border-2 border-green-500 bg-green-50 animate-pulse' : 'border-2 border-red-500 bg-red-50 animate-shake'
-                          : 'border border-gray-200'}
-                      `}
-                    >
-                      {sentence}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {hasAnswered && !bothAnswered && (
-              <div className="text-lg text-blue-700 font-bold animate-pulse mt-4">ענית! מחכים לתשובת היריב...</div>
-            )}
-            {bothAnswered && (
-              <div className="text-lg text-green-700 font-bold animate-bounce mt-4">שני השחקנים ענו! מחכים לסיבוב הבא...</div>
-            )}
-
-            <div className="mt-6 flex justify-center">
-              <button
-                className="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
+          <div className="flex justify-center gap-3 flex-wrap">
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(window.location.href);
                   setShowToast(true);
                   setTimeout(() => setShowToast(false), 2000);
-                }}
-              >
-                העתק קישור למשחק
-              </button>
-              {showToast && (
-                <div className="fixed bottom-8 right-8 bg-green-500 text-white px-4 py-2 rounded shadow-lg animate-fade-in">
-                  הקישור הועתק!
-                </div>
-              )}
-            </div>
+                } catch {
+                  setError('לא ניתן להעתיק — העתיקו ידנית מהכתובת');
+                }
+              }}
+            >
+              העתק קישור למשחק
+            </button>
+            <button
+              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+              onClick={() => (window.location.href = '/games/word-clash')}
+            >
+              יציאה
+            </button>
           </div>
-        </>
-      )}
+          {showToast && (
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
+              הקישור הועתק!
+            </div>
+          )}
+        </div>
+        );
+      })()}
+
 
       {game.status === 'finished' && (
         <div className="text-center bg-gradient-to-br from-purple-100 to-blue-100 p-8 rounded-2xl shadow-xl max-w-2xl mx-auto">
@@ -821,27 +769,40 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
         </div>
       )}
 
+      {/* אימוג'י צף — שלך או של היריב */}
+      {displayEmoji && (
+        <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+          <div className="bg-white/90 rounded-2xl shadow-2xl px-8 py-6 text-center animate-fade-in border-2 border-purple-200">
+            <div className="text-7xl animate-bounce">{displayEmoji.emoji}</div>
+            <p className="text-sm text-gray-700 mt-2 font-bold">
+              {displayEmoji.fromMe ? 'שלחת אימוג׳י!' : 'היריב שלח אימוג׳י!'}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* מערכת אימוג'ים */}
       {game && (
-        <div className="w-full max-w-2xl mt-8 bg-white bg-opacity-90 rounded-lg shadow p-4">
+        <div className="w-full max-w-2xl mt-8 bg-white bg-opacity-90 rounded-lg shadow p-4" dir="rtl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-800">תגובות מהירות</h3>
             <button
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors duration-200 flex items-center gap-2"
+              disabled={emojiSending}
+              className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors duration-200 flex items-center gap-2 disabled:opacity-60"
             >
-              😊 שליחת אימוג'י
+              😊 שליחת אימוג׳י
             </button>
           </div>
 
-          {/* בחירת אימוג'י */}
           {showEmojiPicker && (
-            <div className="grid grid-cols-5 gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
-              {EMOJI_REACTIONS.map((reaction, index) => (
+            <div className="grid grid-cols-5 sm:grid-cols-7 gap-2 mb-2 p-3 bg-gray-50 rounded-lg">
+              {EMOJI_REACTIONS.map((reaction) => (
                 <button
-                  key={index}
+                  key={reaction.emoji}
                   onClick={() => sendEmoji(reaction.emoji)}
-                  className={`p-2 rounded-lg transition-all duration-200 ${reaction.color} hover:scale-110`}
+                  disabled={emojiSending}
+                  className={`p-2 rounded-lg transition-all duration-200 ${reaction.color} hover:scale-110 disabled:opacity-50`}
                   title={reaction.name}
                 >
                   <span className="text-2xl">{reaction.emoji}</span>
@@ -849,42 +810,31 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
               ))}
             </div>
           )}
-
-          {/* אימוג'י נוכחי */}
-          {currentEmoji && (
-            <div className="text-center mb-4">
-              <div className="text-6xl animate-bounce">{currentEmoji}</div>
-              <p className="text-sm text-gray-600 mt-2">שלחת אימוג'י!</p>
-            </div>
-          )}
-
-          {/* היסטוריית אימוג'ים */}
-          {emojiHistory.length > 0 && (
-            <div className="flex justify-center gap-2 mb-4">
-              {emojiHistory.map((emoji, index) => (
-                <div
-                  key={index}
-                  className="text-2xl animate-fade-in opacity-80"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {emoji}
-                </div>
-              ))}
-            </div>
-          )}
+          <p className="text-xs text-gray-500 text-center">האימוג׳י נשלח ליריב בזמן אמת</p>
         </div>
       )}
 
       {/* קומפוננטת צ'אט */}
       {game && (
-        <div className="w-full max-w-2xl mt-4 bg-white bg-opacity-80 rounded-lg shadow p-4">
+        <div className="w-full max-w-2xl mt-4 bg-white bg-opacity-80 rounded-lg shadow p-4" dir="rtl">
           <div className="h-40 overflow-y-auto mb-2 border-b pb-2">
-            {game.chatMessages && game.chatMessages.length > 0 ? (
-              game.chatMessages.map((msg, idx) => (
-                <div key={idx} className={`mb-1 text-sm ${msg.sender === currentPlayerId ? 'text-blue-700 text-right' : 'text-gray-800 text-left'}`}>
-                  <span className="font-bold">{msg.sender === currentPlayerId ? 'אתה' : 'יריב'}: </span>{msg.text}
-                </div>
-              ))
+            {game.chatMessages && Array.isArray(game.chatMessages) && game.chatMessages.length > 0 ? (
+              game.chatMessages.map((msg: any, idx: number) => {
+                const mine = msg.sender === currentPlayerId;
+                if (msg.type === 'emoji') {
+                  return (
+                    <div key={`${msg.timestamp}-${idx}`} className={`mb-1 text-2xl ${mine ? 'text-right' : 'text-left'}`}>
+                      <span className="text-xs font-bold text-gray-500 ml-1">{mine ? 'את/ה' : 'יריב'}</span>
+                      {msg.text}
+                    </div>
+                  );
+                }
+                return (
+                  <div key={`${msg.timestamp}-${idx}`} className={`mb-1 text-sm ${mine ? 'text-blue-700 text-right' : 'text-gray-800 text-left'}`}>
+                    <span className="font-bold">{mine ? 'את/ה' : 'יריב'}: </span>{msg.text}
+                  </div>
+                );
+              })
             ) : (
               <div className="text-gray-400 text-center">אין הודעות עדיין</div>
             )}
@@ -894,16 +844,43 @@ export default function GameBoard({ gameId, currentPlayerId, currentPlayerSymbol
             onSubmit={async (e) => {
               e.preventDefault();
               if (!chatInput.trim()) return;
-              // await sendChatMessage(gameId, currentPlayerId, chatInput.trim());
+              const text = chatInput.trim();
               setChatInput('');
+
+              try {
+                const response = await fetch('/api/games/word-clash', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    action: 'chat',
+                    gameId,
+                    playerId: currentPlayerId,
+                    message: text,
+                  }),
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  setGame(data.game);
+                } else {
+                  const errorData = await response.json().catch(() => ({ error: 'שליחת ההודעה נכשלה' }));
+                  setError(errorData.error || 'שליחת ההודעה נכשלה');
+                  setChatInput(text);
+                }
+              } catch (err) {
+                console.error('Error sending chat message:', err);
+                setError('שליחת ההודעה נכשלה');
+                setChatInput(text);
+              }
             }}
           >
             <input
               type="text"
               value={chatInput}
-              onChange={e => setChatInput(e.target.value)}
+              onChange={(e) => setChatInput(e.target.value)}
               className="flex-1 px-3 py-2 rounded border border-gray-300 focus:outline-none focus:ring focus:border-blue-400"
               placeholder="כתוב הודעה..."
+              maxLength={500}
             />
             <button
               type="submit"

@@ -328,13 +328,31 @@ export default function AchievementsPage() {
                 <button
                   onClick={async () => {
                     try {
+                      // בדיקה נוספת לפני השליחה
+                      if (!user?.id || !achievement.id) {
+                        console.error('Missing user ID or achievement ID');
+                        alert('שגיאה: חסרים פרטים נדרשים');
+                        return;
+                      }
+
+                      // וידוא שההתקדמות באמת מספקת
+                      if (achievement.progress < achievement.requirement) {
+                        alert('ההישג עדיין לא הושלם');
+                        return;
+                      }
+
                       const response = await fetch('/api/achievements', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: user?.id, achievementId: achievement.id })
+                        body: JSON.stringify({ userId: user.id, achievementId: achievement.id })
                       });
-                      if (response.ok) {
+
+                      const responseData = await response.json();
+
+                      if (response.ok && responseData.success) {
+                        alert(`🎉 קיבלת ${responseData.reward} יהלומים ו-${responseData.xpReward} נקודות ניסיון!`);
                         loadAchievements();
+                        
                         // עדכן את המשתמש
                         const userStr = localStorage.getItem('user');
                         if (userStr) {
@@ -357,12 +375,18 @@ export default function AchievementsPage() {
                             }));
                           }
                         }
+                      } else {
+                        // הצג הודעת שגיאה
+                        const errorMessage = responseData.error || responseData.details || 'שגיאה בקבלת ההישג';
+                        alert(`❌ ${errorMessage}`);
+                        console.error('Error claiming achievement:', responseData);
                       }
                     } catch (error) {
                       console.error('Error claiming achievement:', error);
+                      alert('שגיאה בקבלת ההישג. נסה שוב מאוחר יותר.');
                     }
                   }}
-                  className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg"
+                  className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-2 px-4 rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   🎁 קבל פרס
                 </button>

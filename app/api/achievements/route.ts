@@ -418,13 +418,26 @@ async function syncUserAchievements(userId: string): Promise<void> {
 // פונקציה לקבלת פרס על הישג
 async function claimAchievement(userId: string, achievementId: string): Promise<NextResponse> {
   try {
+    // וידוא שה-userId וה-achievementId תקינים
+    if (!userId || !achievementId || typeof userId !== 'string' || typeof achievementId !== 'string') {
+      console.error('❌ [claimAchievement] Invalid userId or achievementId:', { userId, achievementId });
+      return NextResponse.json({ error: 'Invalid user ID or achievement ID' }, { status: 400 });
+    }
+
     // קבל את ההישג
     const achievement = await prisma.achievement.findUnique({
       where: { id: achievementId }
     });
 
     if (!achievement) {
+      console.error('❌ [claimAchievement] Achievement not found:', achievementId);
       return NextResponse.json({ error: 'Achievement not found' }, { status: 404 });
+    }
+
+    // וידוא שההישג פעיל
+    if (!achievement.isActive) {
+      console.error('❌ [claimAchievement] Achievement is not active:', achievementId);
+      return NextResponse.json({ error: 'Achievement is not active' }, { status: 400 });
     }
 
     // קבל את ההתקדמות של המשתמש
@@ -438,40 +451,99 @@ async function claimAchievement(userId: string, achievementId: string): Promise<
     });
 
     if (!userAchievement) {
-      return NextResponse.json({ error: 'User achievement not found' }, { status: 404 });
+      console.error('❌ [claimAchievement] User achievement not found:', { userId, achievementId });
+      return NextResponse.json({ error: 'User achievement not found. Please play more to unlock this achievement.' }, { status: 404 });
     }
+
+    // בדיקות מחמירות - הישג ניתן רק אם באמת הושג
+    const currentProgress = Number(userAchievement.progress) || 0;
+    const requiredProgress = Number(achievement.requirement) || 0;
+    const isAlreadyCompleted = Boolean(userAchievement.isCompleted);
+
+    console.log(`🔍 [claimAchievement] Checking achievement: ${achievement.name}`, {
+      userId,
+      achievementId,
+      currentProgress,
+      requiredProgress,
+      isAlreadyCompleted,
+      meetsRequirement: currentProgress >= requiredProgress
+    });
 
     // בדוק שההישג מושלם אבל לא נאסף
-    if (userAchievement.progress < achievement.requirement) {
-      return NextResponse.json({ error: 'Achievement not completed yet' }, { status: 400 });
+    if (currentProgress < requiredProgress) {
+      console.warn(`⚠️ [claimAchievement] Achievement not completed yet. Progress: ${currentProgress}/${requiredProgress}`);
+      return NextResponse.json({ 
+        error: 'Achievement not completed yet',
+        details: `You need ${requiredProgress - currentProgress} more to complete this achievement.`
+      }, { status: 400 });
     }
 
-    if (userAchievement.isCompleted) {
+    if (isAlreadyCompleted) {
+      console.warn(`⚠️ [claimAchievement] Achievement already claimed: ${achievementId}`);
       return NextResponse.json({ error: 'Achievement already claimed' }, { status: 400 });
     }
 
-    // סמן כהושלם ותן פרס
-    const xpReward = achievement.xpReward || 0;
-        await prisma.userAchievement.update({
-      where: {
-        userId_achievementId: {
-          userId,
-          achievementId
-        }
-      },
-          data: {
-            isCompleted: true,
-            completedAt: new Date()
-          }
-        });
+    // בדיקה נוספת - ודא שההתקדמות היא מספר תקין
+    if (isNaN(currentProgress) || currentProgress < 0) {
+      console.error('❌ [claimAchievement] Invalid progress value:', currentProgress);
+      return NextResponse.json({ error: 'Invalid achievement progress' }, { status: 400 });
+    }
 
-    // מתן פרס למשתמש
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-        diamonds: { increment: achievement.reward },
-        points: { increment: xpReward }
+    // סמן כהושלם ותן פרס - רק אחרי כל הבדיקות
+    const xpReward = Number(achievement.xpReward) || 0;
+    const diamondReward = Number(achievement.reward) || 0;
+
+    console.log(`✅ [claimAchievement] Claiming achievement: ${achievement.name}`, {
+      reward: diamondReward,
+      xpReward: xpReward
+    });
+
+    // עדכן את ההישג כהושלם - בתוך transaction כדי למנוע race conditions
+    await prisma.$transaction(async (tx) => {
+      // בדיקה נוספת בתוך ה-transaction
+      const freshUserAchievement = await tx.userAchievement.findUnique({
+        where: {
+          userId_achievementId: {
+            userId,
+            achievementId
+          }
+        }
+      });
+
+      if (!freshUserAchievement) {
+        throw new Error('User achievement not found');
       }
+
+      if (freshUserAchievement.isCompleted) {
+        throw new Error('Achievement already claimed');
+      }
+
+      if (Number(freshUserAchievement.progress) < requiredProgress) {
+        throw new Error('Achievement not completed yet');
+      }
+
+      // עדכון ההישג
+      await tx.userAchievement.update({
+        where: {
+          userId_achievementId: {
+            userId,
+            achievementId
+          }
+        },
+        data: {
+          isCompleted: true,
+          completedAt: new Date()
+        }
+      });
+
+      // מתן פרס למשתמש
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          diamonds: { increment: diamondReward },
+          points: { increment: xpReward }
+        }
+      });
     });
 
     // עדכון רמת המשתמש אחרי קבלת הישג
@@ -485,10 +557,16 @@ async function claimAchievement(userId: string, achievementId: string): Promise<
       console.error('Error updating rank:', rankError);
     }
 
+    console.log(`✅ [claimAchievement] Achievement claimed successfully: ${achievement.name}`);
+
     return NextResponse.json({
       success: true,
-      reward: achievement.reward,
-      xpReward: xpReward
+      reward: diamondReward,
+      xpReward: xpReward,
+      achievement: {
+        id: achievement.id,
+        name: achievement.name
+      }
     });
   } catch (error) {
     console.error('Error claiming achievement:', error);

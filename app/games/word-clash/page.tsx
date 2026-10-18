@@ -80,20 +80,38 @@ export default function WordClashGame() {
 
       const data = await response.json();
       
-      if (response.ok) {
+      if (response.ok && data.gameId) {
+        // שמור את המצב לפני שימוש בכרטיס (אם נכשל, נחזיר את הכרטיס)
+        let premiumPassUsed = false;
+        
         // רק אחרי שהמשחק נוצר בהצלחה - נשתמש בכרטיס
         if (!isSubscribed && hasPremiumPass) {
-          if (!usePremiumPass()) {
+          if (usePremiumPass()) {
+            premiumPassUsed = true;
+          } else {
             setError('אין לך כרטיס כניסה זמין. רכוש כרטיס חדש בחנות!');
             setIsCreating(false);
             return;
           }
         }
         
-        setGameId(data.gameId);
-        setGameData(data.game);
-        // העבר פרמטר creator=true כדי שהמשתמש יצטרף אוטומטית למשחק שהוא יצר
-        router.push(`/game?gameId=${data.gameId}&creator=true`);
+        try {
+          setGameId(data.gameId);
+          setGameData(data.game);
+          // העבר פרמטר creator=true כדי שהמשתמש יצטרף אוטומטית למשחק שהוא יצר
+          router.push(`/game?gameId=${data.gameId}&creator=true`);
+        } catch (navError) {
+          console.error('Navigation error:', navError);
+          // אם נכשלה הניווט, נחזיר את הכרטיס
+          if (premiumPassUsed && !isSubscribed) {
+            const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
+            premiumPasses['word-clash'] = (premiumPasses['word-clash'] || 0) + 1;
+            localStorage.setItem('premium-passes', JSON.stringify(premiumPasses));
+            setHasPremiumPass(true);
+            window.dispatchEvent(new CustomEvent('premiumPassUpdated'));
+          }
+          setError('שגיאה בכניסה למשחק. הכרטיס הוחזר לחשבונך. אנא נסה שוב.');
+        }
       } else {
         setError(data.error || 'שגיאה ביצירת המשחק');
       }
@@ -140,19 +158,37 @@ export default function WordClashGame() {
 
       const data = await response.json();
       
-      if (response.ok) {
+      if (response.ok && data.game) {
+        // שמור את המצב לפני שימוש בכרטיס (אם נכשל, נחזיר את הכרטיס)
+        let premiumPassUsed = false;
+        
         // רק אחרי שהמשחק נמצא וההצטרפות הצליחה - נשתמש בכרטיס
         if (!isSubscribed && hasPremiumPass) {
-          if (!usePremiumPass()) {
+          if (usePremiumPass()) {
+            premiumPassUsed = true;
+          } else {
             setError('אין לך כרטיס כניסה זמין. רכוש כרטיס חדש בחנות!');
             setIsJoining(false);
             return;
           }
         }
         
-        setGameData(data.game);
-        // מעבר ישיר למשחק עם הקוד שכבר הוזן
-        router.push(`/game?gameId=${gameId.trim()}&joined=true`);
+        try {
+          setGameData(data.game);
+          // מעבר ישיר למשחק עם הקוד שכבר הוזן
+          router.push(`/game?gameId=${gameId.trim()}&joined=true`);
+        } catch (navError) {
+          console.error('Navigation error:', navError);
+          // אם נכשלה הניווט, נחזיר את הכרטיס
+          if (premiumPassUsed && !isSubscribed) {
+            const premiumPasses = JSON.parse(localStorage.getItem('premium-passes') || '{}');
+            premiumPasses['word-clash'] = (premiumPasses['word-clash'] || 0) + 1;
+            localStorage.setItem('premium-passes', JSON.stringify(premiumPasses));
+            setHasPremiumPass(true);
+            window.dispatchEvent(new CustomEvent('premiumPassUpdated'));
+          }
+          setError('שגיאה בכניסה למשחק. הכרטיס הוחזר לחשבונך. אנא נסה שוב.');
+        }
       } else {
         setError(data.error || 'שגיאה בהצטרפות למשחק');
       }
@@ -279,8 +315,14 @@ export default function WordClashGame() {
               </div>
             </div>
 
-            {/* Back to Games */}
-            <div className="mt-8 text-center">
+            {/* Leaderboard & Back */}
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                href="/leaderboard"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:from-amber-500 hover:to-orange-600 transition-all"
+              >
+                🏆 לוח דירוג שחקנים
+              </Link>
               <Link
                 href="/games"
                 className="inline-flex items-center text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200"
@@ -296,10 +338,10 @@ export default function WordClashGame() {
               איך לשחק?
             </h3>
             <ul className="text-blue-800 space-y-2">
-              <li>• כל שחקן מקבל הגדרות שונות לאותה מילה</li>
-              <li>• נחשו איזו הגדרה נכונה למילה</li>
-              <li>• השתמשו בכוחות מיוחדים כדי לעזור לעצמכם</li>
-              <li>• השחקן עם הכי הרבה נקודות מנצח!</li>
+              <li>• שניכם עונים במקביל על אותה שאלה</li>
+              <li>• פעם הגדרה נכונה, פעם משפט נכון — יש 20 שניות לכל שאלה</li>
+              <li>• תשובה נכונה = 10 נקודות</li>
+              <li>• אחרי כמה סיבובים — מי עם יותר נקודות מנצח!</li>
             </ul>
           </div>
         </div>

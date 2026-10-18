@@ -172,6 +172,14 @@ const kidsGames = [
     icon: '🏫',
     color: 'from-indigo-400 to-purple-500',
     href: '/games/kids/school'
+  },
+  {
+    id: 'colors-balloons',
+    name: 'בלונים וצבעים',
+    description: 'פוצץ בלונים ולמד צבעים!',
+    icon: '🎈',
+    color: 'from-pink-400 to-rose-500',
+    href: '/games/kids/colors-balloons'
   }
 ];
 

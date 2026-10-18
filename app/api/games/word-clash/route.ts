@@ -341,16 +341,46 @@ const WORD_CLASH_CHALLENGES = {
   ]
 };
 
+function shuffleWithCorrectIndex(items: string[], correctIndex: number) {
+  const paired = items.map((item, index) => ({ item, isCorrect: index === correctIndex }));
+  for (let i = paired.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [paired[i], paired[j]] = [paired[j], paired[i]];
+  }
+  return {
+    items: paired.map((p) => p.item),
+    correctIndex: paired.findIndex((p) => p.isCorrect),
+  };
+}
+
 // Helper function to get random word challenge by difficulty
-function getRandomWordChallenge(difficulty: string) {
+function getRandomWordChallenge(difficulty: string, round: number = 0) {
   const challenges = WORD_CLASH_CHALLENGES[difficulty as keyof typeof WORD_CLASH_CHALLENGES] || WORD_CLASH_CHALLENGES.easy;
+  if (!challenges || challenges.length === 0) {
+    console.error(`[getRandomWordChallenge] No challenges available for difficulty: ${difficulty}`);
+    return null;
+  }
   const randomIndex = Math.floor(Math.random() * challenges.length);
-  return challenges[randomIndex];
+  const base = challenges[randomIndex];
+  const defs = shuffleWithCorrectIndex(base.definitions, base.correctDefinitionIndex);
+  const sents = shuffleWithCorrectIndex(base.sentences, base.correctSentenceIndex);
+  return {
+    word: base.word,
+    definitions: defs.items,
+    correctDefinitionIndex: defs.correctIndex,
+    sentences: sents.items,
+    correctSentenceIndex: sents.correctIndex,
+    // Alternate: definition rounds and sentence rounds so UI is clear
+    questionType: (round % 2 === 0 ? 'definition' : 'sentence') as 'definition' | 'sentence',
+  };
 }
 
 // Helper function to get random question by difficulty (legacy support)
 function getRandomQuestion(difficulty: string) {
   const questions = WORD_CLASH_QUESTIONS[difficulty as keyof typeof WORD_CLASH_QUESTIONS] || WORD_CLASH_QUESTIONS.easy;
+  if (!questions || questions.length === 0) {
+    return null;
+  }
   const randomIndex = Math.floor(Math.random() * questions.length);
   return questions[randomIndex];
 }
@@ -367,19 +397,36 @@ async function loadGames() {
         let currentQuestion;
         let currentWord;
         try {
-          const parsed = JSON.parse(game.currentWord);
-          // Check if it's a WordChallenge (has word, definitions, sentences)
-          if (parsed.word && parsed.definitions && parsed.sentences) {
-            currentWord = parsed;
-            currentQuestion = null; // Use currentWord instead
+          // Only try to parse if currentWord exists and is not empty
+          if (game.currentWord && game.currentWord.trim()) {
+            try {
+              const parsed = JSON.parse(game.currentWord);
+              // Check if it's a WordChallenge (has word, definitions, sentences)
+              if (parsed.word && parsed.definitions && parsed.sentences) {
+                currentWord = parsed;
+                currentQuestion = null; // Use currentWord instead
+              } else if (parsed.text || parsed.answer) {
+                // It's a simple question object
+                currentQuestion = parsed;
+                currentWord = null;
+              } else {
+                // Invalid format, use defaults
+                currentQuestion = null;
+                currentWord = null;
+              }
+            } catch {
+              // If parsing fails, it's just text, create a simple question object
+              currentQuestion = { text: game.currentWord, answer: '', explanation: '' };
+              currentWord = null;
+            }
           } else {
-            // It's a simple question object
-            currentQuestion = parsed;
+            // Empty or null currentWord
+            currentQuestion = null;
             currentWord = null;
           }
         } catch {
-          // If parsing fails, it's just text, create a simple question object
-          currentQuestion = { text: game.currentWord || '', answer: '', explanation: '' };
+          // If parsing fails completely, use defaults
+          currentQuestion = null;
           currentWord = null;
         }
         
@@ -388,42 +435,65 @@ async function loadGames() {
         let playerStates = {};
         let lastMove = null;
         let chatMessages: any[] = [];
-        let revealedLetters = { player1: [], player2: [] };
+        let revealedLetters = { player1: [] as string[], player2: [] as string[] };
         
         try {
-          players = JSON.parse(game.players || '{}');
+          if (game.players && game.players.trim()) {
+            players = JSON.parse(game.players);
+          }
         } catch (e) {
           console.error(`[loadGames] Error parsing players for game ${game.gameId}:`, e);
+          players = {}; // Use default empty object
         }
         
         try {
-          playerStates = JSON.parse(game.playerStates || '{}');
+          if (game.playerStates && game.playerStates.trim()) {
+            playerStates = JSON.parse(game.playerStates);
+          }
         } catch (e) {
           console.error(`[loadGames] Error parsing playerStates for game ${game.gameId}:`, e);
+          playerStates = {}; // Use default empty object
         }
         
-        if (game.lastMove) {
+        if (game.lastMove && game.lastMove.trim()) {
           try {
             lastMove = JSON.parse(game.lastMove);
           } catch (e) {
             console.error(`[loadGames] Error parsing lastMove for game ${game.gameId}:`, e);
+            lastMove = null;
           }
         }
         
-        if (game.chatMessages) {
+        if (game.chatMessages && game.chatMessages.trim()) {
           try {
             chatMessages = JSON.parse(game.chatMessages);
+            // Ensure it's an array
+            if (!Array.isArray(chatMessages)) {
+              chatMessages = [];
+            }
           } catch (e) {
             console.error(`[loadGames] Error parsing chatMessages for game ${game.gameId}:`, e);
+            chatMessages = [];
           }
         }
         
-        if (game.revealedLetters) {
+        if (game.revealedLetters && game.revealedLetters.trim()) {
           try {
             revealedLetters = JSON.parse(game.revealedLetters);
+            // Ensure it has the correct structure
+            if (!revealedLetters.player1 || !Array.isArray(revealedLetters.player1)) {
+              revealedLetters.player1 = [];
+            }
+            if (!revealedLetters.player2 || !Array.isArray(revealedLetters.player2)) {
+              revealedLetters.player2 = [];
+            }
           } catch (e) {
             console.error(`[loadGames] Error parsing revealedLetters for game ${game.gameId}:`, e);
+            revealedLetters = { player1: [] as string[], player2: [] as string[] };
           }
+        } else {
+          // Ensure revealedLetters is properly initialized even if game.revealedLetters is null/undefined
+          revealedLetters = { player1: [] as string[], player2: [] as string[] };
         }
         
         gamesMap[game.gameId] = {
@@ -456,6 +526,149 @@ async function loadGames() {
   }
 }
 
+function mapDbRowToGame(game: any) {
+  let currentQuestion = null;
+  let currentWord = null;
+  if (game.currentWord && game.currentWord.trim()) {
+    try {
+      const parsed = JSON.parse(game.currentWord);
+      if (parsed.word && parsed.definitions && parsed.sentences) {
+        currentWord = parsed;
+      } else if (parsed.text || parsed.answer) {
+        currentQuestion = parsed;
+      }
+    } catch {
+      currentQuestion = { text: game.currentWord, answer: '', explanation: '' };
+    }
+  }
+
+  const safeParse = (raw: string | null | undefined, fallback: any) => {
+    if (!raw || !String(raw).trim()) return fallback;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return fallback;
+    }
+  };
+
+  const players = safeParse(game.players, {});
+  const playerStates = safeParse(game.playerStates, {});
+  const lastMove = safeParse(game.lastMove, null);
+  let chatMessages = safeParse(game.chatMessages, []);
+  if (!Array.isArray(chatMessages)) chatMessages = [];
+  // Normalize legacy `time` field → timestamp
+  chatMessages = chatMessages.map((m: any) => ({
+    sender: m?.sender || '',
+    text: m?.text || '',
+    timestamp: m?.timestamp || m?.time || 0,
+    type: m?.type === 'emoji' ? 'emoji' : 'text',
+  }));
+  let revealedLetters = safeParse(game.revealedLetters, { player1: [], player2: [] });
+  if (!Array.isArray(revealedLetters.player1)) revealedLetters.player1 = [];
+  if (!Array.isArray(revealedLetters.player2)) revealedLetters.player2 = [];
+  const lastEmoji = revealedLetters.lastEmoji && revealedLetters.lastEmoji.emoji
+    ? revealedLetters.lastEmoji
+    : null;
+
+  return {
+    id: game.gameId,
+    status: game.status,
+    currentRound: game.currentRound,
+    maxRounds: game.maxRounds,
+    difficulty: 'easy',
+    currentQuestion,
+    currentWord,
+    players,
+    playerStates,
+    lastMove,
+    winner: game.winner,
+    createdAt: game.createdAt.getTime(),
+    updatedAt: game.updatedAt.getTime(),
+    chatMessages,
+    lastEmoji,
+    revealedLetters: {
+      player1: revealedLetters.player1,
+      player2: revealedLetters.player2,
+    },
+  };
+}
+
+const ALLOWED_EMOJIS = ['😊', '😢', '😠', '😍', '🤔', '😴', '🎉', '😱', '🤯', '😎', '👍', '👎', '❤️', '🔥', '😂'];
+const STALE_ANSWER_MS = 22000; // if one player answered and the other stalls, auto-timeout
+
+function advanceRoundIfReady(currentGame: any): boolean {
+  const bothPlayersAnswered =
+    currentGame.playerStates?.player1?.hasAnswered === true &&
+    currentGame.playerStates?.player2?.hasAnswered === true &&
+    currentGame.players?.player2 !== null;
+
+  if (!bothPlayersAnswered) return false;
+
+  currentGame.playerStates.player1.hasAnswered = false;
+  currentGame.playerStates.player2.hasAnswered = false;
+  if (currentGame.playerStates.player1.lastAnswerTime) currentGame.playerStates.player1.lastAnswerTime = undefined;
+  if (currentGame.playerStates.player2.lastAnswerTime) currentGame.playerStates.player2.lastAnswerTime = undefined;
+  currentGame.currentRound += 1;
+
+  if (currentGame.currentRound >= currentGame.maxRounds) {
+    const player1Score = currentGame.playerStates?.player1?.score || 0;
+    const player2Score = currentGame.playerStates?.player2?.score || 0;
+    if (player1Score > player2Score) currentGame.winner = 'player1';
+    else if (player2Score > player1Score) currentGame.winner = 'player2';
+    else currentGame.winner = 'draw';
+    currentGame.status = 'finished';
+    currentGame.currentWord = null;
+  } else {
+    const newWordChallenge = getRandomWordChallenge(currentGame.difficulty || 'easy', currentGame.currentRound);
+    if (!newWordChallenge) {
+      currentGame.status = 'finished';
+      currentGame.currentWord = null;
+    } else {
+      currentGame.currentWord = newWordChallenge;
+      currentGame.currentQuestion = null;
+    }
+  }
+  return true;
+}
+
+/** If one player answered and the other is idle too long, force a timeout and advance. */
+async function forceStaleOpponentTimeout(gameId: string, game: any) {
+  if (!game || game.status !== 'active' || !game.players?.player2) return game;
+  const p1 = game.playerStates?.player1;
+  const p2 = game.playerStates?.player2;
+  if (!p1 || !p2) return game;
+
+  const p1a = p1.hasAnswered === true;
+  const p2a = p2.hasAnswered === true;
+  if (p1a === p2a) return game;
+
+  const answeredAt = p1a
+    ? (p1.lastAnswerTime || game.lastMove?.time || 0)
+    : (p2.lastAnswerTime || game.lastMove?.time || 0);
+  if (!answeredAt || Date.now() - answeredAt < STALE_ANSWER_MS) return game;
+
+  const lagging: 'player1' | 'player2' = p1a ? 'player2' : 'player1';
+  game.playerStates[lagging].hasAnswered = true;
+  game.playerStates[lagging].lastAnswerTime = Date.now();
+  game.lastMove = {
+    player: lagging,
+    answer: 'timeout',
+    isCorrect: false,
+    time: Date.now(),
+    selectedIndex: -1,
+  };
+  advanceRoundIfReady(game);
+  game.updatedAt = Date.now();
+  await saveGame(gameId, game);
+  return game;
+}
+
+async function loadGameById(gameId: string) {
+  const game = await prisma.wordClashGame.findUnique({ where: { gameId } });
+  if (!game) return null;
+  return mapDbRowToGame(game);
+}
+
 async function saveGame(gameId: string, gameData: any) {
   try {
     const existingGame = await prisma.wordClashGame.findUnique({
@@ -463,12 +676,25 @@ async function saveGame(gameId: string, gameData: any) {
     });
 
     // Save currentQuestion or currentWord as JSON string in currentWord field
-    const currentQuestionStr = gameData.currentWord
-      ? JSON.stringify(gameData.currentWord)
-      : (gameData.currentQuestion 
-          ? JSON.stringify(gameData.currentQuestion)
-          : '');
+    let currentQuestionStr = '';
+    try {
+      if (gameData.currentWord) {
+        currentQuestionStr = JSON.stringify(gameData.currentWord);
+      } else if (gameData.currentQuestion) {
+        currentQuestionStr = JSON.stringify(gameData.currentQuestion);
+      }
+    } catch (error) {
+      console.error(`[saveGame] Error stringifying currentWord/currentQuestion:`, error);
+      currentQuestionStr = '';
+    }
     
+    // Keep lastEmoji inside revealedLetters JSON (shared column, no migration)
+    const revealedPayload = {
+      player1: gameData.revealedLetters?.player1 || [],
+      player2: gameData.revealedLetters?.player2 || [],
+      ...(gameData.lastEmoji ? { lastEmoji: gameData.lastEmoji } : (gameData.revealedLetters?.lastEmoji ? { lastEmoji: gameData.revealedLetters.lastEmoji } : {})),
+    };
+
     const gameRecord = {
       gameId: gameData.id || gameId,
       status: gameData.status || 'waiting',
@@ -480,7 +706,7 @@ async function saveGame(gameId: string, gameData: any) {
       lastMove: gameData.lastMove ? JSON.stringify(gameData.lastMove) : null,
       winner: gameData.winner || null,
       chatMessages: gameData.chatMessages ? JSON.stringify(gameData.chatMessages) : null,
-      revealedLetters: gameData.revealedLetters ? JSON.stringify(gameData.revealedLetters) : null
+      revealedLetters: JSON.stringify(revealedPayload),
     };
 
     if (existingGame) {
@@ -505,39 +731,69 @@ async function saveGame(gameId: string, gameData: any) {
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting
-    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    if (!rateLimit(clientIP, 10, 60000)) { // 10 requests per minute
-      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
-    }
-    
     const body = await req.json();
     const { action, gameId, playerId, playerName, difficulty = 'easy' } = body;
     console.log(`[POST] Action: ${action}, gameId: ${gameId}, playerId: ${playerId}`);
     
-    // Input validation
-    if (!action || !playerId || !playerName) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    // Input validation - action is always required
+    if (!action) {
+      return NextResponse.json({ error: 'Missing action field' }, { status: 400 });
+    }
+
+    // Rate limiting — allow more room for active play (moves/chat)
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const limit = (action === 'move' || action === 'chat' || action === 'emoji') ? 120 : 30;
+    if (!rateLimit(`${clientIP}:${action}`, limit, 60000)) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
     }
     
-    // Sanitize inputs
-    const sanitizedPlayerId = playerId.toString().replace(/[<>\"'&]/g, '');
-    const sanitizedPlayerName = playerName.toString().replace(/[<>\"'&]/g, '');
+    // Sanitize inputs (only if playerId and playerName are provided)
+    let sanitizedPlayerId = '';
+    let sanitizedPlayerName = '';
     
-    // Length validation
-    if (sanitizedPlayerId.length > 50 || sanitizedPlayerName.length > 50) {
-      return NextResponse.json({ error: 'Input too long' }, { status: 400 });
-    }
-    
-    if (sanitizedPlayerId.length === 0 || sanitizedPlayerName.length === 0) {
-      return NextResponse.json({ error: 'Input cannot be empty' }, { status: 400 });
+    // playerId and playerName are required for create and join actions
+    if (action === 'create' || action === 'join') {
+      if (!playerId || !playerName) {
+        return NextResponse.json({ error: 'Missing required fields: playerId and playerName are required for create/join actions' }, { status: 400 });
+      }
+      
+      sanitizedPlayerId = playerId.toString().replace(/[<>\"'&]/g, '');
+      sanitizedPlayerName = playerName.toString().replace(/[<>\"'&]/g, '');
+      
+      // Length validation
+      if (sanitizedPlayerId.length > 128 || sanitizedPlayerName.length > 80) {
+        return NextResponse.json({ error: 'Input too long' }, { status: 400 });
+      }
+      
+      if (sanitizedPlayerId.length === 0 || sanitizedPlayerName.length === 0) {
+        return NextResponse.json({ error: 'Input cannot be empty' }, { status: 400 });
+      }
+    } else if (action === 'move') {
+      // For move action, playerId should come from body (already parsed)
+      if (!playerId) {
+        return NextResponse.json({ error: 'Missing required field: playerId is required for move action' }, { status: 400 });
+      }
+      sanitizedPlayerId = playerId.toString().replace(/[<>\"'&]/g, '');
+    } else if (action === 'chat' || action === 'emoji') {
+      if (!playerId) {
+        return NextResponse.json({ error: 'Missing required field: playerId is required for chat/emoji actions' }, { status: 400 });
+      }
+      sanitizedPlayerId = playerId.toString().replace(/[<>\"'&]/g, '');
     }
 
     switch (action) {
       case 'create':
         const newGameId = `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         // Get random word challenge based on difficulty
-        const randomWordChallenge = getRandomWordChallenge(difficulty);
+        const randomWordChallenge = getRandomWordChallenge(difficulty, 0);
+        
+        // Validate that we got a valid challenge
+        if (!randomWordChallenge) {
+          return NextResponse.json({ 
+            error: 'Failed to generate word challenge. Please try again.',
+            details: 'No challenges available for the selected difficulty'
+          }, { status: 500 });
+        }
         
         const newGame = {
           id: newGameId,
@@ -610,225 +866,341 @@ export async function POST(req: NextRequest) {
         console.log('[POST create] Created game:', newGameId, 'for player:', sanitizedPlayerId);
         return NextResponse.json({ gameId: newGameId, game: newGame });
 
-      case 'join':
-        // Load existing game from database
+      case 'join': {
         console.log(`[POST join] Attempting to join game: ${gameId}`);
-        const joinGames = await loadGames();
-        console.log(`[POST join] Loaded ${Object.keys(joinGames).length} games`);
-        
-        if (!gameId || !joinGames[gameId]) {
-          console.log(`[POST join] Game not found: ${gameId}`);
-          console.log(`[POST join] Available games:`, Object.keys(joinGames));
+        if (!gameId) {
           return NextResponse.json({ error: 'Game not found' }, { status: 404 });
         }
 
-        const existingGame = joinGames[gameId];
-        
-        // Check if game is already finished
-        if (existingGame.status === 'finished') {
-          console.log(`[POST join] Game is finished: ${gameId}`);
-          return NextResponse.json({ error: 'Game is finished' }, { status: 400 });
-        }
-        
-        // Check if player is already in the game
-        if (existingGame.players.player1 === sanitizedPlayerId || existingGame.players.player2 === sanitizedPlayerId) {
-          console.log(`[POST join] Player already in game: ${gameId}, player: ${sanitizedPlayerId}`);
-          return NextResponse.json({ game: existingGame }); // Return game state
-        }
-        
-        if (existingGame.players.player2) {
-          console.log(`[POST join] Game is full: ${gameId}`);
-          return NextResponse.json({ error: 'Game is full' }, { status: 400 });
-        }
+        const joinResult = await prisma.$transaction(async (tx) => {
+          const row = await tx.wordClashGame.findUnique({ where: { gameId } });
+          if (!row) return { error: 'not_found' as const };
+          const existingGame = mapDbRowToGame(row);
 
-        // Add second player
-        existingGame.players.player2 = sanitizedPlayerId;
-        existingGame.status = 'active';
-        existingGame.updatedAt = Date.now();
-        
-        // Initialize player2 state if not exists
-        if (!existingGame.playerStates.player2) {
+          if (existingGame.status === 'finished') return { error: 'finished' as const };
+          if (!existingGame.players) return { error: 'invalid' as const };
+
+          if (
+            existingGame.players.player1 === sanitizedPlayerId ||
+            existingGame.players.player2 === sanitizedPlayerId
+          ) {
+            return { game: existingGame };
+          }
+
+          if (existingGame.players.player2) return { error: 'full' as const };
+
+          if (!existingGame.playerStates) {
+            existingGame.playerStates = {
+              player1: { score: 0, isReady: true, hasAnswered: false, powerUps: { revealLetter: 3, skipWord: 2, freezeOpponent: 1 } },
+              player2: { score: 0, isReady: true, hasAnswered: false, powerUps: { revealLetter: 3, skipWord: 2, freezeOpponent: 1 } },
+            };
+          }
+
+          existingGame.players.player2 = sanitizedPlayerId;
+          existingGame.status = 'active';
+          existingGame.updatedAt = Date.now();
           existingGame.playerStates.player2 = {
-            score: 0,
+            score: existingGame.playerStates.player2?.score || 0,
             isReady: true,
             hasAnswered: false,
-            powerUps: {
-              revealLetter: 3,
-              skipWord: 2,
-              freezeOpponent: 1
-            }
+            powerUps: existingGame.playerStates.player2?.powerUps || { revealLetter: 3, skipWord: 2, freezeOpponent: 1 },
           };
-        } else {
-          // Ensure hasAnswered is set
-          existingGame.playerStates.player2.hasAnswered = false;
-        }
-        
-        // Ensure player1 has hasAnswered set
-        if (existingGame.playerStates.player1) {
-          existingGame.playerStates.player1.hasAnswered = false;
-        }
-        
-        // Save updated game to database
-        try {
-          await saveGame(gameId, existingGame);
-          console.log(`[POST join] Game updated successfully: ${gameId}`);
-        } catch (saveError) {
-          console.error(`[POST join] Error saving game:`, saveError);
-          return NextResponse.json({ error: 'Failed to update game in database' }, { status: 500 });
-        }
-        
-        console.log(`[POST join] Player joined game: ${gameId}, player: ${sanitizedPlayerId}`);
-        return NextResponse.json({ game: existingGame });
+          if (existingGame.playerStates.player1) {
+            existingGame.playerStates.player1.hasAnswered = false;
+          }
 
-      case 'get':
-        // Load existing game from database
+          let currentQuestionStr = '';
+          if (existingGame.currentWord) currentQuestionStr = JSON.stringify(existingGame.currentWord);
+          else if (existingGame.currentQuestion) currentQuestionStr = JSON.stringify(existingGame.currentQuestion);
+
+          await tx.wordClashGame.update({
+            where: { gameId },
+            data: {
+              status: existingGame.status,
+              currentRound: existingGame.currentRound || 0,
+              maxRounds: existingGame.maxRounds || 5,
+              currentWord: currentQuestionStr,
+              players: JSON.stringify(existingGame.players || {}),
+              playerStates: JSON.stringify(existingGame.playerStates || {}),
+              lastMove: existingGame.lastMove ? JSON.stringify(existingGame.lastMove) : null,
+              winner: existingGame.winner || null,
+              chatMessages: existingGame.chatMessages ? JSON.stringify(existingGame.chatMessages) : null,
+              revealedLetters: JSON.stringify({
+                player1: existingGame.revealedLetters?.player1 || [],
+                player2: existingGame.revealedLetters?.player2 || [],
+                ...(existingGame.lastEmoji ? { lastEmoji: existingGame.lastEmoji } : {}),
+              }),
+            },
+          });
+
+          return { game: existingGame };
+        });
+
+        if ('error' in joinResult && joinResult.error) {
+          if (joinResult.error === 'not_found') return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+          if (joinResult.error === 'finished') return NextResponse.json({ error: 'Game is finished' }, { status: 400 });
+          if (joinResult.error === 'full') return NextResponse.json({ error: 'Game is full' }, { status: 400 });
+          return NextResponse.json({ error: 'Game has invalid structure' }, { status: 500 });
+        }
+
+        console.log(`[POST join] Player joined game: ${gameId}, player: ${sanitizedPlayerId}`);
+        return NextResponse.json({ game: joinResult.game });
+      }
+
+      case 'get': {
         console.log(`[GET] Fetching game: ${gameId}`);
-        const getGames = await loadGames();
-        console.log(`[GET] Loaded ${Object.keys(getGames).length} games, looking for: ${gameId}`);
-        console.log(`[GET] Available game IDs:`, Object.keys(getGames));
-        
-        if (!gameId || !getGames[gameId]) {
+        if (!gameId) {
+          return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+        }
+        const gameData = await loadGameById(gameId);
+        if (!gameData) {
           console.log(`[GET] Game not found: ${gameId}`);
           return NextResponse.json({ error: 'Game not found' }, { status: 404 });
         }
-
-        const gameData = getGames[gameId];
         console.log(`[GET] Found game ${gameId}, status: ${gameData.status}`);
         return NextResponse.json({ game: gameData });
+      }
 
-      case 'move':
-        // Load existing game from database
-        const moveGames = await loadGames();
-        
-        if (!gameId || !moveGames[gameId]) {
+      case 'move': {
+        if (!gameId) {
           return NextResponse.json({ error: 'Game not found' }, { status: 404 });
         }
 
-        const currentGame = moveGames[gameId];
-        
-        // Check if game is still active
-        if (currentGame.status !== 'active') {
-          return NextResponse.json({ error: 'Game is not active' }, { status: 400 });
-        }
-        
-        // Check if game is finished
-        if (currentGame.status === 'finished') {
-          return NextResponse.json({ error: 'Game is finished' }, { status: 400 });
-        }
-        
-        const { answer, selectedIndex } = await req.json();
-        
-        // Validate answer and selectedIndex
-        if (!answer || (answer !== 'definition' && answer !== 'sentence')) {
+        const { answer, selectedIndex, playerId: movePlayerId } = body;
+        const movePlayerIdSanitized = movePlayerId ? movePlayerId.toString().replace(/[<>\"'&]/g, '') : sanitizedPlayerId;
+
+        if (!answer || (answer !== 'definition' && answer !== 'sentence' && answer !== 'timeout')) {
           return NextResponse.json({ error: 'Invalid answer type' }, { status: 400 });
         }
-        
-        if (typeof selectedIndex !== 'number' || selectedIndex < 0) {
+
+        if (answer !== 'timeout' && (typeof selectedIndex !== 'number' || selectedIndex < 0)) {
           return NextResponse.json({ error: 'Invalid selected index' }, { status: 400 });
         }
-        
-        // Check if answer is correct based on currentWord structure
-        let isCorrect = false;
-        if (currentGame.currentWord) {
-          // currentWord has correctDefinitionIndex and correctSentenceIndex
-          if (answer === 'definition') {
-            isCorrect = currentGame.currentWord.correctDefinitionIndex === selectedIndex;
-          } else if (answer === 'sentence') {
-            isCorrect = currentGame.currentWord.correctSentenceIndex === selectedIndex;
+
+        // Serialize concurrent answers so both players' moves are applied
+        const moveResult = await prisma.$transaction(async (tx) => {
+          const row = await tx.wordClashGame.findUnique({ where: { gameId } });
+          if (!row) return { error: 'not_found' as const };
+          const currentGame = mapDbRowToGame(row);
+
+          if (currentGame.status !== 'active') {
+            return { error: 'not_active' as const, game: currentGame };
           }
-        } else if (currentGame.currentQuestion) {
-          // Fallback for old format (shouldn't happen but handle it)
-          isCorrect = currentGame.currentQuestion?.answer === answer;
+          if (!currentGame.players || !currentGame.players.player1) {
+            return { error: 'invalid' as const };
+          }
+
+          let playerSymbol: 'player1' | 'player2' | null = null;
+          if (currentGame.players.player1 === movePlayerIdSanitized) playerSymbol = 'player1';
+          else if (currentGame.players.player2 === movePlayerIdSanitized) playerSymbol = 'player2';
+          if (!playerSymbol) return { error: 'not_in_game' as const };
+
+          if (!currentGame.playerStates) {
+            currentGame.playerStates = {
+              player1: { score: 0, isReady: true, powerUps: { revealLetter: 3, skipWord: 2, freezeOpponent: 1 }, hasAnswered: false },
+              player2: { score: 0, isReady: true, powerUps: { revealLetter: 3, skipWord: 2, freezeOpponent: 1 }, hasAnswered: false },
+            };
+          }
+          if (!currentGame.playerStates[playerSymbol]) {
+            currentGame.playerStates[playerSymbol] = {
+              score: 0, isReady: true, powerUps: { revealLetter: 3, skipWord: 2, freezeOpponent: 1 }, hasAnswered: false,
+            };
+          }
+
+          if (currentGame.playerStates[playerSymbol].hasAnswered === true) {
+            return { game: currentGame };
+          }
+
+          const expectedType =
+            currentGame.currentWord?.questionType ||
+            ((currentGame.currentRound || 0) % 2 === 0 ? 'definition' : 'sentence');
+
+          if (answer !== 'timeout' && answer !== expectedType) {
+            return { error: 'wrong_type' as const };
+          }
+
+          if (answer !== 'timeout' && currentGame.currentWord) {
+            if (answer === 'definition') {
+              if (!currentGame.currentWord.definitions || selectedIndex >= currentGame.currentWord.definitions.length) {
+                return { error: 'bounds' as const };
+              }
+            } else if (answer === 'sentence') {
+              if (!currentGame.currentWord.sentences || selectedIndex >= currentGame.currentWord.sentences.length) {
+                return { error: 'bounds' as const };
+              }
+            }
+          }
+
+          let isCorrect = false;
+          if (answer === 'timeout') {
+            isCorrect = false;
+          } else if (currentGame.currentWord) {
+            if (answer === 'definition') {
+              isCorrect = currentGame.currentWord.correctDefinitionIndex === selectedIndex;
+            } else if (answer === 'sentence') {
+              isCorrect = currentGame.currentWord.correctSentenceIndex === selectedIndex;
+            }
+          }
+
+          currentGame.playerStates[playerSymbol].hasAnswered = true;
+          currentGame.playerStates[playerSymbol].lastAnswerTime = Date.now();
+          currentGame.lastMove = {
+            player: playerSymbol,
+            answer,
+            isCorrect,
+            time: Date.now(),
+            selectedIndex: typeof selectedIndex === 'number' ? selectedIndex : -1,
+          };
+          if (isCorrect) {
+            currentGame.playerStates[playerSymbol].score += 10;
+          }
+
+          // Keep lastMove so both clients can show feedback for the round that just ended
+          advanceRoundIfReady(currentGame);
+
+          currentGame.updatedAt = Date.now();
+
+          let currentQuestionStr = '';
+          if (currentGame.currentWord) currentQuestionStr = JSON.stringify(currentGame.currentWord);
+          else if (currentGame.currentQuestion) currentQuestionStr = JSON.stringify(currentGame.currentQuestion);
+
+          await tx.wordClashGame.update({
+            where: { gameId },
+            data: {
+              status: currentGame.status || 'waiting',
+              currentRound: currentGame.currentRound || 0,
+              maxRounds: currentGame.maxRounds || 5,
+              currentWord: currentQuestionStr,
+              players: JSON.stringify(currentGame.players || {}),
+              playerStates: JSON.stringify(currentGame.playerStates || {}),
+              lastMove: currentGame.lastMove ? JSON.stringify(currentGame.lastMove) : null,
+              winner: currentGame.winner || null,
+              chatMessages: currentGame.chatMessages ? JSON.stringify(currentGame.chatMessages) : null,
+              revealedLetters: JSON.stringify({
+                player1: currentGame.revealedLetters?.player1 || [],
+                player2: currentGame.revealedLetters?.player2 || [],
+                ...(currentGame.lastEmoji ? { lastEmoji: currentGame.lastEmoji } : {}),
+              }),
+            },
+          });
+
+          return { game: currentGame };
+        });
+
+        if ('error' in moveResult && moveResult.error) {
+          if (moveResult.error === 'not_found') return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+          if (moveResult.error === 'not_active') return NextResponse.json({ error: 'Game is not active', game: moveResult.game }, { status: 400 });
+          if (moveResult.error === 'not_in_game') return NextResponse.json({ error: 'Player not in game' }, { status: 400 });
+          if (moveResult.error === 'wrong_type') return NextResponse.json({ error: 'Wrong question type for this round' }, { status: 400 });
+          if (moveResult.error === 'bounds') return NextResponse.json({ error: 'Selected index out of bounds' }, { status: 400 });
+          return NextResponse.json({ error: 'Game has invalid structure' }, { status: 500 });
         }
 
-        // Update game state
-        const playerSymbol = currentGame.players.player1 === playerId ? 'player1' : 'player2';
-        
-        // Check if player is in the game
-        if (!playerSymbol || (playerSymbol !== 'player1' && playerSymbol !== 'player2')) {
+        return NextResponse.json({ game: moveResult.game });
+      }
+
+      case 'chat': {
+        if (!gameId) {
+          return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+        }
+
+        const chatGame = await loadGameById(gameId);
+        if (!chatGame) {
+          return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+        }
+
+        if (
+          chatGame.players?.player1 !== sanitizedPlayerId &&
+          chatGame.players?.player2 !== sanitizedPlayerId
+        ) {
           return NextResponse.json({ error: 'Player not in game' }, { status: 400 });
         }
-        
-        // Check if player already answered (prevent double submission)
-        if (currentGame.playerStates[playerSymbol]?.hasAnswered === true) {
-          console.log(`[POST move] Player ${playerSymbol} already answered, ignoring duplicate submission`);
-          return NextResponse.json({ game: currentGame }); // Return current game state
+
+        const { message } = body;
+
+        if (!message || typeof message !== 'string' || message.trim().length === 0) {
+          return NextResponse.json({ error: 'Invalid message' }, { status: 400 });
         }
-        
-        // Mark player as answered in playerStates
-        if (!currentGame.playerStates[playerSymbol]) {
-          currentGame.playerStates[playerSymbol] = {
-            score: 0,
-            isReady: true,
-            powerUps: { revealLetter: 3, skipWord: 2, freezeOpponent: 1 },
-            hasAnswered: false
-          };
+
+        const sanitizedMessage = message.toString().replace(/[<>\"'&]/g, '').trim();
+        if (sanitizedMessage.length === 0) {
+          return NextResponse.json({ error: 'Message cannot be empty' }, { status: 400 });
         }
-        currentGame.playerStates[playerSymbol].hasAnswered = true;
-        
-        currentGame.lastMove = {
-          player: playerSymbol,
-          answer: answer,
-          isCorrect: isCorrect,
-          time: Date.now(),
-          selectedIndex: selectedIndex
+
+        if (sanitizedMessage.length > 500) {
+          return NextResponse.json({ error: 'Message too long (max 500 characters)' }, { status: 400 });
+        }
+
+        if (!chatGame.chatMessages) chatGame.chatMessages = [];
+
+        chatGame.chatMessages.push({
+          sender: sanitizedPlayerId,
+          text: sanitizedMessage,
+          timestamp: Date.now(),
+          type: 'text',
+        });
+
+        if (chatGame.chatMessages.length > 100) {
+          chatGame.chatMessages = chatGame.chatMessages.slice(-100);
+        }
+
+        chatGame.updatedAt = Date.now();
+        await saveGame(gameId, chatGame);
+        return NextResponse.json({ game: chatGame });
+      }
+
+      case 'emoji': {
+        if (!gameId) {
+          return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+        }
+
+        const emojiGame = await loadGameById(gameId);
+        if (!emojiGame) {
+          return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+        }
+
+        if (
+          emojiGame.players?.player1 !== sanitizedPlayerId &&
+          emojiGame.players?.player2 !== sanitizedPlayerId
+        ) {
+          return NextResponse.json({ error: 'Player not in game' }, { status: 400 });
+        }
+
+        const rawEmoji = typeof body.emoji === 'string' ? body.emoji.trim() : '';
+        const normalized = rawEmoji.replace(/\uFE0F/g, '');
+        const matched = ALLOWED_EMOJIS.find((e) => e.replace(/\uFE0F/g, '') === normalized);
+        if (!matched) {
+          return NextResponse.json({ error: 'Emoji not allowed' }, { status: 400 });
+        }
+
+        const now = Date.now();
+        if (!emojiGame.chatMessages) emojiGame.chatMessages = [];
+        emojiGame.chatMessages.push({
+          sender: sanitizedPlayerId,
+          text: matched,
+          timestamp: now,
+          type: 'emoji',
+        });
+        if (emojiGame.chatMessages.length > 100) {
+          emojiGame.chatMessages = emojiGame.chatMessages.slice(-100);
+        }
+
+        emojiGame.lastEmoji = {
+          sender: sanitizedPlayerId,
+          emoji: matched,
+          time: now,
+        };
+        // Persist lastEmoji inside revealedLetters JSON (no schema migration)
+        emojiGame.revealedLetters = {
+          player1: emojiGame.revealedLetters?.player1 || [],
+          player2: emojiGame.revealedLetters?.player2 || [],
+          lastEmoji: emojiGame.lastEmoji,
         };
 
-        if (isCorrect) {
-          currentGame.playerStates[playerSymbol].score += 10;
-        }
-
-        // Check if both players answered - if so, move to next round
-        const player1Answered = currentGame.playerStates?.player1?.hasAnswered === true;
-        const player2Answered = currentGame.playerStates?.player2?.hasAnswered === true;
-        const bothPlayersAnswered = player1Answered && player2Answered;
-        
-        // Move to next round if both answered
-        if (bothPlayersAnswered) {
-          // Reset hasAnswered for both players
-          if (currentGame.playerStates.player1) {
-            currentGame.playerStates.player1.hasAnswered = false;
-          }
-          if (currentGame.playerStates.player2) {
-            currentGame.playerStates.player2.hasAnswered = false;
-          }
-          
-          // Move to next round
-          currentGame.currentRound += 1;
-          
-          // Check if game is finished
-          if (currentGame.currentRound >= currentGame.maxRounds) {
-            // Game finished - determine winner
-            const player1Score = currentGame.playerStates?.player1?.score || 0;
-            const player2Score = currentGame.playerStates?.player2?.score || 0;
-            
-            if (player1Score > player2Score) {
-              currentGame.winner = 'player1';
-            } else if (player2Score > player1Score) {
-              currentGame.winner = 'player2';
-            } else {
-              currentGame.winner = 'draw';
-            }
-            
-            currentGame.status = 'finished';
-            currentGame.currentWord = null; // Clear current word when game is finished
-          } else {
-            // Generate new word challenge for next round
-            const newWordChallenge = getRandomWordChallenge(currentGame.difficulty || 'easy');
-            currentGame.currentWord = newWordChallenge;
-            currentGame.currentQuestion = null; // Use currentWord instead
-          }
-          
-          // Clear lastMove for new round
-          currentGame.lastMove = null;
-        }
-
-        currentGame.updatedAt = Date.now();
-        
-        // Save updated game to database
-        await saveGame(gameId, currentGame);
-        
-        return NextResponse.json({ game: currentGame });
+        emojiGame.updatedAt = now;
+        await saveGame(gameId, emojiGame);
+        return NextResponse.json({ game: emojiGame });
+      }
 
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
@@ -855,19 +1227,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Game ID is required' }, { status: 400 });
     }
 
-    // Load existing games from database
-    const games = await loadGames();
-    console.log(`[GET endpoint] Loaded ${Object.keys(games).length} games`);
-    console.log(`[GET endpoint] Looking for gameId: ${gameId}`);
-    console.log(`[GET endpoint] Available gameIds:`, Object.keys(games));
-    
-    if (!games[gameId]) {
-      console.log(`[GET endpoint] Game ${gameId} not found in loaded games`);
+    const game = await loadGameById(gameId);
+    if (!game) {
+      console.log(`[GET endpoint] Game ${gameId} not found`);
       return NextResponse.json({ error: 'Game not found' }, { status: 404 });
     }
     
+    const synced = await forceStaleOpponentTimeout(gameId, game);
     console.log(`[GET endpoint] Returning game ${gameId}`);
-    return NextResponse.json({ game: games[gameId] });
+    return NextResponse.json({ game: synced });
   } catch (error) {
     console.error('[GET endpoint] Error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

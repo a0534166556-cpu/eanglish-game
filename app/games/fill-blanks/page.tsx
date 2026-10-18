@@ -8,7 +8,7 @@ import { getTranslationWithFallback } from '@/lib/translations';
 interface Question {
   id: number;
   sentence: string;
-  answer: string;
+  answer: string | string[]; // תמיכה בתשובה אחת או מספר תשובות נכונות
   options: string[];
   explanation?: string; // הסבר בעברית
 }
@@ -20,65 +20,59 @@ interface QuestionBank {
 // Expanded question bank with 200+ questions for better learning experience
 const QUESTION_BANK: QuestionBank = {
   easy: [
+    // דקדוק בסיסי ומשפטים שימושיים
+    { id: 1, sentence: 'I ___ a student.', answer: 'am', options: ['am', 'is', 'are', 'be'], explanation: 'עם I משתמשים ב-am: I am a student.' },
+    { id: 2, sentence: 'She ___ my teacher.', answer: 'is', options: ['is', 'am', 'are', 'be'], explanation: 'עם she/he/it משתמשים ב-is.' },
+    { id: 3, sentence: 'They ___ at school.', answer: 'are', options: ['are', 'is', 'am', 'be'], explanation: 'עם they/we/you משתמשים ב-are.' },
+    { id: 4, sentence: 'This is ___ apple.', answer: 'an', options: ['an', 'a', 'the', 'some'], explanation: 'לפני צליל ניקוד (apple) משתמשים ב-an.' },
+    { id: 5, sentence: 'I have two ___.', answer: 'books', options: ['books', 'book', 'bookes', 'booking'], explanation: 'רבים: book → books.' },
+    { id: 6, sentence: 'He ___ football on Sundays.', answer: 'plays', options: ['plays', 'play', 'playing', 'played'], explanation: 'הווה פשוט עם he: מוסיפים s — he plays.' },
+    { id: 7, sentence: '___ you from Israel?', answer: 'Are', options: ['Are', 'Is', 'Am', 'Do'], explanation: 'Are you...? = האם אתה...?' },
+    { id: 8, sentence: 'My name ___ Dana.', answer: 'is', options: ['is', 'am', 'are', 'be'], explanation: 'My name is... = קוראים לי...' },
+    { id: 9, sentence: 'Please ___ the door.', answer: 'open', options: ['open', 'opens', 'opening', 'opened'], explanation: 'אחרי Please הפועל בבסיס: Please open.' },
+    { id: 10, sentence: 'I ___ to school by bus.', answer: 'go', options: ['go', 'goes', 'going', 'gone'], explanation: 'עם I: I go (בלי s).' },
+    { id: 11, sentence: 'There ___ a cat on the chair.', answer: 'is', options: ['is', 'are', 'am', 'be'], explanation: 'There is + יחיד. There are + רבים.' },
+    { id: 12, sentence: 'Can I have some water, ___?', answer: 'please', options: ['please', 'now', 'fast', 'sorry'], explanation: 'please הופך בקשה למנומסת.' },
+    { id: 13, sentence: 'How ___ are you?', answer: 'old', options: ['old', 'many', 'much', 'long'], explanation: 'How old are you? = בן כמה אתה?' },
+    { id: 14, sentence: 'I ___ English every day.', answer: 'study', options: ['study', 'studies', 'studying', 'studied'], explanation: 'הרגל בהווה: I study every day.' },
+    { id: 15, sentence: 'She ___ not at home.', answer: 'is', options: ['is', 'are', 'am', 'do'], explanation: 'She is not / She isn\'t at home.' },
+    { id: 16, sentence: 'We ___ happy today.', answer: 'are', options: ['are', 'is', 'am', 'be'], explanation: 'We are = אנחנו.' },
+    { id: 17, sentence: 'I like ___.', answer: 'apples', options: ['apples', 'apple', 'an apple', 'the apple'], explanation: 'העדפה כללית: I like apples (רבים).' },
+    { id: 18, sentence: '___ is your name?', answer: 'What', options: ['What', 'Where', 'When', 'Who'], explanation: 'What is your name? = מה שמך?' },
+    { id: 19, sentence: 'I am ___ (רעב).', answer: 'hungry', options: ['hungry', 'thirsty', 'angry', 'angry'], explanation: 'hungry = רעב. thirsty = צמא. angry = כועס.' },
+    { id: 20, sentence: 'See you ___.', answer: 'later', options: ['later', 'before', 'under', 'inside'], explanation: 'See you later = להתראות.' },
+    { id: 21, sentence: 'He ___ a dog.', answer: 'has', options: ['has', 'have', 'haves', 'having'], explanation: 'He/she/it has. I/you/we/they have.' },
+    { id: 22, sentence: '___ the window, please.', answer: 'Close', options: ['Close', 'Closes', 'Closing', 'Closed'], explanation: 'ציווי: Close the window.' },
+    { id: 23, sentence: 'I drink ___ every morning.', answer: 'water', options: ['water', 'bread', 'paper', 'shoe'], explanation: 'drink water = לשתות מים.' },
+    { id: 24, sentence: 'She ___ a book now.', answer: 'is reading', options: ['is reading', 'read', 'reads', 'reading'], explanation: 'עכשיו → הווה ממושך: is + ing.' },
+    { id: 25, sentence: 'Do you ___ pizza?', answer: 'like', options: ['like', 'likes', 'liking', 'liked'], explanation: 'Do you + פועל בבסיס.' },
+    { id: 26, sentence: 'I went to the shop ___.', answer: 'yesterday', options: ['yesterday', 'tomorrow', 'now', 'next week'], explanation: 'went = עבר → yesterday.' },
+    { id: 27, sentence: 'The opposite of hot is ___.', answer: 'cold', options: ['cold', 'warm', 'new', 'big'], explanation: 'hot ↔ cold.' },
+    { id: 28, sentence: 'Good ___! (בבוקר)', answer: 'morning', options: ['morning', 'night', 'bye', 'luck'], explanation: 'Good morning = בוקר טוב.' },
+    { id: 29, sentence: 'Thank you! — You\'re ___.', answer: 'welcome', options: ['welcome', 'please', 'sorry', 'fine'], explanation: 'You\'re welcome = על לא דבר.' },
+    { id: 30, sentence: 'I ___ my homework every evening.', answer: 'do', options: ['do', 'make', 'does', 'making'], explanation: 'do homework (לא make homework).' },
+    { id: 31, sentence: 'Where ___ you live?', answer: 'do', options: ['do', 'does', 'are', 'is'], explanation: 'Where do you live? = איפה אתה גר?' },
+    { id: 32, sentence: 'There are three ___.', answer: 'chairs', options: ['chairs', 'chair', 'a chair', 'the chair'], explanation: 'There are + רבים.' },
+    { id: 33, sentence: 'I ___ happy.', answer: 'am', options: ['am', 'is', 'are', 'be'], explanation: 'I am happy.' },
+    { id: 34, sentence: 'She ___ to music every day.', answer: 'listens', options: ['listens', 'listen', 'listening', 'listened'], explanation: 'listen to + he/she → listens.' },
+    { id: 35, sentence: '___ me your pen, please.', answer: 'Give', options: ['Give', 'Gives', 'Giving', 'Gave'], explanation: 'Give me... please = תן לי בבקשה.' },
+    { id: 36, sentence: 'I can ___ English.', answer: 'speak', options: ['speak', 'speaks', 'speaking', 'spoke'], explanation: 'can + V1: I can speak English.' },
+    { id: 37, sentence: 'This bag is ___.', answer: 'mine', options: ['mine', 'my', 'me', 'I'], explanation: 'mine = שלי (בלי שם עצם אחרי). my bag.' },
+    { id: 38, sentence: 'We ___ students.', answer: 'are', options: ['are', 'is', 'am', 'be'], explanation: 'We are students.' },
+    { id: 39, sentence: 'I need a ___ to write.', answer: 'pen', options: ['pen', 'plate', 'sock', 'door'], explanation: 'pen = עט.' },
+    { id: 40, sentence: '___ is the train station?', answer: 'Where', options: ['Where', 'Who', 'What', 'When'], explanation: 'Where is...? = איפה נמצא...?' },
+    
     // Animals (בעלי חיים) - מילים קצרות ופשוטות בלבד!
-    { id: 1, sentence: 'The ___ is big.', answer: 'dog', options: ['dog', 'cat', 'ant', 'bee'], explanation: 'הכלב גדול - Dog is big' },
-    { id: 2, sentence: 'The ___ is small.', answer: 'cat', options: ['cat', 'dog', 'bird', 'fish'], explanation: 'החתול קטן - Cat is small' },
-    { id: 3, sentence: 'The ___ can fly.', answer: 'bird', options: ['bird', 'cat', 'dog', 'fish'], explanation: 'הציפור יכולה לעוף - Bird can fly' },
-    { id: 4, sentence: 'The ___ can swim.', answer: 'fish', options: ['fish', 'cat', 'dog', 'bird'], explanation: 'הדג יכול לשחות - Fish can swim' },
-    { id: 5, sentence: 'The ___ can jump.', answer: 'frog', options: ['frog', 'cat', 'dog', 'fish'], explanation: 'הצפרדע יכולה לקפוץ - Frog can jump' },
-    { id: 6, sentence: 'The ___ can run.', answer: 'dog', options: ['dog', 'cat', 'fish', 'bird'], explanation: 'הכלב יכול לרוץ - Dog can run' },
-    { id: 7, sentence: 'The ___ is soft.', answer: 'cat', options: ['cat', 'rock', 'dog', 'tree'], explanation: 'החתול רך - Cat is soft' },
-    { id: 8, sentence: 'The ___ can sing.', answer: 'bird', options: ['bird', 'cat', 'dog', 'fish'], explanation: 'הציפור יכולה לשיר - Bird can sing' },
-    { id: 9, sentence: 'A ___ is cute.', answer: 'baby', options: ['baby', 'car', 'rock', 'pen'], explanation: 'תינוק חמוד - Baby is cute' },
-    { id: 10, sentence: 'A ___ can play.', answer: 'child', options: ['child', 'car', 'tree', 'rock'], explanation: 'ילד יכול לשחק - Child can play' },
-    
-    // Food (אוכל) - מילים קצרות: 3-6 אותיות
-    { id: 11, sentence: 'I eat a red ___.', answer: 'apple', options: ['apple', 'cake', 'egg', 'fish'], explanation: 'אני אוכל תפוח אדום - Red apple' },
-    { id: 12, sentence: 'I drink ___ every day.', answer: 'water', options: ['water', 'milk', 'juice', 'tea'], explanation: 'אני שותה מים כל יום - Drink water every day' },
-    { id: 13, sentence: 'The ___ is hot.', answer: 'soup', options: ['soup', 'ice', 'snow', 'milk'], explanation: 'המרק חם - Hot soup' },
-    { id: 14, sentence: 'I eat ___ for breakfast.', answer: 'bread', options: ['bread', 'rice', 'pasta', 'soup'], explanation: 'אני אוכל לחם לארוחת בוקר - Eat bread for breakfast' },
-    { id: 15, sentence: 'I drink white ___.', answer: 'milk', options: ['milk', 'water', 'juice', 'tea'], explanation: 'אני שותה חלב לבן - Drink white milk' },
-    { id: 16, sentence: 'I eat a yellow ___.', answer: 'banana', options: ['banana', 'apple', 'orange', 'grape'], explanation: 'אני אוכל בננה צהובה - Eat a yellow banana' },
-    { id: 17, sentence: 'The ___ is sweet.', answer: 'cake', options: ['cake', 'salt', 'rock', 'wood'], explanation: 'העוגה מתוקה - Sweet cake' },
-    { id: 18, sentence: 'I drink hot ___.', answer: 'tea', options: ['tea', 'coffee', 'water', 'juice'], explanation: 'אני שותה תה חם - Drink hot tea' },
-    { id: 19, sentence: 'The ___ is good.', answer: 'food', options: ['food', 'rock', 'sand', 'wood'], explanation: 'האוכל טוב - Good food' },
-    { id: 20, sentence: 'I eat ___ with my meal.', answer: 'rice', options: ['rice', 'bread', 'pasta', 'soup'], explanation: 'אני אוכל אורז עם הארוחה - Eat rice with my meal' },
-    
-    // Nature (טבע) - מילים קצרות: 3-5 אותיות
-    { id: 21, sentence: 'The ___ is hot.', answer: 'sun', options: ['sun', 'moon', 'snow', 'ice'], explanation: 'השמש חמה - Sun is hot' },
-    { id: 22, sentence: 'The ___ is blue.', answer: 'sky', options: ['sky', 'tree', 'grass', 'fire'], explanation: 'השמיים כחולים - Sky is blue' },
-    { id: 23, sentence: 'The ___ is big.', answer: 'tree', options: ['tree', 'ant', 'bee', 'fly'], explanation: 'העץ גדול - Tree is big' },
-    { id: 24, sentence: 'I see a beautiful ___.', answer: 'flower', options: ['flower', 'rock', 'pen', 'car'], explanation: 'אני רואה פרח יפה - See a beautiful flower' },
-    { id: 25, sentence: 'The ___ is green.', answer: 'grass', options: ['grass', 'sky', 'sun', 'snow'], explanation: 'הדשא ירוק - Grass is green' },
-    { id: 26, sentence: 'The ___ is white.', answer: 'cloud', options: ['cloud', 'tree', 'grass', 'fire'], explanation: 'הענן לבן - Cloud is white' },
-    { id: 27, sentence: 'The ___ is cold.', answer: 'snow', options: ['snow', 'fire', 'sun', 'soup'], explanation: 'השלג קר - Snow is cold' },
-    { id: 28, sentence: 'The ___ falls.', answer: 'rain', options: ['rain', 'tree', 'rock', 'car'], explanation: 'הגשם יורד - Rain falls' },
-    { id: 29, sentence: 'The ___ is big.', answer: 'sea', options: ['sea', 'ant', 'bee', 'fly'], explanation: 'הים גדול - Sea is big' },
-    { id: 30, sentence: 'The ___ is tall.', answer: 'hill', options: ['hill', 'ant', 'bee', 'fly'], explanation: 'הגבעה גבוהה - Hill is tall' },
-    
-    // Objects (חפצים) - מילים קצרות: 3-4 אותיות
-    { id: 31, sentence: 'I read a ___.', answer: 'book', options: ['book', 'pen', 'cup', 'hat'], explanation: 'אני קורא ספר - Read book' },
-    { id: 32, sentence: 'I use a ___ to write.', answer: 'pen', options: ['pen', 'dog', 'cat', 'tree'], explanation: 'אני משתמש בעט לכתיבה - Use pen to write' },
-    { id: 33, sentence: 'I have a ___.', answer: 'ball', options: ['ball', 'rock', 'sand', 'wood'], explanation: 'יש לי כדור - Have ball' },
-    { id: 34, sentence: 'I use a ___ to drink.', answer: 'cup', options: ['cup', 'rock', 'sand', 'wood'], explanation: 'אני משתמש בכוס לשתייה - Use cup to drink' },
-    { id: 35, sentence: 'I wear a ___.', answer: 'hat', options: ['hat', 'rock', 'tree', 'fish'], explanation: 'אני לובש כובע - Wear hat' },
-    { id: 36, sentence: 'I wear ___.', answer: 'shoes', options: ['shoes', 'rocks', 'trees', 'fish'], explanation: 'אני נועל נעליים - Wear shoes' },
-    { id: 37, sentence: 'I sit on a ___.', answer: 'chair', options: ['chair', 'tree', 'rock', 'fish'], explanation: 'אני יושב על כיסא - Sit on chair' },
-    { id: 38, sentence: 'I sleep on a ___.', answer: 'bed', options: ['bed', 'tree', 'rock', 'fish'], explanation: 'אני ישן על מיטה - Sleep on bed' },
-    { id: 39, sentence: 'I ride a ___ to the park.', answer: 'bike', options: ['bike', 'rock', 'tree', 'fish'], explanation: 'אני רוכב על אופניים לפארק - Ride bike to the park' },
-    { id: 40, sentence: 'I play with a ___.', answer: 'ball', options: ['ball', 'rock', 'tree', 'fish'], explanation: 'אני משחק עם כדור - Play with a ball' },
-    
-    // Colors (צבעים) - מילים קצרות: 3-5 אותיות
-    { id: 41, sentence: 'The ___ is red.', answer: 'rose', options: ['rose', 'sky', 'snow', 'grass'], explanation: 'הוורד אדום - Rose is red' },
-    { id: 42, sentence: 'The ___ is blue.', answer: 'sky', options: ['sky', 'fire', 'grass', 'sun'], explanation: 'השמיים כחולים - Sky is blue' },
-    { id: 43, sentence: 'The ___ is green.', answer: 'grass', options: ['grass', 'sky', 'fire', 'snow'], explanation: 'הדשא ירוק - Grass is green' },
-    { id: 44, sentence: 'The ___ is hot.', answer: 'sun', options: ['sun', 'snow', 'ice', 'rain'], explanation: 'השמש חמה - Sun is hot' },
-    { id: 45, sentence: 'The ___ is white.', answer: 'snow', options: ['snow', 'fire', 'grass', 'sky'], explanation: 'השלג לבן - Snow is white' },
-    { id: 46, sentence: 'The ___ is dark.', answer: 'night', options: ['night', 'sun', 'snow', 'fire'], explanation: 'הלילה חשוך - Night is dark' },
-    { id: 47, sentence: 'The ___ is big.', answer: 'bear', options: ['bear', 'ant', 'bee', 'fly'], explanation: 'הדוב גדול - Bear is big' },
-    { id: 48, sentence: 'I eat a purple ___.', answer: 'grape', options: ['grape', 'apple', 'banana', 'orange'], explanation: 'אני אוכל ענב סגול - Eat a purple grape' },
-    { id: 49, sentence: 'I see a red ___.', answer: 'rose', options: ['rose', 'tulip', 'daisy', 'lily'], explanation: 'אני רואה ורד אדום - See a red rose' },
-    { id: 50, sentence: 'I eat an orange ___.', answer: 'carrot', options: ['carrot', 'apple', 'banana', 'grape'], explanation: 'אני אוכל גזר כתום - Eat an orange carrot' },
+    { id: 41, sentence: 'The ___ is big.', answer: 'dog', options: ['dog', 'cat', 'ant', 'bee'], explanation: 'הכלב גדול - Dog is big' },
+    { id: 42, sentence: 'The ___ is small.', answer: 'cat', options: ['cat', 'dog', 'bird', 'fish'], explanation: 'החתול קטן - Cat is small' },
+    { id: 43, sentence: 'The ___ can fly.', answer: 'bird', options: ['bird', 'cat', 'dog', 'fish'], explanation: 'הציפור יכולה לעוף - Bird can fly' },
+    { id: 44, sentence: 'The ___ can swim.', answer: 'fish', options: ['fish', 'cat', 'dog', 'bird'], explanation: 'הדג יכול לשחות - Fish can swim' },
+    { id: 45, sentence: 'I eat a red ___.', answer: 'apple', options: ['apple', 'cake', 'egg', 'fish'], explanation: 'אני אוכל תפוח אדום - Red apple' },
+    { id: 46, sentence: 'I drink ___ every day.', answer: 'water', options: ['water', 'milk', 'juice', 'tea'], explanation: 'אני שותה מים כל יום - Drink water every day' },
+    { id: 47, sentence: 'I read a ___.', answer: 'book', options: ['book', 'pen', 'cup', 'hat'], explanation: 'אני קורא ספר - Read book' },
+    { id: 48, sentence: 'I sit on a ___.', answer: 'chair', options: ['chair', 'tree', 'rock', 'fish'], explanation: 'אני יושב על כיסא - Sit on chair' },
+    { id: 49, sentence: 'I sleep on a ___.', answer: 'bed', options: ['bed', 'tree', 'rock', 'fish'], explanation: 'אני ישן על מיטה - Sleep on bed' },
+    { id: 50, sentence: 'I go to ___ every day.', answer: 'school', options: ['school', 'car', 'dog', 'pen'], explanation: 'אני הולך לבית ספר כל יום - Go to school every day' },
     
     // Family (משפחה) - מילים: 3-6 אותיות (mom/dad קצרים יותר)
     { id: 51, sentence: 'I love my ___.', answer: 'mom', options: ['mom', 'dad', 'cat', 'dog'], explanation: 'אני אוהב את אמא - Love mom' },
@@ -606,24 +600,28 @@ function buildTranslationDictionary(): Map<string, string> {
 
   // הוסף תרגומים מהשאלות - רק אם המילה לא קיימת במילון הבסיסי
   Object.values(QUESTION_BANK).flat().forEach(question => {
-    // הוסף את התשובה למילון - רק אם לא קיימת
-    if (question.answer && question.explanation && !dict.has(question.answer.toLowerCase())) {
-      const parts = question.explanation.split('-');
-      if (parts.length > 0) {
-        const fullTranslation = parts[0].trim();
-        // קח את המילה הנכונה מהתרגום
-        const translation = extractCorrectWord(question.answer, fullTranslation);
-        dict.set(question.answer.toLowerCase(), translation);
+    // הוסף את התשובה/ות למילון - רק אם לא קיימת/ות
+    const answers = Array.isArray(question.answer) ? question.answer : [question.answer];
+    answers.forEach(answer => {
+      if (answer && question.explanation && !dict.has(answer.toLowerCase())) {
+        const parts = question.explanation.split('-');
+        if (parts.length > 0) {
+          const fullTranslation = parts[0].trim();
+          // קח את המילה הנכונה מהתרגום
+          const translation = extractCorrectWord(answer, fullTranslation);
+          dict.set(answer.toLowerCase(), translation);
+        }
       }
-    }
+    });
     
     // הוסף את כל האופציות למילון - רק אם לא קיימות
     question.options.forEach(option => {
       if (!dict.has(option.toLowerCase())) {
         // נסה למצוא תרגום מהשאלות האחרות
-        const matchingQuestion = Object.values(QUESTION_BANK).flat().find(q => 
-          q.answer.toLowerCase() === option.toLowerCase()
-        );
+        const matchingQuestion = Object.values(QUESTION_BANK).flat().find(q => {
+          const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+          return answers.some(ans => ans.toLowerCase() === option.toLowerCase());
+        });
         if (matchingQuestion?.explanation) {
           const parts = matchingQuestion.explanation.split('-');
           if (parts.length > 0) {
@@ -819,9 +817,11 @@ function FillBlanks() {
     // אם עדיין אין תרגום, נסה למצוא מהשאלות הנוכחיות
     if (!translation || translation === word) {
       // קודם כל, נסה למצוא מהשאלות הנוכחיות במשחק (כולל שאלות שנוצרו מהמילים שנלמדו)
-      const currentQuestion = questions.find(q => 
-        q.answer.toLowerCase() === wordLower || q.options.some(opt => opt.toLowerCase() === wordLower)
-      );
+      const currentQuestion = questions.find(q => {
+        const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+        return answers.some(ans => ans.toLowerCase() === wordLower) || 
+               q.options.some(opt => opt.toLowerCase() === wordLower);
+      });
       
       if (currentQuestion?.explanation) {
         // נסה לחלץ תרגום מההסבר
@@ -856,9 +856,11 @@ function FillBlanks() {
       
       // אם עדיין אין תרגום, נסה למצוא מהשאלות הקיימות
       if (!translation || translation === word) {
-        const matchingQuestion = Object.values(QUESTION_BANK).flat().find(q => 
-          q.answer.toLowerCase() === wordLower || q.options.some(opt => opt.toLowerCase() === wordLower)
-        );
+        const matchingQuestion = Object.values(QUESTION_BANK).flat().find(q => {
+          const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+          return answers.some(ans => ans.toLowerCase() === wordLower) || 
+                 q.options.some(opt => opt.toLowerCase() === wordLower);
+        });
         if (matchingQuestion?.explanation) {
           const parts = matchingQuestion.explanation.split('-');
           if (parts.length > 0) {
@@ -1085,9 +1087,13 @@ function FillBlanks() {
           (w: string) => `I always carry my ___ in my backpack when I go to school.`,
           (w: string) => `The ___ is an important tool that everyone should have.`,
           (w: string) => `My teacher showed me how to use the ___ properly.`,
-          (w: string) => `I opened a ___ of soda and drank it.`,
-          (w: string) => `The ___ contains food that I can eat.`,
-          (w: string) => `I recycle the empty ___ after I finish using it.`,
+          (w: string) => `I sit at my ___ every day to do my homework.`,
+          (w: string) => `I sit on the ___ to rest.`,
+          (w: string) => `I sleep on my ___ every night.`,
+          (w: string) => `I eat dinner at the ___ with my family.`,
+          (w: string) => `I use a ___ to write.`,
+          (w: string) => `I read a ___ before going to bed.`,
+          (w: string) => `I play with a ___ in the park.`,
         ];
       case 'nature':
         return [
@@ -1119,6 +1125,10 @@ function FillBlanks() {
           (w: string) => `I study at the ___ because it's quiet and peaceful.`,
           (w: string) => `The ___ has many interesting books that I love to read.`,
           (w: string) => `I play with my friends in the ___ after school.`,
+          (w: string) => `I live in a ___.`,
+          (w: string) => `I sleep in my ___.`,
+          (w: string) => `I cook in the ___.`,
+          (w: string) => `I take a shower in the ___.`,
         ];
       case 'transport':
         return [
@@ -1365,9 +1375,10 @@ function FillBlanks() {
       }
       
       // נסה למצוא שאלה קיימת שהמילה היא התשובה הנכונה שלה
-      const existingQuestion = Object.values(QUESTION_BANK).flat().find(q => 
-        q.answer.toLowerCase() === word.toLowerCase()
-      );
+      const existingQuestion = Object.values(QUESTION_BANK).flat().find(q => {
+        const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+        return answers.some(ans => ans.toLowerCase() === word.toLowerCase());
+      });
       
       if (existingQuestion) {
         // אם יש שאלה קיימת, השתמש בה - היא כבר טובה והגיונית
@@ -1386,20 +1397,73 @@ function FillBlanks() {
         // מערבב את הטמפלטים כדי לנסות אותם בסדר אקראי
         const shuffledTemplates = [...templates].sort(() => Math.random() - 0.5);
         
+        // פונקציה לבדיקה אם המשפט הגיוני סמנטית
+        const isSentenceSemanticallyCorrect = (sentenceWithWord: string, word: string): boolean => {
+          const sentenceLower = sentenceWithWord.toLowerCase();
+          const wordLower = word.toLowerCase();
+          
+          // בדיקות ספציפיות למילים נפוצות
+          // desk - רק עם "sit at", "work at", "at my desk", "on my desk"
+          if (wordLower === 'desk') {
+            if (sentenceLower.includes('sit at my desk') || sentenceLower.includes('work at my desk') || 
+                sentenceLower.includes('at my desk') || sentenceLower.includes('on my desk')) {
+              return true;
+            }
+            // אם המשפט אומר "sit at desk" אבל לא "my desk" - עדיין הגיוני
+            if (sentenceLower.includes('sit at') && sentenceLower.includes('desk')) {
+              return true;
+            }
+            return false;
+          }
+          
+          // chair - רק עם "sit on", "sit in", "on the chair"
+          if (wordLower === 'chair') {
+            if (sentenceLower.includes('sit on') || sentenceLower.includes('sit in') || 
+                sentenceLower.includes('on the chair') || sentenceLower.includes('in the chair')) {
+              return true;
+            }
+            return false;
+          }
+          
+          // bed - רק עם "sleep on", "sleep in", "on my bed", "in my bed"
+          if (wordLower === 'bed') {
+            if (sentenceLower.includes('sleep on') || sentenceLower.includes('sleep in') || 
+                sentenceLower.includes('on my bed') || sentenceLower.includes('in my bed')) {
+              return true;
+            }
+            return false;
+          }
+          
+          // table - רק עם "eat at", "sit at", "at the table"
+          if (wordLower === 'table') {
+            if (sentenceLower.includes('eat at') || sentenceLower.includes('sit at') || 
+                sentenceLower.includes('at the table')) {
+              return true;
+            }
+            return false;
+          }
+          
+          // אם אין בדיקות ספציפיות, החזר true (המשפט כנראה הגיוני)
+          return true;
+        };
+        
         // נסה כל טמפלט עד שנמצא אחד שהמילה הגיונית בו
         for (const temp of shuffledTemplates) {
           const testSentence = temp(word);
-          // בדוק אם המילה הגיונית במשפט הזה (תמיד true למילה המקורית, אבל בודק שהמשפט הגיוני)
+          // בדוק אם המילה הגיונית במשפט הזה
           const sentenceWithWord = testSentence.replace('___', word);
           // בדוק שהמשפט הגיוני עם המילה
           if (isWordLogicalInSentence(word, sentenceWithWord, word)) {
-            sentence = testSentence;
-            template = temp;
-            break;
+            // בדיקה נוספת - ודא שהמשפט הגיוני סמנטית
+            if (isSentenceSemanticallyCorrect(sentenceWithWord, word)) {
+              sentence = testSentence;
+              template = temp;
+              break;
+            }
           }
         }
         
-        // אם לא מצאנו טמפלט הגיוני, נשתמש בטמפלט הראשון (המילה תמיד הגיונית במשפט שלה)
+        // אם לא מצאנו טמפלט הגיוני, נשתמש בטמפלט הראשון
         if (!sentence || !template) {
           template = templates[0] || templates[Math.floor(Math.random() * templates.length)];
           sentence = template(word);
@@ -1434,12 +1498,24 @@ function FillBlanks() {
           const categoryQuestions = Object.values(QUESTION_BANK)
             .flat()
             .filter(q => {
-              const qCategory = getWordCategory(q.answer);
-              return qCategory === category && 
-                     q.answer.toLowerCase() !== word.toLowerCase() &&
-                     isValidWord(q.answer);
+              const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+              // בדוק אם אחת מהתשובות מתאימה לקטגוריה ולא זהה למילה
+              return answers.some(ans => {
+                const qCategory = getWordCategory(ans);
+                return qCategory === category && 
+                       ans.toLowerCase() !== word.toLowerCase() &&
+                       isValidWord(ans);
+              });
             })
-            .map(q => q.answer)
+            .flatMap(q => {
+              const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+              return answers.filter(ans => {
+                const qCategory = getWordCategory(ans);
+                return qCategory === category && 
+                       ans.toLowerCase() !== word.toLowerCase() &&
+                       isValidWord(ans);
+              });
+            })
             .filter(opt => !similarWords.some(s => s.toLowerCase() === opt.toLowerCase()))
             .sort(() => Math.random() - 0.5)
             .slice(0, 3 - similarWords.length);
@@ -1565,9 +1641,10 @@ function FillBlanks() {
           finalTranslation = dictTranslation;
         } else {
           // אם אין במילון הבסיסי, נסה למצוא מהשאלות הקיימות
-          const existingQuestion = Object.values(QUESTION_BANK).flat().find(q => 
-            q.answer.toLowerCase() === word.toLowerCase()
-          );
+          const existingQuestion = Object.values(QUESTION_BANK).flat().find(q => {
+            const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+            return answers.some(ans => ans.toLowerCase() === word.toLowerCase());
+          });
           if (existingQuestion?.explanation) {
             const parts = existingQuestion.explanation.split('-');
             if (parts.length > 0) {
@@ -1622,9 +1699,10 @@ function FillBlanks() {
         const sentenceWithWord = sentence.replace('___', word);
         
         // נסה למצוא הסבר מהשאלות הקיימות (אם יש שאלה עם אותה מילה)
-        const existingQuestionWithSameWord = Object.values(QUESTION_BANK).flat().find(q => 
-          q.answer.toLowerCase() === word.toLowerCase()
-        );
+        const existingQuestionWithSameWord = Object.values(QUESTION_BANK).flat().find(q => {
+          const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+          return answers.some(ans => ans.toLowerCase() === word.toLowerCase());
+        });
         
         // אם יש תרגום טוב מהמילון, השתמש בו
         const goodTranslation = TRANSLATION_DICT.get(word.toLowerCase());
@@ -2010,9 +2088,10 @@ function FillBlanks() {
         console.log(`Using dictionary translation for "${word}": ${finalTranslation}`);
       } else if (!translation || translation === word || translation.includes('המילה') || translation.includes('באנגלית')) {
         // אם התרגום לא טוב, נסה למצוא מהשאלות הקיימות
-        const existingQuestion = Object.values(QUESTION_BANK).flat().find(q => 
-          q.answer.toLowerCase() === word.toLowerCase()
-        );
+        const existingQuestion = Object.values(QUESTION_BANK).flat().find(q => {
+          const answers = Array.isArray(q.answer) ? q.answer : [q.answer];
+          return answers.some(ans => ans.toLowerCase() === word.toLowerCase());
+        });
         if (existingQuestion?.explanation) {
           const parts = existingQuestion.explanation.split('-');
           if (parts.length > 0) {
@@ -2108,34 +2187,37 @@ function FillBlanks() {
         }
       });
       
-      // הוסף גם את המילה הנכונה (התשובה) - תמיד עם התרגום הטוב ביותר
-      if (question.answer) {
-        const answerWord = question.answer.toLowerCase();
-        if (!wordsMap.has(answerWord)) {
-          // קודם כל, נסה למצוא תרגום מהמילון הבסיסי
-          let translation = TRANSLATION_DICT.get(answerWord);
-          
-          // אם אין במילון, נסה למצוא מההסבר
-          if (!translation || translation === answerWord || translation.includes('המילה') || translation.includes('באנגלית')) {
-          if (question.explanation) {
-              // נסה לחלץ תרגום מההסבר
-              const translationMatch = question.explanation.match(/\(([^)]+)\)/);
-              if (translationMatch && translationMatch[1]) {
-                const extracted = translationMatch[1].trim();
-                if (extracted && extracted !== answerWord && !extracted.includes('המילה') && !extracted.includes('באנגלית')) {
-                  translation = extracted;
+      // הוסף גם את המילה/ות הנכונה/ות (התשובה/ות) - תמיד עם התרגום הטוב ביותר
+      const answers = Array.isArray(question.answer) ? question.answer : [question.answer];
+      answers.forEach(answer => {
+        if (answer) {
+          const answerWord = answer.toLowerCase();
+          if (!wordsMap.has(answerWord)) {
+            // קודם כל, נסה למצוא תרגום מהמילון הבסיסי
+            let translation = TRANSLATION_DICT.get(answerWord);
+            
+            // אם אין במילון, נסה למצוא מההסבר
+            if (!translation || translation === answerWord || translation.includes('המילה') || translation.includes('באנגלית')) {
+              if (question.explanation) {
+                // נסה לחלץ תרגום מההסבר
+                const translationMatch = question.explanation.match(/\(([^)]+)\)/);
+                if (translationMatch && translationMatch[1]) {
+                  const extracted = translationMatch[1].trim();
+                  if (extracted && extracted !== answerWord && !extracted.includes('המילה') && !extracted.includes('באנגלית')) {
+                    translation = extracted;
+                  }
+                }
+              }
             }
-          }
-            }
-          }
           
-          // אם יש תרגום טוב, שמור אותו
-          if (translation && translation !== answerWord && !translation.includes('המילה') && !translation.includes('באנגלית')) {
-          wordsMap.set(answerWord, translation);
+            // אם יש תרגום טוב, שמור אותו
+            if (translation && translation !== answerWord && !translation.includes('המילה') && !translation.includes('באנגלית')) {
+              wordsMap.set(answerWord, translation);
+            }
           }
         }
-      }
-    });
+      });
+    }); // סגירת questions.forEach
     
     const result = Array.from(wordsMap.entries())
       .filter(([word, translation]) => translation && translation !== word && !translation.includes('המילה') && !translation.includes('באנגלית'))
@@ -2152,9 +2234,29 @@ function FillBlanks() {
     if (feedback) return;
 
     const currentQuestion = questions[currentQuestionIndex];
-    const isCorrect = option === currentQuestion.answer;
     
-    setFeedback({ correct: isCorrect, answer: currentQuestion.answer });
+    // תמיכה במספר תשובות נכונות
+    let isCorrect: boolean;
+    let correctAnswers: string[];
+    
+    if (Array.isArray(currentQuestion.answer)) {
+      // אם answer הוא array, בדוק אם התשובה הנבחרת נמצאת בו
+      isCorrect = currentQuestion.answer.some(ans => 
+        ans.toLowerCase().trim() === option.toLowerCase().trim()
+      );
+      correctAnswers = currentQuestion.answer;
+    } else {
+      // אם answer הוא string, בדוק שוויון רגיל
+      isCorrect = currentQuestion.answer.toLowerCase().trim() === option.toLowerCase().trim();
+      correctAnswers = [currentQuestion.answer];
+    }
+    
+    // הצג את התשובה/ות הנכונה/ות (אם יש מספר תשובות, הצג את הראשונה או את כולן)
+    const displayAnswer = Array.isArray(currentQuestion.answer) 
+      ? currentQuestion.answer.join(' או ') 
+      : currentQuestion.answer;
+    
+    setFeedback({ correct: isCorrect, answer: displayAnswer });
     setScore(prev => prev + (isCorrect ? 10 : -2));
     setSelectedOption(option);
 
@@ -2760,7 +2862,13 @@ function FillBlanks() {
                 <span className="text-2xl">💡</span>
                 <span>רמז</span>
               </div>
-              <div className="text-md">התשובה הנכונה היא: <strong>{currentQuestion.answer}</strong></div>
+              <div className="text-md">
+                התשובה הנכונה היא: <strong>
+                  {Array.isArray(currentQuestion.answer) 
+                    ? currentQuestion.answer.join(' או ') 
+                    : currentQuestion.answer}
+                </strong>
+              </div>
           </div>
         )}
 
